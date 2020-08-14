@@ -1,0 +1,15 @@
+{
+
+  "Step1": {
+    "Step": {
+      "Type": "COMMAND_STATUS",
+      "Test": "${CSM_CHANGE_TITLE}",
+      "Script": {
+        "command-1": "java -version 2>&1",
+        "command-2": "cd ${PWD}",
+        "command-3": "cd ${PWD};ls",
+        "command-4": "cd ${PWD};pwd"
+      }
+    }
+  }
+}
