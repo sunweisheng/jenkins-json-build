@@ -44,4 +44,5 @@ hs_err_pid*
 
 work/
 *.iml
+/unit-tests/*.iml
 .scannerwork/
