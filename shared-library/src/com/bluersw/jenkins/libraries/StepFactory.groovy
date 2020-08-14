@@ -16,6 +16,12 @@ import hudson.remoting.Channel
 import com.bluersw.jenkins.libraries.utils.JSONExtend
 import net.sf.json.JSONObject
 
+import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
+import static com.bluersw.jenkins.libraries.model.Constants.STEP_TYPE_NODE_NAME
+import static com.bluersw.jenkins.libraries.model.Constants.GLOBAL_VARIABLE_NODE_NAME
+import static com.bluersw.jenkins.libraries.model.Constants.COMMAND_SCRIPT_NODE_NAME
+import static com.bluersw.jenkins.libraries.model.Constants.GLOBAL_LOG_LEVEL_NODE_NAME
+
 /**
  * 构建过程配置工厂
  * @auther SunWeiSheng
@@ -23,29 +29,9 @@ import net.sf.json.JSONObject
 class StepFactory {
 
 	/**
-	 * json配置文件内定义构建步骤类型的节点类型的节点名称
-	 */
-	static final String STEP_TYPE_NODE_NAME = 'Type'
-	/**
-	 * json配置文件内全局变量节点名称
-	 */
-	static final String GLOBAL_VARIABLE_NODE_NAME = 'GlobalVariable'
-	/**
-	 * json配置文件内定义需要执行脚本的节点名称
-	 */
-	static final String COMMAND_SCRIPT_NODE_NAME = 'Script'
-	/**
-	 * json配置文件内全局变量中定义日志级别的节点名称
-	 */
-	static final String GLOBAL_LOG_LEVEL_NODE_NAME = 'LogLevel'
-	/**
 	 * 定义StepFactory类型对象加载时日志的结束标记
 	 */
 	static final String INIT_LOG_END_TAG = '初始化完成----------'
-	/**
-	 * 文件分割符号，用于跨系统转换路径
-	 */
-	private static final String FILE_SEPARATOR = System.getProperty("file.separator")
 	String configPath
 	String projectRoot
 	private JSONExtend json

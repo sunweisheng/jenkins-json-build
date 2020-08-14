@@ -14,10 +14,8 @@ import com.bluersw.jenkins.libraries.model.Steps
 import groovy.transform.Field
 import net.sf.json.JSONObject
 
-/**
- * 文件分割符号，用于跨系统转换路径
- */
-@Field private static final String FILE_SEPARATOR = System.getProperty("file.separator")
+import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
+
 /**
  * 记录当前正在处理的StepFactory对象，比如在POST失败处理过程中使用
  */

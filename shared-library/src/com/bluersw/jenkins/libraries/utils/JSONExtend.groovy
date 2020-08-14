@@ -17,32 +17,18 @@ import hudson.remoting.VirtualChannel
 import hudson.remoting.Channel
 import net.sf.json.JSONObject
 
+import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
+import static com.bluersw.jenkins.libraries.model.Constants.GLOBAL_VARIABLE_NODE_NAME
+import static com.bluersw.jenkins.libraries.model.Constants.LOCAL_VARIABLE_NODE_NAME
+import static com.bluersw.jenkins.libraries.model.Constants.FIND_VARIABLE_PATTERN
+import static com.bluersw.jenkins.libraries.model.Constants.JUDGE_VARIABLE_PATTERN
+
 /**
  * 处理Json文档，扩展了变量的概念，文档内可以定义全局变量和局部变量，节点的值可引用变量进行赋值。
  * @auther SunWeiSheng
  */
 class JSONExtend {
 
-	/**
-	 * 文件分割符号，用于跨系统转换路径
-	 */
-	private static final String FILE_SEPARATOR = System.getProperty("file.separator")
-	/**
-	 * 配置文件内的全局变量节点名称
-	 */
-	private static final String NODE_NAME_GLOBAL_VARIABLE = "GlobalVariable"
-	/**
-	 * 配置文件内的局部变量节点名称
-	 */
-	private static final String NODE_NAME_LOCAL_VARIABLE = "Variable"
-	/**
-	 * 匹配变量引用的正则并且匹配的分组名为key，比如：${var}
-	 */
-	private static final Pattern FIND_VARIABLE_PATTERN = Pattern.compile('\\$\\{(?<key>.*?)}')
-	/**
-	 * 匹配变量的正则没有设置分组用于判断是否含有变量引用，比如：${var}
-	 */
-	private static final Pattern JUDGE_VARIABLE_PATTERN = Pattern.compile('\\$\\{(.*?)}')
 	private FilePath filePath
 	private String path
 	private String text
@@ -94,11 +80,11 @@ class JSONExtend {
 	@NonCPS
 	private static void setEnvVarsForJSONObject(JSONObject jsonObject, Map<String, String> envVars) {
 		JSONObject gv = null
-		if (!jsonObject.containsKey(NODE_NAME_GLOBAL_VARIABLE)) {
-			jsonObject.accumulate(NODE_NAME_GLOBAL_VARIABLE, new JSONObject())
+		if (!jsonObject.containsKey(GLOBAL_VARIABLE_NODE_NAME)) {
+			jsonObject.accumulate(GLOBAL_VARIABLE_NODE_NAME, new JSONObject())
 		}
 
-		gv = jsonObject[NODE_NAME_GLOBAL_VARIABLE] as JSONObject
+		gv = jsonObject[GLOBAL_VARIABLE_NODE_NAME] as JSONObject
 		envVars.each { if (it.value != null) (gv.accumulate(it.key, it.value)) }
 	}
 
@@ -121,7 +107,7 @@ class JSONExtend {
 	@NonCPS
 	private void setLocalVariable(String xpath, String varName, String value) {
 		//得到变量的作用域
-		String scope = xpath.substring(0, xpath.indexOf(NODE_NAME_LOCAL_VARIABLE) - 1)
+		String scope = xpath.substring(0, xpath.indexOf(LOCAL_VARIABLE_NODE_NAME) - 1)
 		if (!localVariable.containsKey(scope)) {
 			localVariable.put(scope, new LinkedHashMap<>())
 		}
@@ -257,10 +243,10 @@ class JSONExtend {
 			xpath = xpath + '/' + entry.key.toString()
 			if (entry.value instanceof String) {
 				//如果是全局变量节点
-				if (xpath.indexOf(NODE_NAME_GLOBAL_VARIABLE) != -1) {
+				if (xpath.indexOf(GLOBAL_VARIABLE_NODE_NAME) != -1) {
 					setGlobalVariable(entry.key.toString(), entry.value.toString())
 				}//如果是局部变量节点
-				else if (xpath.indexOf(NODE_NAME_LOCAL_VARIABLE) != -1) {
+				else if (xpath.indexOf(LOCAL_VARIABLE_NODE_NAME) != -1) {
 					setLocalVariable(xpath, entry.key.toString(), entry.value.toString())
 				}
 				//如果节点的值含变量引用，赋值后返回新的节点值内容
