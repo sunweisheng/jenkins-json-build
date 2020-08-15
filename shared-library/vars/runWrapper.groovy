@@ -4,6 +4,10 @@
 * @version 2.0
 * @date 2020-8-15
 */
+
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 import com.bluersw.jenkins.libraries.StepFactory
 import com.bluersw.jenkins.libraries.model.LogContainer
 import com.bluersw.jenkins.libraries.model.LogType
@@ -11,9 +15,11 @@ import com.bluersw.jenkins.libraries.model.Step
 import com.bluersw.jenkins.libraries.model.Command
 import com.bluersw.jenkins.libraries.model.StepType
 import com.bluersw.jenkins.libraries.model.Steps
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.transform.Field
 import net.sf.json.JSONObject
 
+import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
 import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
 
 /**
@@ -110,8 +116,8 @@ void postFailure(Exception ex) {
 		String to = factory.getGlobalVariableValue('Email-TO')
 		String cc = factory.getGlobalVariableValue('Email-CC')
 		if(to != '') {
-			def request = libraryResource 'com/bluersw/default.json'
-			JSONObject defaultJson = readJSON(text: request)
+			def response = libraryResource 'com/bluersw/default.json'
+			JSONObject defaultJson = readJSON(text: response)
 			def subject = "${JOB_NAME}-第${BUILD_NUMBER}次构建失败!"
 			String message = defaultJson['FailMailTemplate'].toString().replace('FailReasons', errorMessage)
 			def recipient = "${to},cc:${cc}".trim()
@@ -163,8 +169,8 @@ void postSuccess() {
 	if (to != '') {
 		def recipient = "${to},cc:${cc}".trim()
 		def subject = "${JOB_NAME}-第${BUILD_NUMBER}次构建成功!"
-		def request = libraryResource 'com/bluersw/default.json'
-		JSONObject defaultJson = readJSON(text: request)
+		def response = libraryResource 'com/bluersw/default.json'
+		JSONObject defaultJson = readJSON(text: response)
 		String successMailTemplate = defaultJson['SuccessMailTemplate'].toString()
 		emailext(to: recipient, mimeType: 'text/html', subject: subject, body: successMailTemplate)
 	}
@@ -279,14 +285,53 @@ private void runCommand(Step step) {
  * @param envVars Jenkins环境变量
  * @return StepFactory对象列表
  */
-private static LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars) {
+private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars) {
 	LinkedList<StepFactory> factoryList = new LinkedList<>()
 	for (String json in jsonFile) {
-		StepFactory factory = new StepFactory(json, envVars)
+		Map<String, String> stepFactoryEnv = new LinkedHashMap<>()
+		copyMap(envVars, stepFactoryEnv)
+		bindRuntimeVariable(json, stepFactoryEnv)
+		StepFactory factory = new StepFactory(json, stepFactoryEnv)
 		factory.initialize()
 		factoryList.add(factory)
 	}
 	return factoryList
+}
+
+/**
+ * 在获得Jenkins全局变量之后，绑定运行时变量，此类变量在RuntimeVariables节点中定义，如果是json格式可加入@path[]属性标示节点搜索路径
+ * @param jsonFile json文件路径
+ * @param stepFactoryEnv jenkins环境变量
+ */
+private void bindRuntimeVariable(String jsonFile, Map<String,String> stepFactoryEnv) {
+	JSONObject json = readJSON(file: jsonFile)
+	JSONObject runtimeVariables = json['RuntimeVariables'] as JSONObject
+	if (runtimeVariables != null) {
+		println('发现运行时变量节点：')
+		Iterator<Object> iterator = runtimeVariables.keySet().iterator()
+		while (iterator.hasNext()) {
+			String key = iterator.next() as String
+			//运行时变量都是健值对
+			if (runtimeVariables[key] instanceof String) {
+				String varValue = runtimeVariable.getVarValue(runtimeVariables[key], stepFactoryEnv)
+				stepFactoryEnv.put(key, varValue)
+			}
+		}
+		println('运行时变量处理完成。')
+	}
+}
+
+/**
+ * Map拷贝
+ * @param source 源Map
+ * @param target 目标Map
+ */
+private static void copyMap(Map<String,String> source, Map<String,String> target) {
+	Iterator<String> iterator = source.keySet().iterator()
+	while (iterator.hasNext()) {
+		String key = iterator.next()
+		target.put(key, source[key])
+	}
 }
 
 /**

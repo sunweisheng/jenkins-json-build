@@ -1,6 +1,9 @@
 package io.jenkins.pipeline.sample
 
+import com.lesfurets.jenkins.unit.MethodSignature
 import com.lesfurets.jenkins.unit.declarative.DeclarativePipelineTest
+import net.sf.json.JSONObject
+import net.sf.json.JSONSerializer
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static com.lesfurets.jenkins.unit.global.lib.LocalSource.localSource
@@ -28,6 +31,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerAllowedMethod('isUnix',[],{true})
         helper.registerAllowedMethod('sh',[Map.class],{println("执行${it['script']}")})
         helper.registerAllowedMethod('emailext')
+        helper.registerAllowedMethod(MethodSignature.method("readJSON",Map.class),{return this.readJSON(it)})
     }
 
     @Test
@@ -43,5 +47,19 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerSharedLibrary(library)
         runScript('com/bluersw/jenkins/libraries/testRunWrapper.groovy')
         printCallStack()
+    }
+
+    JSONObject readJSON(Map<String,String> map){
+        if(map.containsKey('file')) {
+            FileInputStream fs = new FileInputStream(map['file'])
+            String text = fs.getText()
+            JSONObject jo = (JSONObject) JSONSerializer.toJSON(text)
+            return jo
+        }
+
+        if(map.containsKey('test')){
+            JSONObject jo = (JSONObject) JSONSerializer.toJSON(map['test'])
+            return jo
+        }
     }
 }
