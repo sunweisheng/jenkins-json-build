@@ -32,6 +32,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerAllowedMethod('sh',[Map.class],{println("执行${it['script']}")})
         helper.registerAllowedMethod('emailext')
         helper.registerAllowedMethod(MethodSignature.method("readJSON",Map.class),{return this.readJSON(it)})
+        helper.registerAllowedMethod('pwd',[],{return './src/main/jenkins/com/bluersw/jenkins/libraries'})
     }
 
     @Test

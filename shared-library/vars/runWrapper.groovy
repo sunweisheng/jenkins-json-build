@@ -289,9 +289,13 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
 	LinkedList<StepFactory> factoryList = new LinkedList<>()
 	for (String json in jsonFile) {
 		Map<String, String> stepFactoryEnv = new LinkedHashMap<>()
+		//复制环境变量避免公用同一个引用
 		copyMap(envVars, stepFactoryEnv)
+		//获取运行时变量的名称和值并存入环境变量中
 		bindRuntimeVariable(json, stepFactoryEnv)
+		//整体加载json配置文档
 		StepFactory factory = new StepFactory(json, stepFactoryEnv)
+		//初始化构建需要的对象
 		factory.initialize()
 		factoryList.add(factory)
 	}
@@ -304,6 +308,7 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
  * @param stepFactoryEnv jenkins环境变量
  */
 private void bindRuntimeVariable(String jsonFile, Map<String,String> stepFactoryEnv) {
+	//本次读取json配置文件只为了读出RuntimeVariables节点，其他节点不做处理
 	JSONObject json = readJSON(file: jsonFile)
 	JSONObject runtimeVariables = json['RuntimeVariables'] as JSONObject
 	if (runtimeVariables != null) {
@@ -313,7 +318,9 @@ private void bindRuntimeVariable(String jsonFile, Map<String,String> stepFactory
 			String key = iterator.next() as String
 			//运行时变量都是健值对
 			if (runtimeVariables[key] instanceof String) {
+				//通过节点内容获取变量值，节点的Key就是变量的名称
 				String varValue = runtimeVariable.getVarValue(runtimeVariables[key], stepFactoryEnv)
+				//将运行时变量名称和值存入环境变量，在分析整个json文档的过程中使用，在json文件中可以引用这些变量
 				stepFactoryEnv.put(key, varValue)
 			}
 		}

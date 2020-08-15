@@ -27,10 +27,6 @@ void printVars() {
 		}
 		println(userName)
 	}
-
-	//获得最后一次commit的message
-	def SCM_CHANGE_TITLE = runStdoutScript("git --no-pager show -s --format=\"%s\" -n 1")
-	println(SCM_CHANGE_TITLE)
 }
 
 /**
@@ -56,13 +52,6 @@ Map<String,String> getEnvironment() {
 		}
 		envMap.put("REAL_USER_NAME",REAL_USER_NAME)
 	}
-
-	//获得最后一次commit的message
-	String CSM_CHANGE_TITLE = runStdoutScript("git --no-pager show -s --format=\"%s\" -n 1")
-	if(CSM_CHANGE_TITLE != null){
-		CSM_CHANGE_TITLE = CSM_CHANGE_TITLE.trim()
-	}
-	envMap.put("CSM_CHANGE_TITLE",CSM_CHANGE_TITLE)
 
 	return envMap
 }

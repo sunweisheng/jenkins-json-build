@@ -1,9 +1,17 @@
 {
-
+  "RuntimeVariables": {
+    "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1",
+    "PWD": "pwd()",
+    "BAIDU": "https://www.baidu.com",
+    "SQ": "${PWD}./src/main/jenkins/com/bluersw/jenkins/libraries/json/sq.json@path[\\代码扫描\\SonarQube\\Type]"
+  },
+  "GlobalVariable": {
+    "LogLevel": "DEBUG"
+  },
   "Step1": {
     "Step": {
       "Type": "COMMAND_STATUS",
-      "Test": "${CSM_CHANGE_TITLE}",
+      "Test": "${SCM_CHANGE_TITLE}",
       "Script": {
         "command-1": "java -version 2>&1",
         "command-2": "cd ${PWD}",

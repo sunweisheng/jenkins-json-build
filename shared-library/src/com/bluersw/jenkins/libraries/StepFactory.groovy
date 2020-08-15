@@ -212,8 +212,8 @@ class StepFactory {
 	@NonCPS
 	private String setProjectRoot(String jsonPath) {
 		String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
-		if(!this.envVars.containsKey('PWD')){
-			this.envVars.put('PWD', projectRoot)
+		if(!this.envVars.containsKey('JSON_PWD')){
+			this.envVars.put('JSON_PWD', projectRoot)
 		}
 		return projectRoot
 	}
