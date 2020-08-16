@@ -20,7 +20,7 @@ import groovy.transform.Field
 import net.sf.json.JSONObject
 
 import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
-import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
+import static com.bluersw.jenkins.libraries.model.Constants.RUNTIME_VARIABLE_NODE_NAME
 
 /**
  * 记录当前正在处理的StepFactory对象，比如在POST失败处理过程中使用
@@ -311,7 +311,7 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
 private void bindRuntimeVariable(String jsonFile, Map<String,String> stepFactoryEnv) {
 	//本次读取json配置文件只为了读出RuntimeVariables节点，其他节点不做处理
 	JSONObject json = readJSON(file: jsonFile)
-	JSONObject runtimeVariables = json['RuntimeVariables'] as JSONObject
+	JSONObject runtimeVariables = json[RUNTIME_VARIABLE_NODE_NAME] as JSONObject
 	if (runtimeVariables != null) {
 		println('发现运行时变量节点：')
 		Iterator<Object> iterator = runtimeVariables.keySet().iterator()

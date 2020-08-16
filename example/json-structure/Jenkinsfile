@@ -1,6 +1,4 @@
-@Library('shared-library')
-
-import groovy.transform.Field
+@Library('shared-library') _
 
 pipeline {
 	agent any

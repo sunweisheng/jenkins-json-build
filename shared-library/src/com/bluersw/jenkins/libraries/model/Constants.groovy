@@ -29,6 +29,7 @@ class Constants {
 	 * json配置文件内全局变量节点名称
 	 */
 	static final String GLOBAL_VARIABLE_NODE_NAME = 'GlobalVariable'
+	static final String RUNTIME_VARIABLE_NODE_NAME = 'RuntimeVariable'
 	/**
 	 * json配置文件内定义需要执行脚本的节点名称
 	 */
