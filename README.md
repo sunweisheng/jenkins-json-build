@@ -226,7 +226,7 @@ Finished: SUCCESS
 
 为了方便在json中方便的配置构建步骤，本项目允许在json中定义变量并使用变量简化配置内容。变量的作用域程序编写一致：就近原则，GlobalVariable节点定义的变量作用域是整个文档，但在每个节点可以用Variable定义局部变量，如果Variable变量名称和GlobalVariable定义的变量名称相同则会覆盖GlobalVariable变量的值（就近原则），并且Variable定义的局部变量离开定义的节点则无效，另外定义变量和使用变量有先后顺序，如果在使用之前文档没有定义该变量则变量无效，在定义变量之后使用变量才是正确的。
 
-```json
+```text
 //定义变量
 //在GlobalVariable节点或Variable节点内
 "变量名": "变量值"
@@ -263,7 +263,7 @@ pipeline {
 
 jenkins-project.json文件内容:
 
-```json
+```text
 {
   "RuntimeVariable": {
     //Deploy_Choice是构建参数
@@ -335,8 +335,8 @@ bash: no job control in this shell
 bash: no job control in this shell
 test
 执行完成[0]
-
 执行[输出RuntimeVariable变量脚本]完成
+
 开始执行[测试变量]的[输出GlobalVariable变量脚本]
 开始执行[输出GV_PARAMS_DEPLOY]的[echo 部署全部]命令
 bash: no job control in this shell
