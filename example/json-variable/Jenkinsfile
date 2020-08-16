@@ -6,7 +6,7 @@ pipeline {
     }
 	agent any
 	stages {
-		stage('RuntimeVariable变量') {
+		stage('输出变量值') {
 			steps {
 				script{
 					runWrapper.loadJSON('/jenkins-project.json')

@@ -48,6 +48,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerSharedLibrary(library)
         runScript('com/bluersw/jenkins/libraries/JsonStructure.groovy')
         printCallStack()
+        assertJobStatusSuccess()
     }
 
     @Test
