@@ -7,6 +7,7 @@
 1. [准备工作](#准备工作)
 1. [创建Jenkins流水线任务](#创建Jenkins流水线任务)
 1. [Json文档格式及运行方式](#json文档格式及运行方式)
+1. [Json中的变量](#json中的变量)
 
 ## 准备工作
 
@@ -220,3 +221,20 @@ Finished: SUCCESS
 从日志中可以看出构建步骤的执行是按照jenkins-project.json的节点定义进行的，这样就可以统一和标准化Jenkinsfile内的脚本，并用每个项目内的jenkins-project.json文件来定义不同的项目构建步骤，也可以让开发人员不必关心如何编写Jenkins构建脚本，只定义构建的json配置文件即可完成构建工作，对于拥有众多项目或开发人员比较多的组织能起到很好的帮助作用。
 
 因为在执行脚本前都添加了#!/bin/bash -il命令，目的是加载/etc/profile定义的环境变量，所以每个命令脚本执行时都会有一个bash: no job control in this shell提示，这个问题还没有解决如果你知道请告诉我。
+
+## json中的变量
+
+为了方便在json中方便的配置构建步骤，本项目允许在json中定义变量并使用变量简化配置内容。变量的作用域程序编写一致：就近原则，GlobalVariable节点定义的变量作用域是整个文档，但在每个节点可以用Variable定义局部变量，如果Variable变量名称和GlobalVariable定义的变量名称相同则会覆盖GlobalVariable变量的值（就近原则），并且Variable定义的局部变量离开定义的节点则无效，另外定义变量和使用变量有先后顺序，如果在使用之前文档没有定义该变量则变量无效，在定义变量之后使用变量才是正确的。
+
+```json
+//定义变量
+//在GlobalVariable节点或Variable节点内
+"变量名": "变量值"
+
+//使用变量
+//在定义变量之后任何节点的内容中都可以引用变量
+"节点名称": "${变量名称}"
+```
+
+在文档中可使用Jenkins的env全局变量，比如BUILD_NUMBER、JOB_NAME、JENKINS_URL等，也可以在运行时使用json配置文件中的RuntimeVariable节点定义的内容创建自己的全局变量，还可以直接用GlobalVariable和Variable节点直接在文档中定义全局和局部变量，上述变量加载的顺序是：Jenkins的env全局变量（含构建参数变量）、RuntimeVariable节点定义的变量、GlobalVariable节点定义的变量、Variable节点定义的变量，按照上述变量加载顺序，变量加载后就能使用，其中Jenkins的env全局变量和RuntimeVariable节点定义的变量都会隐式的加载到GlobalVariable定义的全局变量中，而且是优先其他变量被加载，以下是定义变量和使用变量的示例：
+
