@@ -6,7 +6,7 @@ pipeline {
         stage('初始化') {
             steps {
                 script{
-                    runWrapper.loadJSON('/json/jenkins-project.json')
+                    runWrapper.loadJSON('/json/json-structure.json')
                     runWrapper.runSteps('初始化')
                 }
             }

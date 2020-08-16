@@ -1,0 +1,39 @@
+{
+  "RuntimeVariable": {
+    "JENKINS_PARAMS_DEPLOY": "echo ${Deploy_Choice}",
+    "JENKINS_BUILD_URL": "echo ${BUILD_URL}",
+    "SCRIPT_PWD": "pwd",
+    "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1"
+  },
+  "GlobalVariable": {
+    "GV_PARAMS_DEPLOY": "${JENKINS_PARAMS_DEPLOY}",
+    "GV_BUILD_URL": "${JENKINS_BUILD_URL}",
+    "GV_VAR": "gv_var_value",
+    "TEMP_VAR": "temp_var_value"
+  },
+  "测试变量": {
+    "输出RuntimeVariable变量脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出JENKINS_PARAMS_DEPLOY": "echo ${JENKINS_PARAMS_DEPLOY}",
+        "输出JENKINS_BUILD_URL": "echo ${JENKINS_BUILD_URL}",
+        "输出SCRIPT_PWD": "echo ${SCRIPT_PWD}",
+        "输出SCM_CHANGE_TITLE": "echo ${SCM_CHANGE_TITLE}"
+      }
+    },
+    "输出GlobalVariable变量脚本": {
+      "Type": "COMMAND_STATUS",
+      "Variable": {
+        "TEMP_VAR": "variable_value",
+        "Local_Variable": "Local_Variable"
+      },
+      "Script": {
+        "输出GV_PARAMS_DEPLOY": "echo ${GV_PARAMS_DEPLOY}",
+        "输出GV_BUILD_URL": "echo ${GV_BUILD_URL}",
+        "输出GV_VAR": "echo ${GV_VAR}",
+        "输出TEMP_VAR": "echo ${TEMP_VAR}",
+        "输出Local_Variable": "echo ${Local_Variable}"
+      }
+    }
+  }
+}

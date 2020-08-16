@@ -365,7 +365,7 @@ private String[] getJSONFilePath(String jsonPaths) {
 		}
 		if (!dirs[i].endsWith('.json')) {
 			//默认项目根目录或子项目目录下jenkins-project.json作为构建配置文件
-			dirs[i] = dirs[i] + 'jenkins-project.json'
+			dirs[i] = dirs[i] + 'json-structure.json'
 		}
 		if (!dirs[i].startsWith(FILE_SEPARATOR)) {
 			dirs[i] = FILE_SEPARATOR + dirs[i]
