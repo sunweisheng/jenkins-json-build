@@ -1,8 +1,0 @@
-{
-  "GlobalVariable": {},
-  "代码扫描": {
-    "SonarQube":{
-      "Type": "SONAR_QUBE"
-    }
-  }
-}

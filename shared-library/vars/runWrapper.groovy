@@ -64,8 +64,8 @@ void runStepForEnv(String stepsName, String envName){
 					println("执行[${step.name}]完成")
 				}
 			}
-			println("执行[${stepsName}]完成")
 		}
+		println("执行[${stepsName}]完成")
 	}
 }
 
@@ -89,8 +89,9 @@ void runSteps(String stepsName) {
 				runStep(step)
 				println("执行[${step.name}]完成")
 			}
-			println("执行[${stepsName}]完成")
+
 		}
+		println("执行[${stepsName}]完成")
 	}
 }
 
@@ -252,7 +253,7 @@ private void runCommand(Step step) {
 	for (int i = 0; i < step.commandQueue.size(); i++) {
 		Command cmd = step.commandQueue[i]
 		def result = null
-		println("开始执行[${cmd.name}]的${cmd.command}命令")
+		println("开始执行[${cmd.name}]的[${cmd.command}]命令")
 		if (step.stepType == StepType.COMMAND_STDOUT) {
 			result = runStdoutScript(cmd.command)
 			String success = step.getStepPropertyValue('Success-IndexOf')

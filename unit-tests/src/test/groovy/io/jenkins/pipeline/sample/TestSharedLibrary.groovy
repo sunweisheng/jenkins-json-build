@@ -36,7 +36,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
     }
 
     @Test
-    void library_annotation() throws Exception {
+    void testJsonStructure() throws Exception {
         boolean exception = false
         def library = library().name('shared-library')
                                .defaultVersion("master")
@@ -46,7 +46,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
                                .retriever(localSource(sharedLibs))
                                .build()
         helper.registerSharedLibrary(library)
-        runScript('com/bluersw/jenkins/libraries/testRunWrapper.groovy')
+        runScript('com/bluersw/jenkins/libraries/JsonStructure.groovy')
         printCallStack()
     }
 
