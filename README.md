@@ -236,5 +236,131 @@ Finished: SUCCESS
 "节点名称": "${变量名称}"
 ```
 
-在文档中可使用Jenkins的env全局变量，比如BUILD_NUMBER、JOB_NAME、JENKINS_URL等，也可以在运行时使用json配置文件中的RuntimeVariable节点定义的内容创建自己的全局变量，还可以直接用GlobalVariable和Variable节点直接在文档中定义全局和局部变量，上述变量加载的顺序是：Jenkins的env全局变量（含构建参数变量）、RuntimeVariable节点定义的变量、GlobalVariable节点定义的变量、Variable节点定义的变量，按照上述变量加载顺序，变量加载后就能使用，其中Jenkins的env全局变量和RuntimeVariable节点定义的变量都会隐式的加载到GlobalVariable定义的全局变量中，而且是优先其他变量被加载，以下是定义变量和使用变量的示例：
+在文档中可使用Jenkins的env全局变量，比如BUILD_NUMBER、JOB_NAME、JENKINS_URL等，也可以在运行时使用json配置文件中的RuntimeVariable节点定义的内容创建自己的全局变量，还可以直接用GlobalVariable和Variable节点直接在文档中定义全局和局部变量，上述变量加载的顺序是：Jenkins的env全局变量（含构建参数变量）、RuntimeVariable节点定义的变量、GlobalVariable节点定义的变量、Variable节点定义的变量，按照上述变量加载顺序，变量加载后就能使用，其中Jenkins的env全局变量和RuntimeVariable节点定义的变量都会隐式的加载到GlobalVariable定义的全局变量中，而且是优先其他变量被加载，以下是定义变量和使用变量的示例([示例文件](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/json-variable))：
 
+Jenkinsfile文件内容：
+
+```groovy
+@Library('shared-library') _
+
+pipeline {
+	parameters { //定义构建参数
+        choice choices: ['部署全部'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+    }
+	agent any
+	stages {
+		stage('输出变量值') {
+			steps {
+				script{
+					runWrapper.loadJSON('/jenkins-project.json')
+					runWrapper.runSteps('测试变量')
+				}
+			}
+		}
+	}
+}
+```
+
+jenkins-project.json文件内容:
+
+```json
+{
+  "RuntimeVariable": {
+    //Deploy_Choice是构建参数
+    "JENKINS_PARAMS_DEPLOY": "echo ${Deploy_Choice}",
+    //BUILD_URL是Jenkins的env全局变量
+    "JENKINS_BUILD_URL": "echo ${BUILD_URL}",
+    //会执行pwd命令获取当前目录
+    "SCRIPT_PWD": "pwd",
+    //执行脚本获取git commit的信息
+    "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1"
+  },
+  "GlobalVariable": {
+    //使用RuntimeVariable的JENKINS_PARAMS_DEPLOY变量值
+    "GV_PARAMS_DEPLOY": "${JENKINS_PARAMS_DEPLOY}",
+    //使用RuntimeVariable的JENKINS_BUILD_URL变量值
+    "GV_BUILD_URL": "${JENKINS_BUILD_URL}",
+    //定义一个全局的健值对变量
+    "GV_VAR": "gv_var_value",
+    //定义一个全局的健值对变量
+    "TEMP_VAR": "temp_var_value"
+  },
+  "测试变量": {
+    "输出RuntimeVariable变量脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出JENKINS_PARAMS_DEPLOY": "echo ${JENKINS_PARAMS_DEPLOY}",
+        "输出JENKINS_BUILD_URL": "echo ${JENKINS_BUILD_URL}",
+        "输出SCRIPT_PWD": "echo ${SCRIPT_PWD}",
+        "输出SCM_CHANGE_TITLE": "echo ${SCM_CHANGE_TITLE}"
+      }
+    },
+    "输出GlobalVariable变量脚本": {
+      "Type": "COMMAND_STATUS",
+      "Variable": {
+        //覆盖GlobalVariable的TEMP_VAR变量值
+        "TEMP_VAR": "variable_value",
+        //定义一个局部变量
+        "Local_Variable": "Local_Variable"
+      },
+      "Script": {
+        "输出GV_PARAMS_DEPLOY": "echo ${GV_PARAMS_DEPLOY}",
+        "输出GV_BUILD_URL": "echo ${GV_BUILD_URL}",
+        "输出GV_VAR": "echo ${GV_VAR}",
+        "输出TEMP_VAR": "echo ${TEMP_VAR}",
+        "输出Local_Variable": "echo ${Local_Variable}"
+      }
+    }
+  }
+}
+```
+
+构建日志：
+
+```text
+开始执行[测试变量]的[输出RuntimeVariable变量脚本]
+开始执行[输出JENKINS_PARAMS_DEPLOY]的[echo 部署全部]命令
+bash: no job control in this shell
+部署全部
+执行完成[0]
+开始执行[输出JENKINS_BUILD_URL]的[echo http://192.168.0.15:8081/job/Test-Jenkins-Json-Build/11/]命令
+bash: no job control in this shell
+http://192.168.0.15:8081/job/Test-Jenkins-Json-Build/11/
+执行完成[0]
+开始执行[输出SCRIPT_PWD]的[echo /root/.jenkins/workspace/Test-Jenkins-Json-Build]命令
+bash: no job control in this shell
+/root/.jenkins/workspace/Test-Jenkins-Json-Build
+执行完成[0]
+开始执行[输出SCM_CHANGE_TITLE]的[echo test]命令
+bash: no job control in this shell
+test
+执行完成[0]
+
+执行[输出RuntimeVariable变量脚本]完成
+开始执行[测试变量]的[输出GlobalVariable变量脚本]
+开始执行[输出GV_PARAMS_DEPLOY]的[echo 部署全部]命令
+bash: no job control in this shell
+部署全部
+执行完成[0]
+开始执行[输出GV_BUILD_URL]的[echo http://192.168.0.15:8081/job/Test-Jenkins-Json-Build/11/]命令
+bash: no job control in this shell
+http://192.168.0.15:8081/job/Test-Jenkins-Json-Build/11/
+执行完成[0]
+开始执行[输出GV_VAR]的[echo gv_var_value]命令
+bash: no job control in this shell
+gv_var_value
+执行完成[0]
+开始执行[输出TEMP_VAR]的[echo variable_value]命令
+bash: no job control in this shell
+variable_value
+执行完成[0]
+开始执行[输出Local_Variable]的[echo Local_Variable]命令
+bash: no job control in this shell
+Local_Variable
+执行完成[0]
+执行[输出GlobalVariable变量脚本]完成
+执行[测试变量]完成
+Finished: SUCCESS
+```
+
+JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因为添加构建参数的脚本在Jenkinsfile中，第一次执行时实际上构建任务还没有该构建参数，另外，在RuntimeVariable定义变量是不能和GlobalVariable一样直接用"="号赋值，因为在RuntimeVariable定义的变量都需要通过HTTP、读取文件、执行命令脚本这三种方式其中的一种方式获得变量值，但可以用echo命令来进行赋值。
