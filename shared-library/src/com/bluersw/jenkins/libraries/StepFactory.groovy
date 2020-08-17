@@ -310,10 +310,10 @@ class StepFactory {
 	 * 完善使用Junit分析单元测试后的结果
 	 * @param step 使用Junit分析单元测试后的结果步骤
 	 */
-	private static void perfectJunitStep(Step step){
+	private void perfectJunitStep(Step step){
 		//设置JunitReportPath节点默认值
 		if(step.getStepPropertyValue('JunitReportPath') == ''){
-			step.setStepProperty('JunitReportPath',CrossPlatform('**/junitreports/TEST-*.xml'))
+			step.setStepProperty('JunitReportPath',CrossPlatform("${this.projectRoot}/target/surefire-reports/TEST-*.xml"))
 		}
 	}
 

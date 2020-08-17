@@ -7,7 +7,7 @@
       "Type": "COMMAND_STDOUT",
       "Success-IndexOf": "java version \"1.8.0_211\"",
       "Script": {
-        "输出Java版本": "java -version"
+        "输出Java版本": "java -version 2>&1"
       }
     },
     "检查Maven环境": {
@@ -37,13 +37,10 @@
         "Maven单元测试": "cd ${PROJECT_ROOT};mvn clean test"
       }
     },
-    "执行JUnit插件": {
-      "Type": "JUNIT_PLUG_IN",
-      "JunitPluginPath": "${PROJECT_ROOT}/junitreports/TEST-*.xml"
-    },
     "执行Jacoco插件": {
       "Type": "JACOCO_PLUG_IN",
       "classPattern":"${PROJECT_ROOT}/target/classes",
+      "InclusionPattern":"${PROJECT_ROOT}/**",
       "LineCoverage":"95",
       "InstructionCoverage":"0",
       "MethodCoverage":"100",

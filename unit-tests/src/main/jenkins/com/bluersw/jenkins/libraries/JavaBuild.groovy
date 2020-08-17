@@ -3,7 +3,7 @@
 pipeline {
 	agent any
 	parameters { //定义构建参数
-		choice choices: [], description: '请选择要部署的项目', name: 'Deploy_Choice'
+		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
 	}
 	stages {
 		stage('初始化') {

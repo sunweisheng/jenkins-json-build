@@ -7,7 +7,7 @@
       "Type": "COMMAND_STDOUT",
       "Success-IndexOf": "java version \"1.8.0_211\"",
       "Script": {
-        "输出Java版本": "java -version"
+        "输出Java版本": "java -version 2>&1"
       }
     },
     "检查Maven环境": {
@@ -39,11 +39,12 @@
     },
     "执行JUnit插件": {
       "Type": "JUNIT_PLUG_IN",
-      "JunitPluginPath": "${PROJECT_ROOT}/junitreports/TEST-*.xml"
+      "JunitReportPath": "${PROJECT_ROOT}/target/surefire-reports/TEST-*.xml"
     },
     "执行Jacoco插件": {
       "Type": "JACOCO_PLUG_IN",
       "classPattern":"${PROJECT_ROOT}/target/classes",
+      "InclusionPattern":"${PROJECT_ROOT}/**",
       "LineCoverage":"95",
       "InstructionCoverage":"0",
       "MethodCoverage":"100",

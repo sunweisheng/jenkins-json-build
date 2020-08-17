@@ -16,6 +16,7 @@ void call(Step step){
 		throw new Exception('Junit处理失败，因为没有配置JunitReportPath子节点。')
 	}
 
+	println("JUnit报告路径:${junitReportPath}")
 	junit(junitReportPath)
 
 	if (currentBuild.result == 'UNSTABLE') {

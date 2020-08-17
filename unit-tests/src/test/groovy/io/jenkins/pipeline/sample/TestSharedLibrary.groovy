@@ -112,7 +112,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         case ('pwd'):
             result = '/jenkins/home'
             break
-        case ('java -version'):
+        case ('java -version 2>&1'):
             result = 'java version \"1.8.0_211\"'
             break
         case ('mvn -v'):
