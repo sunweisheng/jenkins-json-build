@@ -42,11 +42,19 @@ class Constants {
 	 */
 	static final String GLOBAL_LOG_LEVEL_NODE_NAME = 'LogLevel'
 	/**
-	 * 匹配变量引用的正则并且匹配的分组名为key，比如：${var}
+	 * 匹配变量引用的正则并且匹配的分组名为key，比如：${var}中的var
 	 */
 	static final Pattern FIND_VARIABLE_PATTERN = Pattern.compile('\\$\\{(?<key>.*?)}')
 	/**
 	 * 匹配变量的正则没有设置分组用于判断是否含有变量引用，比如：${var}
 	 */
 	static final Pattern JUDGE_VARIABLE_PATTERN = Pattern.compile('\\$\\{(.*?)}')
+	/**
+	 * shell脚本前缀，目的是加载/etc/profile环境变量
+	 */
+	static final String UNIX_PREFIX = '#!/bin/bash -il\n '
+	/**
+	 * 检查shell脚本是否添加了前缀
+	 */
+	static final String UNIX_PREFIX_KEY_WORD = '#!/bin/bash'
 }

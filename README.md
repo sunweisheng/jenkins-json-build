@@ -18,6 +18,10 @@
 
 ## 创建Jenkins流水线任务
 
+### 依赖插件
+
+* Pipeline Utility Steps
+
 ### 新建流水线
 
 在Jenkins系统中新建一个流水线任务：
@@ -364,3 +368,11 @@ Finished: SUCCESS
 ```
 
 JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因为添加构建参数的脚本在Jenkinsfile中，第一次执行时实际上构建任务还没有该构建参数，另外，在RuntimeVariable定义变量是不能和GlobalVariable一样直接用简单的健值对方式赋值，因为在RuntimeVariable定义的变量都需要通过HTTP、读取文件、执行命令脚本这三种方式其中的一种方式获得变量值，但可以用echo命令来进行赋值。
+
+## 构建Java项目
+
+### 依赖插件
+
+* Pipeline Utility Steps
+* JUnit
+* JaCoCo

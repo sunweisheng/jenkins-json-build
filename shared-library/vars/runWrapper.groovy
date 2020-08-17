@@ -15,7 +15,6 @@ import com.bluersw.jenkins.libraries.model.Step
 import com.bluersw.jenkins.libraries.model.Command
 import com.bluersw.jenkins.libraries.model.StepType
 import com.bluersw.jenkins.libraries.model.Steps
-import com.cloudbees.groovy.cps.NonCPS
 import groovy.transform.Field
 import net.sf.json.JSONObject
 

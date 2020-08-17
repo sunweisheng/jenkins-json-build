@@ -7,12 +7,17 @@
 import com.bluersw.jenkins.libraries.model.Step
 import com.bluersw.jenkins.libraries.utils.HttpRequest
 import net.sf.json.JSONObject
+import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 
 /**
  * 执行SonarQube代码检查步骤
  * @param step SonarQube代码检查步骤
  */
 void call(Step step) {
+	//判断是否是开发环境
+	if (env != null && !(env instanceof EnvActionImpl)){
+		return
+	}
 	def scannerScript = step.getStepPropertyValue('ScannerScript')
 	if (scannerScript != '') {
 		def result = runStdoutScript(scannerScript)
