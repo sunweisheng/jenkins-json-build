@@ -14,6 +14,7 @@
 1. [安装Jenkins](https://github.com/sunweisheng/Jenkins/blob/master/Install-Jenkins.md)
 1. [了解Jenkins共享类库](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
 1. [安装 Gitlab](https://github.com/sunweisheng/Kvm/blob/master/Install-Gitlab.md)
+1. [安装Git客户端](https://git-scm.com/downloads)
 1. [了解共享类库项目构成](https://github.com/sunweisheng/Jenkins/blob/master/Global-Shared-Library.md)【非必须】
 
 ## 创建Jenkins流水线任务
@@ -370,6 +371,12 @@ Finished: SUCCESS
 JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因为添加构建参数的脚本在Jenkinsfile中，第一次执行时实际上构建任务还没有该构建参数，另外，在RuntimeVariable定义变量是不能和GlobalVariable一样直接用简单的健值对方式赋值，因为在RuntimeVariable定义的变量都需要通过HTTP、读取文件、执行命令脚本这三种方式其中的一种方式获得变量值，但可以用echo命令来进行赋值。
 
 ## 构建Java项目
+
+构建服务器上需要安装Java、Maven和Sonar-Scanner。
+
+* [JAVA安装](https://github.com/sunweisheng/Kvm/blob/master/Install-Java-18.md)
+* [Maven安装](https://github.com/sunweisheng/Jenkins/blob/master/Install-Maven.md)
+* [Sonar-Scanner](https://github.com/sunweisheng/Jenkins/blob/master/Install-SonarQube-8.3.md)
 
 ### 依赖插件
 
