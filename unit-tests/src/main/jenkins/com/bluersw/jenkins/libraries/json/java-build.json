@@ -39,7 +39,7 @@
     },
     "执行JUnit插件": {
       "Type": "JUNIT_PLUG_IN",
-      "JunitReportPath": "${PROJECT_ROOT}/target/surefire-reports/TEST-*.xml"
+      "JunitReportPath": "**/${PROJECT_DIR}/**/target/**/TEST-*.xml"
     },
     "执行Jacoco插件": {
       "Type": "JACOCO_PLUG_IN",
@@ -56,6 +56,14 @@
   "代码检查": {
     "执行SQ代码扫描": {
       "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行Maven构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "Maven构建": "cd ${PROJECT_ROOT};mvn clean package -U -DskipTests"
+      }
     }
   },
   "部署": {

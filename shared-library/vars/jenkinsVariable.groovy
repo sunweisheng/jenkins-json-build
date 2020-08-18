@@ -41,6 +41,7 @@ Map<String,String> getEnvironment() {
 		Set<String> set = envVars.keySet()
 		for (int i = 0; i < set.size(); i++) {
 			envMap.put(set[i], envVars[set[i]])
+			//println(set[i] + ":" + envVars[set[i]])
 		}
 
 		//当前构建对象
@@ -51,6 +52,8 @@ Map<String,String> getEnvironment() {
 			REAL_USER_NAME = build.getCause(Cause.UserIdCause).getUserName()
 		}
 		envMap.put("REAL_USER_NAME",REAL_USER_NAME)
+
+		envMap.put('WORKSPACE',"${WORKSPACE}")
 	}
 
 	return envMap

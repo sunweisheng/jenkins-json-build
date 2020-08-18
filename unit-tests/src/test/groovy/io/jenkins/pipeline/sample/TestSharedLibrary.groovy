@@ -33,6 +33,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         binding.setVariable('JENKINS_URL', 'JENKINS_URL')
         binding.setVariable('JOB_NAME', 'JOB_NAME')
         binding.setVariable('BUILD_NUMBER', 'BUILD_NUMBER')
+        binding.setVariable('WORKSPACE', './src/main/jenkins/com/bluersw/jenkins/libraries')
         helper.registerAllowedMethod('isUnix',[],{true})
         helper.registerAllowedMethod('sh',[Map.class],{sh(it)})
         helper.registerAllowedMethod('sonarQube',[],{})

@@ -34,6 +34,7 @@ class StepFactory {
 	static final String INIT_LOG_END_TAG = '初始化完成----------'
 	String configPath
 	String projectRoot
+	String projectDir
 	private JSONExtend json
 	private LinkedHashMap<String, Steps> stepsMap = new LinkedHashMap<>()
 	private JSONObject jsonObject
@@ -51,6 +52,8 @@ class StepFactory {
 		this.envVars = envVars == null ? new LinkedHashMap<String, String>() : envVars
 		//设置项目目录要后于this.envVars的赋值，因为会改变this.envVars内容
 		this.projectRoot = setProjectRoot(this.configPath)
+		//设置配置文件所在目录要后于this.envVars的赋值，因为会改变this.envVars内容
+		this.projectDir = setProjectDir(this.configPath)
 		//加载配置文件
 		this.json = new JSONExtend(Channel.current(), configPath, envVars)
 		//获取经过变量赋值的配置文件JSON对象
@@ -205,17 +208,39 @@ class StepFactory {
 	}
 
 	/**
+	 * 根据Json文件路径设置项目目录路径
+	 * @param jsonPath Json文件路径
+	 * @return 项目目录路径
+	 */
+	@NonCPS
+	private String setProjectRoot(String jsonPath) {
+		String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
+		if(!this.envVars.containsKey('PROJECT_PATH')){
+			this.envVars.put('PROJECT_PATH', projectRoot)
+		}
+		return projectRoot
+	}
+
+	/**
 	 * 根据Json文件路径设置项目目录
 	 * @param jsonPath Json文件路径
 	 * @return 项目目录
 	 */
 	@NonCPS
-	private String setProjectRoot(String jsonPath) {
-		String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
-		if(!this.envVars.containsKey('JSON_PWD')){
-			this.envVars.put('JSON_PWD', projectRoot)
+	private String setProjectDir(String jsonPath) {
+		String dir = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR))
+		String workSpace = ''
+		if(this.envVars.containsKey('WORKSPACE')){
+			workSpace = envVars['WORKSPACE']
 		}
-		return projectRoot
+		dir = dir.replace(workSpace,'')
+		if(dir.size() > 1) {
+			dir = dir.substring(dir.lastIndexOf(FILE_SEPARATOR) + 1, dir.size())
+		}
+		if (!this.envVars.containsKey('PROJECT_DIR')) {
+			this.envVars.put('PROJECT_DIR', dir)
+		}
+		return dir
 	}
 
 	/**
@@ -310,10 +335,10 @@ class StepFactory {
 	 * 完善使用Junit分析单元测试后的结果
 	 * @param step 使用Junit分析单元测试后的结果步骤
 	 */
-	private void perfectJunitStep(Step step){
+	private static void perfectJunitStep(Step step){
 		//设置JunitReportPath节点默认值
 		if(step.getStepPropertyValue('JunitReportPath') == ''){
-			step.setStepProperty('JunitReportPath',CrossPlatform("${this.projectRoot}/target/surefire-reports/TEST-*.xml"))
+			step.setStepProperty('JunitReportPath',CrossPlatform('**/target/**/TEST-*.xml'))
 		}
 	}
 

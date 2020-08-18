@@ -100,7 +100,7 @@ void call(Step step) {
 				exclusionPattern : exclusionPattern
 		)
 	}
-	def jacocoReportUrl = "${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/jenkinsPlugInJacoco/"
+	def jacocoReportUrl = "${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/"
 	println("覆盖率统计：${jacocoReportUrl}")
 
 	if (currentBuild.result == 'UNSTABLE' && failPrompt == 'FAILURE')
