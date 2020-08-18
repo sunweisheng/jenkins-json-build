@@ -495,9 +495,6 @@ runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps�
 
 ```json
 {
-  "RuntimeVariable": {
-    "PROJECT_ROOT": "pwd"
-  },
   "初始化": {
     "检查Java环境": {
       "Type": "COMMAND_STDOUT",
@@ -530,7 +527,7 @@ runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps�
     "执行Maven单元测试脚本": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "Maven单元测试": "cd ${PROJECT_ROOT};mvn clean test"
+        "Maven单元测试": "cd ${PROJECT_PATH};mvn clean test"
       }
     },
     "执行JUnit插件": {
@@ -539,8 +536,8 @@ runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps�
     },
     "执行Jacoco插件": {
       "Type": "JACOCO_PLUG_IN",
-      "classPattern":"${PROJECT_ROOT}/target/classes",
-      "InclusionPattern":"${PROJECT_ROOT}/**",
+      "classPattern":"${PROJECT_PATH}/target/classes",
+      "InclusionPattern":"${PROJECT_PATH}/**",
       "LineCoverage":"95",
       "InstructionCoverage":"0",
       "MethodCoverage":"100",
@@ -558,7 +555,7 @@ runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps�
     "执行Maven构建": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "Maven构建": "cd ${PROJECT_ROOT};mvn clean package -U -DskipTests"
+        "Maven构建": "cd ${PROJECT_PATH};mvn clean package -U -DskipTests"
       }
     }
   },
