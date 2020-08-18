@@ -8,6 +8,7 @@
 1. [创建Jenkins流水线任务](#创建Jenkins流水线任务)
 1. [Json文档格式及运行方式](#json文档格式及运行方式)
 1. [Json中的变量](#json中的变量)
+1. [构建Java项目](#构建Java项目)
 
 ## 准备工作
 
@@ -19,7 +20,7 @@
 
 ## 创建Jenkins流水线任务
 
-### 依赖插件
+### 依赖插件（最少）
 
 * Pipeline Utility Steps
 
@@ -370,7 +371,49 @@ Finished: SUCCESS
 
 JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因为添加构建参数的脚本在Jenkinsfile中，第一次执行时实际上构建任务还没有该构建参数，另外，在RuntimeVariable定义变量是不能和GlobalVariable一样直接用简单的健值对方式赋值，因为在RuntimeVariable定义的变量都需要通过HTTP、读取文件、执行命令脚本这三种方式其中的一种方式获得变量值，但可以用echo命令来进行赋值。
 
+Json文档中隐式声明的变量有：
+
+```text
+BUILD_DISPLAY_NAME:#28
+BUILD_ID:28
+BUILD_NUMBER:28
+BUILD_TAG:jenkins-Test-Jenkins-Json-Build-28
+BUILD_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/
+CLASSPATH:
+Deploy_Choice:模拟部署脚本-1
+HUDSON_HOME:/root/.jenkins
+HUDSON_SERVER_COOKIE:04f54204dabc2b46
+HUDSON_URL:http://ops.gydev.cn:8080/
+JENKINS_HOME:/root/.jenkins
+JENKINS_SERVER_COOKIE:04f54204dabc2b46
+JENKINS_URL:http://ops.gydev.cn:8080/
+JOB_BASE_NAME:Test-Jenkins-Json-Build
+JOB_DISPLAY_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/display/redirect
+JOB_NAME:Test-Jenkins-Json-Build
+JOB_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/
+library.shared-library.version:V2
+RUN_ARTIFACTS_DISPLAY_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/display/redirect?page=artifacts
+RUN_CHANGES_DISPLAY_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/display/redirect?page=changes
+RUN_DISPLAY_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/display/redirect
+RUN_TESTS_DISPLAY_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/display/redirect?page=tests
+
+REAL_USER_NAME:(执行构建账号的UserName)
+WORKSPACE:/root/.jenkins/workspace/Test-Jenkins-Json-Build
+PROJECT_PATH:/root/.jenkins/workspace/Test-Jenkins-Json-Build/
+PROJECT_DIR:
+```
+
+特别说明：
+
+* json配置文件放在项目根目录下
+* PROJECT_PATH是距离加载的Json配置文件最近的目录路径
+* PROJECT_DIR是WORKSPACE和Json配置文件之间的第一层目录的名称，所以如果仓库根目录就是项目根目录PROJECT_DIR是''，否则PROJECT_DIR是仓库目录下的项目子目录名称
+
 ## 构建Java项目
+
+[示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/java-build)
+
+### 需要安装的软件
 
 构建服务器上需要安装Java、Maven和Sonar-Scanner。
 
@@ -378,8 +421,173 @@ JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因�
 * [Maven安装](https://github.com/sunweisheng/Jenkins/blob/master/Install-Maven.md)
 * [Sonar-Scanner](https://github.com/sunweisheng/Jenkins/blob/master/Install-SonarQube-8.3.md)
 
-### 依赖插件
+### 构建Java项目依赖的插件
 
-* Pipeline Utility Steps
 * JUnit
 * JaCoCo
+
+### Java构建Jenkinsfile
+
+```groovy
+@Library('shared-library') _
+
+pipeline {
+	agent any
+	parameters { //定义构建参数
+		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+	}
+	stages {
+		stage('初始化') {
+			steps {
+				script{
+					runWrapper.loadJSON('/jenkins-project.json')
+					runWrapper.runSteps('初始化')
+				}
+			}
+		}
+		stage('单元测试') {
+			steps {
+				script{
+					runWrapper.runSteps('单元测试')
+				}
+			}
+		}
+		stage('代码检查') {
+			steps {
+				script{
+					runWrapper.runSteps('代码检查')
+				}
+			}
+		}
+		stage('编译构建') {
+			steps {
+				script{
+					runWrapper.runSteps('编译构建')
+				}
+			}
+		}
+		stage('部署') {
+			steps {
+				script{
+					runWrapper.runStepForEnv('部署','Deploy_Choice')
+				}
+			}
+		}
+	}
+}
+```
+
+说明：
+
+```groovy
+parameters { //定义构建参数
+		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+	}
+```
+
+```groovy
+runWrapper.runStepForEnv('部署','Deploy_Choice')
+```
+
+runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps中对应名称的构建步骤，在Jenkinsfile中定义了一个下拉菜单用于选择部署方式，在Json配置文件中会配置为其绑定一个Steps内的步骤列表，这样配合runStepForEnv()方法就能达到选择步骤执行的目的。
+
+### Java构建Json配置
+
+```json
+{
+  "RuntimeVariable": {
+    "PROJECT_ROOT": "pwd"
+  },
+  "初始化": {
+    "检查Java环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "java version \"1.8.0_211\"",
+      "Script": {
+        "输出Java版本": "java -version 2>&1"
+      }
+    },
+    "检查Maven环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "Apache Maven 3.6.3",
+      "Script": {
+        "输出Maven版本": "mvn -v"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarScanner 4.4.0.2170",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    }
+  },
+  "单元测试": {
+    "执行Maven单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "Maven单元测试": "cd ${PROJECT_ROOT};mvn clean test"
+      }
+    },
+    "执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/target/**/TEST-*.xml"
+    },
+    "执行Jacoco插件": {
+      "Type": "JACOCO_PLUG_IN",
+      "classPattern":"${PROJECT_ROOT}/target/classes",
+      "InclusionPattern":"${PROJECT_ROOT}/**",
+      "LineCoverage":"95",
+      "InstructionCoverage":"0",
+      "MethodCoverage":"100",
+      "BranchCoverage":"95",
+      "ClassCoverage":"100",
+      "ComplexityCoverage":"0"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行Maven构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "Maven构建": "cd ${PROJECT_ROOT};mvn clean package -U -DskipTests"
+      }
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
+```
+
+说明：
+
+```json
+"检查Java环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "java version \"1.8.0_211\"",
+      "Script": {
+        "输出Java版本": "java -version 2>&1"
+      }
+```
+
+标准输出内未含有Success-IndexOf节点定义的字符串则执行失败，对应的另一个节点名称是Fail-IndexOf，标准输出如果含有Fail-IndexOf定义的字符串则执行失败，两者选择其一使用（也可以都没有单纯的执行）。
