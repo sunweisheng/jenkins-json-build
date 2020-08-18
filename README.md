@@ -371,7 +371,14 @@ Finished: SUCCESS
 
 JENKINS_PARAMS_DEPLOY变量值在执行第二次构建时才能获取到，因为添加构建参数的脚本在Jenkinsfile中，第一次执行时实际上构建任务还没有该构建参数，另外，在RuntimeVariable定义变量是不能和GlobalVariable一样直接用简单的健值对方式赋值，因为在RuntimeVariable定义的变量都需要通过HTTP、读取文件、执行命令脚本这三种方式其中的一种方式获得变量值，但可以用echo命令来进行赋值。
 
-Json文档中隐式声明的变量有：
+如果在RuntimeVariable节点中定义的是通过HTTP或读取文件的方式获得一个Json文档，那么可以在URL或文件路径后面写@path[\节点名称\节点名称]来检索节点路径获得节点的值内容，比如：
+
+```json
+//JAVA_BUILD_JSON变量的值是“java -version 2>&1”
+"JAVA_BUILD_JSON": "./src/main/jenkins/com/bluersw/jenkins/libraries/json/java-build.json@path[\\初始化\\检查Java环境\\Script\\输出Java版本]"
+```
+
+Json文档中隐式声明(不用声明直接使用)的变量有：
 
 ```text
 BUILD_DISPLAY_NAME:#28

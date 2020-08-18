@@ -3,7 +3,8 @@
     "JENKINS_PARAMS_DEPLOY": "echo ${Deploy_Choice}",
     "JENKINS_BUILD_URL": "echo ${BUILD_URL}",
     "SCRIPT_PWD": "pwd",
-    "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1"
+    "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1",
+    "JAVA_BUILD_JSON": "./src/main/jenkins/com/bluersw/jenkins/libraries/json/java-build.json@path[\\初始化\\检查Java环境\\Script\\输出Java版本]"
   },
   "GlobalVariable": {
     "GV_PARAMS_DEPLOY": "${JENKINS_PARAMS_DEPLOY}",
@@ -32,7 +33,8 @@
         "输出GV_BUILD_URL": "echo ${GV_BUILD_URL}",
         "输出GV_VAR": "echo ${GV_VAR}",
         "输出TEMP_VAR": "echo ${TEMP_VAR}",
-        "输出Local_Variable": "echo ${Local_Variable}"
+        "输出Local_Variable": "echo ${Local_Variable}",
+        "输出JAVA_BUILD_JSON": "echo ${JAVA_BUILD_JSON}"
       }
     }
   }
