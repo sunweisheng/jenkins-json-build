@@ -67,12 +67,11 @@ class StepFactory {
 	 * @param propertyName 属性名称
 	 * @return 属性值
 	 */
-	String getGlobalVariableValue(String propertyName){
-		if(this.stepsMap.containsKey(GLOBAL_VARIABLE_NODE_NAME))
-		{
+	String getGlobalVariableValue(String propertyName) {
+		if (this.stepsMap.containsKey(GLOBAL_VARIABLE_NODE_NAME)) {
 			return this.stepsMap[GLOBAL_VARIABLE_NODE_NAME].getStepsPropertyValue(propertyName)
 		}
-		else{
+		else {
 			return ''
 		}
 	}
@@ -172,38 +171,15 @@ class StepFactory {
 		}
 	}
 
-	/**
-	 * 完善SonarQube对象属性
-	 * @param step SonarQube对象
-	 */
-	private void perfectSonarQubeStep(Step step) {
-		//设置ScannerScript属性的默认值
-		if(step.getStepPropertyValue('ScannerScript') == ''){
-			//在sonar-scanner之前进行mvn clean的目的在于过滤掉一些不必要检查的文件
-			step.setStepProperty('ScannerScript', "cd ${this.projectRoot};sonar-scanner")
-		}
-		//设置ReportTaskPath属性的默认值
-		if(step.getStepPropertyValue('ReportTaskPath') == '') {
-			String path = "${this.projectRoot}/.scannerwork/report-task.txt"
-			path = CrossPlatform(path)
-			//这是SQ检查之后生成的本地报告的路径及文件
-			step.setStepProperty('ReportTaskPath', path)
-		}
-		//设置Gate属性的默认值
-		if(step.getStepPropertyValue('Gate') == '') {
-			//这是判断SQ检查是否通过的标准，也是设置的阀门值，OK为最高，下面依次为WARN,、ERROR、NONE
-			step.setStepProperty('Gate', 'OK')
-		}
-	}
 
 	/**
 	 * 对进行路径跨平台转换
 	 * @param path 路径
 	 * @return 根据操作系统转换
 	 */
-	private static String CrossPlatform(String path){
-		path = path.replace('/',FILE_SEPARATOR)
-		path = path.replace('\\',FILE_SEPARATOR)
+	private static String CrossPlatform(String path) {
+		path = path.replace('/', FILE_SEPARATOR)
+		path = path.replace('\\', FILE_SEPARATOR)
 		return path
 	}
 
@@ -215,7 +191,7 @@ class StepFactory {
 	@NonCPS
 	private String setProjectRoot(String jsonPath) {
 		String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
-		if(!this.envVars.containsKey('PROJECT_PATH')){
+		if (!this.envVars.containsKey('PROJECT_PATH')) {
 			this.envVars.put('PROJECT_PATH', projectRoot)
 		}
 		return projectRoot
@@ -230,11 +206,11 @@ class StepFactory {
 	private String setProjectDir(String jsonPath) {
 		String dir = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR))
 		String workSpace = ''
-		if(this.envVars.containsKey('WORKSPACE')){
+		if (this.envVars.containsKey('WORKSPACE')) {
 			workSpace = envVars['WORKSPACE']
 		}
-		dir = dir.replace(workSpace,'')
-		if(dir.size() > 1) {
+		dir = dir.replace(workSpace, '')
+		if (dir.size() > 1) {
 			dir = dir.substring(dir.lastIndexOf(FILE_SEPARATOR) + 1, dir.size())
 		}
 		if (!this.envVars.containsKey('PROJECT_DIR')) {
@@ -256,6 +232,30 @@ class StepFactory {
 			for (int i = 0; i < forArray.length; i++) {
 				step.appendCommand("For-${forArray[i]}", scriptTemplate.replace('${loop-command-for}', forArray[i]))
 			}
+		}
+	}
+
+	/**
+	 * 完善SonarQube对象属性
+	 * @param step SonarQube对象
+	 */
+	private void perfectSonarQubeStep(Step step) {
+		//设置ScannerScript属性的默认值
+		if (step.getStepPropertyValue('ScannerScript') == '') {
+			//在sonar-scanner之前进行mvn clean的目的在于过滤掉一些不必要检查的文件
+			step.setStepProperty('ScannerScript', "cd ${this.projectRoot};sonar-scanner")
+		}
+		//设置ReportTaskPath属性的默认值
+		if (step.getStepPropertyValue('ReportTaskPath') == '') {
+			String path = "${this.projectRoot}/.scannerwork/report-task.txt"
+			path = CrossPlatform(path)
+			//这是SQ检查之后生成的本地报告的路径及文件
+			step.setStepProperty('ReportTaskPath', path)
+		}
+		//设置Gate属性的默认值
+		if (step.getStepPropertyValue('Gate') == '') {
+			//这是判断SQ检查是否通过的标准，也是设置的阀门值，OK为最高，下面依次为WARN,、ERROR、NONE
+			step.setStepProperty('Gate', 'OK')
 		}
 	}
 
@@ -285,6 +285,84 @@ class StepFactory {
 			}
 		}
 		return step
+	}
+
+
+	/**
+	 * 完善使用Junit分析单元测试后的结果
+	 * @param step 使用Junit分析单元测试后的结果步骤
+	 */
+	private static void perfectJunitStep(Step step) {
+		//设置JunitReportPath节点默认值
+		if (step.getStepPropertyValue('JunitReportPath') == '') {
+			step.setStepProperty('JunitReportPath', CrossPlatform('**/target/**/TEST-*.xml'))
+		}
+	}
+
+	/**
+	 * 完善使用MSBuild构建后分析单元测试覆盖度步骤
+	 * @param step 使用MSBuild构建后分析单元测试覆盖度步骤
+	 */
+	private void perfectMSBuildCoverageStep(Step step) {
+		//设置ReportDir节点默认值
+		if (step.getStepPropertyValue('ReportDir') == '') {
+			step.setStepProperty('ReportDir', CrossPlatform("${this.projectRoot}\\Cover\\"))
+		}
+	}
+
+	/**
+	 * 完善jest步骤
+	 * @param step jest步骤
+	 */
+	private void perfectJestStep(Step step) {
+		//设置LcovReportDir节点默认值
+		if (step.getStepPropertyValue('LcovReportDir') == '') {
+			step.setStepProperty('LcovReportDir', CrossPlatform("${this.projectRoot}/coverage/lcov-report"))
+		}
+	}
+
+	/**
+	 * 完善llvm-cov步骤
+	 * @param step llvm-cov步骤
+	 */
+	private void perfectLlvmCovStep(Step step) {
+		//设置XcodePathScript节点默认值
+		if (step.getStepPropertyValue('XcodePathScript') == '') {
+			step.setStepProperty('XcodePathScript', 'Xcode-select --print-path')
+		}
+		//设置LlvmCovCommand节点默认值
+		if (step.getStepPropertyValue('LlvmCovCommand') == '') {
+			step.setStepProperty('LlvmCovCommand', '/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-cov export -format=text --summary-only -instr-profile ')
+		}
+		//设置XcodeBuildLogPath节点默认值
+		if (step.getStepPropertyValue('XcodeBuildLogPath') == '') {
+			step.setStepProperty('XcodeBuildLogPath', "${this.projectRoot}/xcodebuild.log")
+		}
+	}
+
+	/**
+	 * 完善构建集合的属性
+	 */
+	private void perfectStepsProperty() {
+		Iterator<Map.Entry<String, Steps>> iterator = this.stepsMap.entrySet().iterator()
+		while (iterator.hasNext()) {
+			Map.Entry<String, Steps> entry = (Map.Entry<String, Steps>) iterator.next()
+			Steps steps = entry.value
+			//如果是全局变量
+			if (steps.getStepsName() == GLOBAL_VARIABLE_NODE_NAME) {
+				//设置全局变量的日志级别
+				if (steps.getStepsPropertyValue(GLOBAL_LOG_LEVEL_NODE_NAME) == '') {
+					steps.setStepsProperty(GLOBAL_LOG_LEVEL_NODE_NAME, LogType.INFO.toString())
+				}
+			}
+			else {
+				//设置非全局变量构建步骤集合的默认属性值
+				//设置是否运行的属性
+				if (steps.getStepsPropertyValue(Steps.IS_RUN_KEY_NAME) == '') {
+					steps.setStepsProperty(Steps.IS_RUN_KEY_NAME, 'true')
+				}
+			}
+		}
 	}
 
 	/**
@@ -332,58 +410,6 @@ class StepFactory {
 	}
 
 	/**
-	 * 完善使用Junit分析单元测试后的结果
-	 * @param step 使用Junit分析单元测试后的结果步骤
-	 */
-	private static void perfectJunitStep(Step step){
-		//设置JunitReportPath节点默认值
-		if(step.getStepPropertyValue('JunitReportPath') == ''){
-			step.setStepProperty('JunitReportPath',CrossPlatform('**/target/**/TEST-*.xml'))
-		}
-	}
-
-	/**
-	 * 完善使用MSBuild构建后分析单元测试覆盖度步骤
-	 * @param step 使用MSBuild构建后分析单元测试覆盖度步骤
-	 */
-	private void perfectMSBuildCoverageStep(Step step){
-		//设置ReportDir节点默认值
-		if(step.getStepPropertyValue('ReportDir') == ''){
-			step.setStepProperty('ReportDir',CrossPlatform("${this.projectRoot}\\Cover\\"))
-		}
-	}
-
-	/**
-	 * 完善jest步骤
-	 * @param step jest步骤
-	 */
-	private void perfectJestStep(Step step){
-		//设置LcovReportDir节点默认值
-		if(step.getStepPropertyValue('LcovReportDir') == ''){
-			step.setStepProperty('LcovReportDir',CrossPlatform("${this.projectRoot}/coverage/lcov-report"))
-		}
-	}
-
-	/**
-	 * 完善llvm-cov步骤
-	 * @param step llvm-cov步骤
-	 */
-	private void perfectLlvmCovStep(Step step){
-		//设置XcodePathScript节点默认值
-		if(step.getStepPropertyValue('XcodePathScript') == ''){
-			step.setStepProperty('XcodePathScript','Xcode-select --print-path')
-		}
-		//设置LlvmCovCommand节点默认值
-		if(step.getStepPropertyValue('LlvmCovCommand') == ''){
-			step.setStepProperty('LlvmCovCommand','/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-cov export -format=text --summary-only -instr-profile ')
-		}
-		//设置XcodeBuildLogPath节点默认值
-		if(step.getStepPropertyValue('XcodeBuildLogPath') == ''){
-			step.setStepProperty('XcodeBuildLogPath',"${this.projectRoot}/xcodebuild.log")
-		}
-	}
-
-	/**
 	 * 创建构建步骤集合（Steps）
 	 * @param stepsName 集合名称
 	 * @param o 步骤集合的JSON对象（也有可能不是）
@@ -425,31 +451,6 @@ class StepFactory {
 			//如果构建步骤集合中有内容（有效）或构建步骤是全局配置则加到Map中
 			if (steps.isValid() || steps.getStepsName() == GLOBAL_VARIABLE_NODE_NAME) {
 				this.stepsMap.put(entry.key.toString(), steps)
-			}
-		}
-	}
-
-	/**
-	 * 完善构建集合的属性
-	 */
-	private void perfectStepsProperty() {
-		Iterator<Map.Entry<String, Steps>> iterator = this.stepsMap.entrySet().iterator()
-		while (iterator.hasNext()) {
-			Map.Entry<String, Steps> entry = (Map.Entry<String, Steps>) iterator.next()
-			Steps steps = entry.value
-			//如果是全局变量
-			if (steps.getStepsName() == GLOBAL_VARIABLE_NODE_NAME) {
-				//设置全局变量的日志级别
-				if (steps.getStepsPropertyValue(GLOBAL_LOG_LEVEL_NODE_NAME) == '') {
-					steps.setStepsProperty(GLOBAL_LOG_LEVEL_NODE_NAME, LogType.INFO.toString())
-				}
-			}
-			else {
-				//设置非全局变量构建步骤集合的默认属性值
-				//设置是否运行的属性
-				if (steps.getStepsPropertyValue(Steps.IS_RUN_KEY_NAME) == '') {
-					steps.setStepsProperty(Steps.IS_RUN_KEY_NAME, 'true')
-				}
 			}
 		}
 	}

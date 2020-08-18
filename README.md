@@ -588,3 +588,60 @@ runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps�
 ```
 
 标准输出内未含有Success-IndexOf节点定义的字符串则执行失败，对应的另一个节点名称是Fail-IndexOf，标准输出如果含有Fail-IndexOf定义的字符串则执行失败，两者选择其一使用（也可以都没有单纯的执行）。
+
+```json
+"绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    }
+```
+
+将部署节点（Steps）内的具体构建步骤（Step）列表，绑定到名为Deploy_Choice的下拉菜单构建参数上。
+
+```json
+"执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/target/**/TEST-*.xml"
+    }
+```
+
+使用Jenkins的JUnit插件生成Junit和TestNG的测试报告。
+
+```json
+"执行Jacoco插件": {
+      "Type": "JACOCO_PLUG_IN",
+      "classPattern":"${PROJECT_PATH}/target/classes",
+      "InclusionPattern":"${PROJECT_PATH}/**",
+      "LineCoverage":"95",
+      "InstructionCoverage":"0",
+      "MethodCoverage":"100",
+      "BranchCoverage":"95",
+      "ClassCoverage":"100",
+      "ComplexityCoverage":"0"
+    }
+```
+
+使用Jenkins的Jacoco插件检查单元测试覆盖度。
+
+```json
+"代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  }
+```
+
+执行SonarQube代码检查，在项目根目录下要创建SQ的扫码配置文件：
+
+```conf
+# must be unique in a given SonarQube instance
+sonar.projectKey=Jenkins:Test-Java-Build
+
+sonar.projectVersion=1.0
+
+# Path is relative to the sonar-project.properties file. Defaults to .
+sonar.sources=src
+sonar.sourceEncoding=UTF-8
+sonar.java.binaries=./target/classes
+```
