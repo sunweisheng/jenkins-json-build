@@ -773,7 +773,7 @@ pipeline {
         "运行单元测试":"cd ${PROJECT_PATH};npm test"
       }
     },
-    "运行jest分析单元测试覆盖率": {
+    "分析单元测试覆盖率": {
       "Type": "JEST_COVERAGE_ANALYSIS",
       "Statements":"100",
       "Branches":"100",
@@ -826,7 +826,7 @@ pipeline {
 类型是COMMAND_STATUS_IF的节点代表TestScript的执行结果（COMMAND_STATUS方式执行），如果和NotExpect或Expect节点内容进行比对，如果为真则执行Script节点内的脚本，否则不执行。
 
 ```json
-"运行jest分析单元测试覆盖率": {
+"分析单元测试覆盖率": {
       "Type": "JEST_COVERAGE_ANALYSIS",
       "Statements":"100",
       "Branches":"100",
@@ -836,4 +836,4 @@ pipeline {
   }
 ```
 
-该节点的目的是利用jest产生报告分析单元测试覆盖率，如果不符合设置的标准会中断构建进程。
+该节点是利用jest产生的单元测试报告分析单元测试覆盖率，如果不符合设置的标准会中断构建进程。

@@ -53,7 +53,7 @@
         "运行单元测试":"cd ${PROJECT_PATH};npm test"
       }
     },
-    "运行jest分析单元测试覆盖率": {
+    "分析单元测试覆盖率": {
       "Type": "JEST_COVERAGE_ANALYSIS",
       "Statements":"100",
       "Branches":"100",
