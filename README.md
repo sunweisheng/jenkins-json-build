@@ -652,3 +652,187 @@ sonar.sources=src
 sonar.sourceEncoding=UTF-8
 sonar.java.binaries=./target/classes
 ```
+
+## 构建JS项目
+
+构建服务器上需要安装Nodejs。[示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/js-build)
+
+### 构建JS项目需要安装的软件
+
+[安装 Nodejs](https://github.com/sunweisheng/Jenkins/blob/master/Install-Nodejs.md)
+
+### JS构建项目Jenkinsfile
+
+同JAVA构建项目一致，没有特别的地方。
+
+```groovy
+@Library('shared-library') _
+
+pipeline {
+	agent any
+	parameters { //定义构建参数
+		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+	}
+	stages {
+		stage('初始化') {
+			steps {
+				script{
+					runWrapper.loadJSON('/jenkins-project.json')
+					runWrapper.runSteps('初始化')
+				}
+			}
+		}
+		stage('单元测试') {
+			steps {
+				script{
+					runWrapper.runSteps('单元测试')
+				}
+			}
+		}
+		stage('代码检查') {
+			steps {
+				script{
+					runWrapper.runSteps('代码检查')
+				}
+			}
+		}
+		stage('编译构建') {
+			steps {
+				script{
+					runWrapper.runSteps('编译构建')
+				}
+			}
+		}
+		stage('部署') {
+			steps {
+				script{
+					runWrapper.runStepForEnv('部署','Deploy_Choice')
+				}
+			}
+		}
+	}
+}
+```
+
+### JS构建项目Json配置文档
+
+```json
+{
+  "初始化": {
+    "检查Nodejs环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "v12.18.3",
+      "Script": {
+        "输出Node版本": "node -v"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarScanner 4.4.0.2170",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    },
+    "gulp组件全局安装": {
+      "Type": "COMMAND_STATUS_IF",
+      "TestScript": "gulp -v",
+      "NotExpect": "0",
+      "Script": {
+        "安装gulp-cli": "npm install --g gulp-cli",
+        "安装gulp": "npm install -g gulp"
+      }
+    },
+    "jsdoc组件全局安装": {
+      "Type": "COMMAND_STATUS_IF",
+      "TestScript": "jsdoc -v",
+      "NotExpect": "0",
+      "Script": {
+        "安装jsdoc": "npm install -g jsdoc"
+      }
+    },
+    "jest组件全局安装": {
+      "Type": "COMMAND_STATUS_IF",
+      "TestScript": "jest -v",
+      "NotExpect": "0",
+      "Script": {
+        "安装jest": "npm install -g jest"
+      }
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "npm安装": "cd ${PROJECT_PATH};npm i",
+        "运行单元测试":"cd ${PROJECT_PATH};npm test"
+      }
+    },
+    "运行jest分析单元测试覆盖率": {
+      "Type": "JEST_COVERAGE_ANALYSIS",
+      "Statements":"100",
+      "Branches":"100",
+      "Functions":"100",
+      "Lines":"100"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行JS构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "构建": "cd ${PROJECT_PATH}; jsdoc -c jsdoc.json; gulp"
+      }
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
+```
+
+```json
+"gulp组件全局安装": {
+      "Type": "COMMAND_STATUS_IF",
+      "TestScript": "gulp -v",
+      "NotExpect": "0",
+      "Script": {
+        "安装gulp-cli": "npm install --g gulp-cli",
+        "安装gulp": "npm install -g gulp"
+      }
+    }
+```
+
+类型是COMMAND_STATUS_IF的节点代表TestScript的执行结果（COMMAND_STATUS方式执行），如果和NotExpect或Expect节点内容进行比对，如果为真则执行Script节点内的脚本，否则不执行。
+
+```json
+"运行jest分析单元测试覆盖率": {
+      "Type": "JEST_COVERAGE_ANALYSIS",
+      "Statements":"100",
+      "Branches":"100",
+      "Functions":"100",
+      "Lines":"100"
+    }
+  }
+```
+
+该节点的目的是利用jest产生报告分析单元测试覆盖率，如果不符合设置的标准会中断构建进程。
