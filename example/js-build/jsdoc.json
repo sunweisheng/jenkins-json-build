@@ -1,0 +1,39 @@
+{
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc","closure"]
+    },
+    "source": {
+        "include": ["src"],
+        "exclude": [],
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "templates": {
+        "cleverLinks": false,
+        "monospaceLinks": false,
+        "dateFormat": "ddd MMM Do YYYY",        //当需要打印日期时使用的格式
+        "outputSourceFiles": true,              //是否输出文件源码
+        "outputSourcePath": true,               //是否输出源码路径
+        "systemName": "Common Modules",         //系统名称
+        "footer": "",                           //页脚内容
+        "copyright": "",         //页脚版权信息
+        "navType": "vertical",                    //vertical 或 inline
+        //docstrap 模板主题。可取值: cosmo, cyborg, flatly, journal, lumen, paper,
+        //readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+        "theme": "superhero",
+        "linenums": true,                       //是否显示行号
+        "collapseSymbols": false,               //是否折叠太长的内容
+        "inverseNav": true,                     //导航是否使用 bootstrap 的 inverse header
+        "protocol": "html://",                  //生成文档使用的阅读协议
+        "methodHeadingReturns": true            //method 方法标题上是否包含返回类型
+    },
+    "opts": {
+        "template": "templates/default",      //使用 JSDoc 默认模板
+        // "template": "/software/node-v10.14.1-linux-x64/lib/node_modules/ink-docstrap/template", //使用 docstrap 模板 可以按照安装环境进行更改
+        "destination": "jsdoc",               //输出目录。等同于 -d ./out/
+        "recurse": true                       //是否递归查找。 -r
+        // "debug": true,                          //启用调试模式。--debug
+        // "readme": "README.md"                   //要写到文档首页的 readme 文档。-R README.md
+    }
+}

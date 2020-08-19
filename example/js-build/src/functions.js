@@ -1,7 +1,17 @@
 export default {
+  /**
+   * 
+   * @param {*} a 
+   * @param {*} b 
+   */
   sum(a, b) {
     return a + b;
   },
+  /**
+   * 
+   * @param {*} a 
+   * @param {*} b 
+   */
   mul(a, b) {
     return a * b;
   },
@@ -11,6 +21,10 @@ export default {
       age: 18
     }
   },
+  /**
+   * 
+   * @param {*} a 
+   */
   ifs(a) {
     if (a >= 0) {
       return true;
@@ -26,6 +40,11 @@ export default {
     var arrlist = [0, 1, 2, 3, 4, 5]
     return arrlist;
   },
+  /**
+   * 
+   * @param {*} items 
+   * @param {*} callback 
+   */
   forEach(items, callback) {
     for (let index = 0; index < items.length; index++) {
       callback(items[index]);

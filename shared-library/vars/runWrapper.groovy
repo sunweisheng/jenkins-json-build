@@ -211,9 +211,16 @@ private void runStep(Step step) {
 	}
 	//所有步骤内都可以含有Script执行脚本
 	if (step.containsCommands()) {
-		runCommand(step)
+		if(step.stepType == StepType.COMMAND_STATUS_IF){
+			if(!commandIf(step)){
+				return
+			}
+			runCommand(step)
+		}
 	}
 }
+
+
 
 /**
  * 将指定构建集合名称内的构建步骤名称绑定到下拉菜单中

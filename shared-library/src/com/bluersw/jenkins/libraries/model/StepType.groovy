@@ -28,6 +28,10 @@ enum StepType {
 	 */
 	COMMAND_STDOUT,
 	/**
+	 * 通过COMMAND_STATUS执行并根据NotExpect或Expect进行判断，如果为true则执行脚本命令否则不执行
+	 */
+	COMMAND_STATUS_IF,
+	/**
 	 * 绑定Jenkins下拉菜单构建参数控件的值
 	 */
 	BUILD_PARAMETER_DROP_DOWN_MENU,
