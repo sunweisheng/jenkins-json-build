@@ -41,11 +41,11 @@
         "安装jest": "npm install -g jest"
       }
     },
-    "": {
+    "获取钥匙串权限": {
       "Type": "COMMAND_STATUS_WITH_CREDENTIALS",
       "CredentialsId": "iOS_admin_passwd",
       "Script": {
-        "": "cd ${PROJECT_PATH};security set-key-partition-list -S apple-tool:,apple: -s -k $password login.keychain"
+        "获取权限": "cd ${PROJECT_PATH};security set-key-partition-list -S apple-tool:,apple: -s -k $password login.keychain"
       }
     }
   },
@@ -54,7 +54,6 @@
       "Type": "COMMAND_STATUS",
       "Script": {
         "更新库":"cd ${PROJECT_PATH};npm install",
-        "拷贝特定文件":"cd ${PROJECT_PATH};cp -rf ../rn-fix/* ./",
         "运行单元测试":"cd ${PROJECT_PATH};npm test"
       }
     },
@@ -76,11 +75,10 @@
       "Type": "COMMAND_STATUS",
       "Variable": {
         "ProjectName": "Test-RN-iOS-Build",
-        "PlistName": "test-rn-iOS-build.plist",
-        "TargetDir":"/Library/WebServer/Documents/ios"
+        "PlistName": "test-rn-iOS-build.plist"
       },
       "Script": {
-        "打包": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/ios/;xcodebuild -scheme ${ProjectName}  -configuration Release -archivePath build/${ProjectName}.xcarchive archive;xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${TargetDir}/${PlistName}"
+        "打包": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/ios/;xcodebuild -scheme ${ProjectName}  -configuration Release -archivePath build/${ProjectName}.xcarchive archive;xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistName}"
       }
     }
   },
