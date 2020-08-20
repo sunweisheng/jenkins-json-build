@@ -86,13 +86,15 @@
     }
   },
   "编译构建": {
-    "执行RN-iOS构建": {
+    "执行iOS构建": {
       "Type": "COMMAND_STATUS",
       "Variable": {
-        "PlistName": "TestRnBuild.plist"
+        "PlistPath": "~/TestRnBuild.plist"
       },
       "Script": {
-        "打包": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH};xcodebuild -scheme ${ProjectName}  -configuration Debug -archivePath build/${ProjectName}.xcarchive archive;xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistName}"
+        "清理构建环境": "xcodebuild -target ${ProjectName} clean",
+        "执行构建": "xcodebuild -workspace ${ProjectName}.xcworkspace -scheme ${ProjectName} -configuration Debug -archivePath build/${ProjectName}.xcarchive archive",
+        "导出ipa": "xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistPath}"
       }
     }
   },
