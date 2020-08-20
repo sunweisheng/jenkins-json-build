@@ -206,17 +206,25 @@ private void runStep(Step step) {
 	case (StepType.JUNIT_PLUG_IN):
 		jenkinsPlugInJunit(step)
 		break
+	case (StepType.COMMAND_STATUS_WITH_CREDENTIALS):
+		commandWithCredentials(step)
+		break
 	default:
 		break
 	}
 	//所有步骤内都可以含有Script执行脚本
 	if (step.containsCommands()) {
 		if(step.stepType == StepType.COMMAND_STATUS_IF){
+			//条件命令如果不成功不执行
 			if(!commandIf(step)){
 				return
 			}
-			runCommand(step)
 		}
+		//带有凭证的命令会有特有的执行方法，所以这里不执行
+		if(step.stepType == StepType.COMMAND_STATUS_WITH_CREDENTIALS){
+			return
+		}
+		runCommand(step)
 	}
 }
 

@@ -4,6 +4,7 @@ import com.lesfurets.jenkins.unit.MethodSignature
 import com.lesfurets.jenkins.unit.declarative.DeclarativePipelineTest
 import net.sf.json.JSONObject
 import net.sf.json.JSONSerializer
+import org.codehaus.groovy.runtime.GStringImpl
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
 import static com.lesfurets.jenkins.unit.global.lib.LocalSource.localSource
@@ -41,6 +42,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerAllowedMethod('jacoco',[Map.class],{})
         helper.registerAllowedMethod(MethodSignature.method("readJSON",Map.class),{return this.readJSON(it)})
         helper.registerAllowedMethod('pwd',[],{return './src/main/jenkins/com/bluersw/jenkins/libraries'})
+        helper.registerAllowedMethod('withCredentials',[Map.class, GStringImpl],{})
     }
 
     @Test
@@ -102,7 +104,23 @@ class TestSharedLibrary extends DeclarativePipelineTest {
                                .retriever(localSource(sharedLibs))
                                .build()
         helper.registerSharedLibrary(library)
-        runScript('com/bluersw/jenkins/libraries/jsBuild.groovy')
+        runScript('com/bluersw/jenkins/libraries/JSBuild.groovy')
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+
+    @Test
+    void testRNiOSBuild() throws Exception{
+        boolean exception = false
+        def library = library().name('shared-library')
+                               .defaultVersion("master")
+                               .allowOverride(false)
+                               .implicit(false)
+                               .targetPath(sharedLibs)
+                               .retriever(localSource(sharedLibs))
+                               .build()
+        helper.registerSharedLibrary(library)
+        runScript('com/bluersw/jenkins/libraries/RNiOSBuild.groovy')
         printCallStack()
         assertJobStatusSuccess()
     }
@@ -136,7 +154,16 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             result = 'Apache Maven 3.6.3'
             break
         case ('sonar-scanner -v'):
-            result = 'SonarScanner 4.4.0.2170'
+            result = 'SonarScanner 4.4.0.2170 SonarQube Scanner 4.0.0.1744'
+            break
+        case ('node -v'):
+            result = 'v11.6.0 v12.18.3'
+            break
+        case ('react-native -version'):
+            result = 'react-native-cli: 2.0.1'
+            break
+        case ('xcodebuild -version'):
+            result = 'Xcode 11.1'
             break
         default:
             if(map["returnStatus"] as boolean) {

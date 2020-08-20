@@ -32,6 +32,10 @@ enum StepType {
 	 */
 	COMMAND_STATUS_IF,
 	/**
+	 * 使用用户名和密码的脚本命令，必须有CredentialsId属性，该属性的值是在Jenkins中定义的凭据，在命令中$password代表密码，$username代表用户名
+	 */
+	COMMAND_STATUS_WITH_CREDENTIALS,
+	/**
 	 * 绑定Jenkins下拉菜单构建参数控件的值
 	 */
 	BUILD_PARAMETER_DROP_DOWN_MENU,
