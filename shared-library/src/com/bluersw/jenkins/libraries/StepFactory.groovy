@@ -14,6 +14,8 @@ import com.bluersw.jenkins.libraries.model.Steps
 import com.cloudbees.groovy.cps.NonCPS
 import hudson.remoting.Channel
 import com.bluersw.jenkins.libraries.utils.JSONExtend
+import hudson.remoting.VirtualChannel
+import jenkins.model.Jenkins
 import net.sf.json.JSONObject
 
 import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
@@ -40,13 +42,13 @@ class StepFactory {
 	private JSONObject jsonObject
 	private Map<String, String> envVars
 
-
 	/**
 	 * 构造函数
 	 * @param configPath 构建配置文件路径
 	 * @param envVars Jenkins环境变量
+	 * @param computerName 远程计算机名称
 	 */
-	StepFactory(String configPath, Map<String, String> envVars) {
+	StepFactory(String configPath, Map<String, String> envVars, String computerName) {
 		this.configPath = configPath
 		//设置Jenkins环境变量
 		this.envVars = envVars == null ? new LinkedHashMap<String, String>() : envVars
@@ -55,12 +57,10 @@ class StepFactory {
 		//设置配置文件所在目录要后于this.envVars的赋值，因为会改变this.envVars内容
 		this.projectDir = setProjectDir(this.configPath)
 		//加载配置文件
-		this.json = new JSONExtend(Channel.current(), configPath, envVars)
+		this.json = new JSONExtend(getChannel(computerName), configPath, envVars)
 		//获取经过变量赋值的配置文件JSON对象
 		this.jsonObject = this.json.getJsonObject()
-
 	}
-
 
 	/**
 	 * 根据全局变量属性名称返回属性值
@@ -464,6 +464,21 @@ class StepFactory {
 		builder.append("[${step.name}] 节点属性:\n")
 		for (Map.Entry entry in step.getStepProperty()) {
 			builder.append("key:${entry.key} value:${entry.value}\n")
+		}
+	}
+
+	/**
+	 * 获取远程计算机的通讯通道
+	 * @param computerName 远程计算机名称
+	 * @return 远程计算机的通讯通道
+	 */
+	@NonCPS
+	private static VirtualChannel getChannel(String computerName) {
+		if (computerName == null || computerName == '' || computerName.toLowerCase() == 'master') {
+			return Channel.current()
+		}
+		else {
+			return Jenkins.get().getComputer(computerName).channel
 		}
 	}
 }

@@ -1,0 +1,10 @@
+
+------iOS------
+"清理bulid目录": "cd ${ProjectRoot}/ios;rm -rf build",
+"安装CocoaPods依赖库": "cd ${ProjectRoot}/ios;pod install --verbose --no-repo-update"
+
+-- xcodebuild -workspace ${iOSProjectName}.xcworkspace -scheme ${iOSProjectName} -configuration Release -archivePath build/${iOSProjectName}.xcarchive -UseModernBuildSystem=YES -allowProvisioningUpdates archive; xcodebuild -exportArchive -archivePath build/${iOSProjectName}.xcarchive -exportPath build -exportOptionsPlist ${TargetDirIOS}/${PlistName}
+"生成IPA文件": xcodebuild -workspace TestRnBuild.xcworkspace -scheme TestRnBuild -configuration Release -archivePath build/TestRnBuild.xcarchive -UseModernBuildSystem=YES -allowProvisioningUpdates archive; xcodebuild -exportArchive -archivePath build/TestRnBuild.xcarchive -exportPath build -exportOptionsPlist test-rn-build.plist
+
+
+------Android-----

@@ -32,11 +32,12 @@ import static com.bluersw.jenkins.libraries.model.Constants.RUNTIME_VARIABLE_NOD
 /**
  * 加载JSON配置文件合集
  * @param jsonPaths json文件路径集合，用","分割
+ * @param computerName 远程计算机名称
  */
-void loadJSON(String jsonPaths) {
+void loadJSON(String jsonPaths, String computerName) {
 	this.envVars = jenkinsVariable.getEnvironment()
 	this.jsonFilePaths = getJSONFilePath(jsonPaths)
-	this.factories = createStepFactory(this.jsonFilePaths, this.envVars)
+	this.factories = createStepFactory(this.jsonFilePaths, this.envVars, computerName)
 	CURRENT_STEP_FACTORY = null
 }
 
@@ -298,9 +299,10 @@ private void runCommand(Step step) {
  * 创建JSON文件对应的StepFactory对象
  * @param jsonFile json配置文件
  * @param envVars Jenkins环境变量
+ * @param computerName 远程计算机名称
  * @return StepFactory对象列表
  */
-private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars) {
+private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars, String computerName) {
 	LinkedList<StepFactory> factoryList = new LinkedList<>()
 	for (String json in jsonFile) {
 		Map<String, String> stepFactoryEnv = new LinkedHashMap<>()
@@ -309,7 +311,7 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
 		//获取运行时变量的名称和值并存入环境变量中
 		bindRuntimeVariable(json, stepFactoryEnv)
 		//整体加载json配置文档
-		StepFactory factory = new StepFactory(json, stepFactoryEnv)
+		StepFactory factory = new StepFactory(json, stepFactoryEnv, computerName)
 		//初始化构建需要的对象
 		factory.initialize()
 		factoryList.add(factory)
@@ -379,7 +381,7 @@ private String[] getJSONFilePath(String jsonPaths) {
 		}
 		if (!dirs[i].endsWith('.json')) {
 			//默认项目根目录或子项目目录下jenkins-project.json作为构建配置文件
-			dirs[i] = dirs[i] + 'json-structure.json'
+			dirs[i] = dirs[i] + 'jenkins-project.json'
 		}
 		if (!dirs[i].startsWith(FILE_SEPARATOR)) {
 			dirs[i] = FILE_SEPARATOR + dirs[i]
@@ -391,5 +393,7 @@ private String[] getJSONFilePath(String jsonPaths) {
 	}
 	return dirs
 }
+
+
 
 

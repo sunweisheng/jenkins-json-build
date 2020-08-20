@@ -7,14 +7,12 @@
 package com.bluersw.jenkins.libraries.utils
 
 import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 import com.bluersw.jenkins.libraries.model.LogContainer
 import com.bluersw.jenkins.libraries.model.LogType
 import com.cloudbees.groovy.cps.NonCPS
-import hudson.FilePath;
+import hudson.FilePath
 import hudson.remoting.VirtualChannel
-import hudson.remoting.Channel
 import net.sf.json.JSONObject
 
 import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
@@ -27,12 +25,11 @@ import static com.bluersw.jenkins.libraries.model.Constants.JUDGE_VARIABLE_PATTE
  * 处理Json文档，扩展了变量的概念，文档内可以定义全局变量和局部变量，节点的值可引用变量进行赋值。
  * @auther SunWeiSheng
  */
-class JSONExtend {
+class JSONExtend{
 
 	private FilePath filePath
 	private String path
 	private String text
-	private VirtualChannel channel
 	private JSONObject jsonObject
 	private LinkedHashMap<String, String> globalVariable = new LinkedHashMap<>()
 	private LinkedHashMap<String, LinkedHashMap<String, String>> localVariable = new LinkedHashMap<>()
@@ -46,7 +43,6 @@ class JSONExtend {
 	 * @param envVars Jenkins构建环境变量
 	 */
 	JSONExtend(VirtualChannel channel, String path, Map<String, String> envVars) {
-		this.channel = channel == null ? Channel.current() : channel
 		this.envVars = envVars == null ? new LinkedHashMap<String, String>() : envVars
 		this.path = path.replace("/", FILE_SEPARATOR).replace("\\", FILE_SEPARATOR)
 		this.filePath = new FilePath(channel, path)
@@ -56,6 +52,8 @@ class JSONExtend {
 		setEnvVarsForGlobalVariable(this.globalVariable, this.envVars)
 		analyzeJSONObject(this.jsonObject, '')
 	}
+
+
 
 	@NonCPS
 	JSONObject getJsonObject() {

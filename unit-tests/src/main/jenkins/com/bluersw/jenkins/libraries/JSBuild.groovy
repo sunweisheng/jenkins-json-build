@@ -9,7 +9,7 @@ pipeline {
 		stage('初始化') {
 			steps {
 				script{
-					runWrapper.loadJSON('/json/js-build.json')
+					runWrapper.loadJSON('/json/js-build.json',null)
 					runWrapper.runSteps('初始化')
 				}
 			}

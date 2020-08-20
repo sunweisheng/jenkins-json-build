@@ -9,7 +9,7 @@ pipeline {
 		stage('输出变量值') {
 			steps {
 				script{
-					runWrapper.loadJSON('/json/json-variable.json')
+					runWrapper.loadJSON('/json/json-variable.json',null)
 					runWrapper.runSteps('测试变量')
 				}
 			}

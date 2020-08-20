@@ -9,7 +9,7 @@ pipeline {
 		stage('初始化') {
 			steps {
 				script{
-					runWrapper.loadJSON('/json/win-net-build.json')
+					runWrapper.loadJSON('/json/win-net-build.json',null)
 					runWrapper.runSteps('初始化')
 				}
 			}
