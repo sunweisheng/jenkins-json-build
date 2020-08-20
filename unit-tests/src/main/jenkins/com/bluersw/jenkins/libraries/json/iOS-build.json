@@ -1,0 +1,113 @@
+{
+  "GlobalVariable": {
+    "ProjectName": "TestIOSBuild",
+    "TestDeviceID": "FFE62E50-459C-4A0E-B57C-F2BFF00A50B8"
+  },
+  "初始化": {
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarQube Scanner 4.0.0.1744",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "检查Xcode环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "Xcode 11.1",
+      "Script": {
+        "输出Xcode版本": "xcodebuild -version"
+      }
+    },
+    "检查OCLint环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "OCLint version 0.13.",
+      "Script": {
+        "输出OCLint版本": "oclint -version"
+      }
+    },
+    "检查xcpretty环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "0.3.0",
+      "Script": {
+        "输出xcpretty版本": "xcpretty -v"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    },
+    "获取钥匙串权限": {
+      "Type": "COMMAND_STATUS_WITH_CREDENTIALS",
+      "CredentialsId": "iOS_admin_passwd",
+      "Script": {
+        "获取权限": "cd ${PROJECT_PATH};security set-key-partition-list -S apple-tool:,apple: -s -k $password login.keychain"
+      }
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Variable": {
+        "TestDevice": "platform=iOS Simulator,id=${TestDeviceID}"
+      },
+      "Script": {
+        "运行单元测试": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/;xcodebuild -scheme ${ProjectName} -destination '${TestDevice}' -workspace ${ProjectName}.xcworkspace test | tee xcodebuild.log | xcpretty -t -r html -r junit"
+      }
+    },
+    "分析单元测试覆盖率": {
+      "Type": "LLVM_COV_COVERAGE_ANALYSIS",
+      "XcodePathScript":"Xcode-select --print-path",
+      "llvm-covCommand":"/Toolchains/XcodeDefault.xctoolchain/usr/bin/llvm-cov export -format=text --summary-only -instr-profile ",
+      "XcodeBuildLogPath":"${PROJECT_PATH}/xcodebuild.log",
+      "TestDeviceID":"${TestDeviceID}",
+      "APPName":"${ProjectName}",
+      "FileNameContains":"Presenter",
+      "Functions":"100",
+      "Instantiations":"0",
+      "Lines":"95",
+      "Regions":"95"
+    }
+  },
+  "代码检查": {
+    "清理和准备数据": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "清理build目录": "cd ${PROJECT_PATH};rm -rf build",
+        "Xcode构建清理": "cd ${PROJECT_PATH}; xcodebuild clean",
+        "删除文件": "cd ${PROJECT_PATH};rm -rf compile_commands.json;rm -rf xcodebuild.log;rm -rf compile_commands.json",
+        "创建目录": "cd ${PROJECT_PATH}; rm -rf sonar-reports;mkdir sonar-reports",
+        "构建": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}; xcodebuild -scheme ${ProjectName} -workspace ${ProjectName}.xcworkspace -configuration Release clean build | tee xcodebuild.log | xcpretty -r json-compilation-database --output compile_commands.json",
+        "OLint处理": "cd ${PROJECT_PATH}; oclint-json-compilation-database -- -max-priority-1 10000 -max-priority-2 10000 -max-priority-3 10000 -rc LONG_LINE=150 -report-type pmd -o ./sonar-reports/oclint.xml"
+      }
+    },
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行RN-iOS构建": {
+      "Type": "COMMAND_STATUS",
+      "Variable": {
+        "PlistName": "TestRnBuild.plist"
+      },
+      "Script": {
+        "打包": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH};xcodebuild -scheme ${ProjectName}  -configuration Debug -archivePath build/${ProjectName}.xcarchive archive;xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistName}"
+      }
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}

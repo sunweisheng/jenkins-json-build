@@ -7,12 +7,17 @@
 import java.text.DecimalFormat
 
 import com.bluersw.jenkins.libraries.model.Step
+import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 
 /**
  * 使用llvm-cov工具分析Xcode单元测试覆盖度
  * @param step llvm-cov分析单元测试覆盖度步骤
  */
 void call(Step step) {
+	//判断是否是开发环境
+	if (env != null && !(env instanceof EnvActionImpl)){
+		return
+	}
 
 	String xcodePathScript = step.getStepPropertyValue('XcodePathScript')
 	if (xcodePathScript == '')

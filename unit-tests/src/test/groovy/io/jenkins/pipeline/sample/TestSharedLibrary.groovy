@@ -141,6 +141,22 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test
+    void testIOSBuild() throws Exception{
+        boolean exception = false
+        def library = library().name('shared-library')
+                               .defaultVersion("master")
+                               .allowOverride(false)
+                               .implicit(false)
+                               .targetPath(sharedLibs)
+                               .retriever(localSource(sharedLibs))
+                               .build()
+        helper.registerSharedLibrary(library)
+        runScript('com/bluersw/jenkins/libraries/iOSBuild.groovy')
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+
     JSONObject readJSON(Map<String,String> map){
         if(map.containsKey('file')) {
             FileInputStream fs = new FileInputStream(map['file'])
@@ -180,6 +196,12 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             break
         case ('xcodebuild -version'):
             result = 'Xcode 11.1'
+            break
+        case ('oclint -version'):
+            result = 'OCLint version 0.13.'
+            break
+        case ('xcpretty -v'):
+            result = '0.3.0'
             break
         default:
             if(map["returnStatus"] as boolean) {
