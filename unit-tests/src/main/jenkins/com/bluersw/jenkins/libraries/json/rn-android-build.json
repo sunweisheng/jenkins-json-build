@@ -60,7 +60,7 @@
     "执行RN-Android构建": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "构建脚本": "cd ${ProjectRoot}/android/;./gradlew assembleRelease --stacktrace"
+        "构建脚本": "cd ${PROJECT_PATH}/android/;./gradlew assembleRelease --stacktrace"
       }
     }
   },
