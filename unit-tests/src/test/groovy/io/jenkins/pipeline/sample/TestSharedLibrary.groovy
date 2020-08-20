@@ -125,6 +125,22 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test
+    void testRNAndroidBuild() throws Exception{
+        boolean exception = false
+        def library = library().name('shared-library')
+                               .defaultVersion("master")
+                               .allowOverride(false)
+                               .implicit(false)
+                               .targetPath(sharedLibs)
+                               .retriever(localSource(sharedLibs))
+                               .build()
+        helper.registerSharedLibrary(library)
+        runScript('com/bluersw/jenkins/libraries/RNAndroidBuild.groovy')
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+
     JSONObject readJSON(Map<String,String> map){
         if(map.containsKey('file')) {
             FileInputStream fs = new FileInputStream(map['file'])

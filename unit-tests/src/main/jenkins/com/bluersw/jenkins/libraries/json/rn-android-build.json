@@ -21,13 +21,6 @@
         "输出react-native-cli版本": "react-native -version"
       }
     },
-    "检查Xcode环境": {
-      "Type": "COMMAND_STDOUT",
-      "Success-IndexOf": "Xcode 11.1",
-      "Script": {
-        "输出Xcode版本": "xcodebuild -version"
-      }
-    },
     "绑定构建参数": {
       "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
       "StepsName": "部署",
@@ -39,13 +32,6 @@
       "NotExpect": "0",
       "Script": {
         "安装jest": "npm install -g jest"
-      }
-    },
-    "获取钥匙串权限": {
-      "Type": "COMMAND_STATUS_WITH_CREDENTIALS",
-      "CredentialsId": "iOS_admin_passwd",
-      "Script": {
-        "获取权限": "cd ${PROJECT_PATH};security set-key-partition-list -S apple-tool:,apple: -s -k $password login.keychain"
       }
     }
   },
@@ -71,14 +57,10 @@
     }
   },
   "编译构建": {
-    "执行RN-iOS构建": {
+    "执行RN-Android构建": {
       "Type": "COMMAND_STATUS",
-      "Variable": {
-        "ProjectName": "TestRnBuild",
-        "PlistName": "TestRnBuild.plist"
-      },
       "Script": {
-        "打包": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/ios/;xcodebuild -scheme ${ProjectName}  -configuration Release -archivePath build/${ProjectName}.xcarchive archive;xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistName}"
+        "构建脚本": "cd ${ProjectRoot}/android/;./gradlew assembleRelease --stacktrace"
       }
     }
   },
