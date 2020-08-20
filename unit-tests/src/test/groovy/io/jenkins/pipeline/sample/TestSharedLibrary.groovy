@@ -157,6 +157,22 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test
+    void testAndroidBuild() throws Exception{
+        boolean exception = false
+        def library = library().name('shared-library')
+                               .defaultVersion("master")
+                               .allowOverride(false)
+                               .implicit(false)
+                               .targetPath(sharedLibs)
+                               .retriever(localSource(sharedLibs))
+                               .build()
+        helper.registerSharedLibrary(library)
+        runScript('com/bluersw/jenkins/libraries/AndroidBuild.groovy')
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+
     JSONObject readJSON(Map<String,String> map){
         if(map.containsKey('file')) {
             FileInputStream fs = new FileInputStream(map['file'])
@@ -202,6 +218,12 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             break
         case ('xcpretty -v'):
             result = '0.3.0'
+            break
+        case ('adb --version'):
+            result = 'Android Debug Bridge version 1.0.41'
+            break
+        case ('gradle -v'):
+            result = 'Gradle 5.6.2'
             break
         default:
             if(map["returnStatus"] as boolean) {

@@ -1,0 +1,87 @@
+{
+  "初始化": {
+    "检查Java环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "java version \"1.8.0_211\"",
+      "Script": {
+        "输出Java版本": "java -version 2>&1"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarQube Scanner 4.0.0.1744",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "检查Android SDK环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "Android Debug Bridge version 1.0.41",
+      "Script": {
+        "输出Android SDK版本": "adb --version"
+      }
+    },
+    "检查Gradle环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "Gradle 5.6.2",
+      "Script": {
+        "输出Gradle版本": "gradle -v"
+      }
+    },
+    "检查Android 模拟器": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出Android 模拟器": "device=`adb devices -l | grep -E \"^[0-9a-z-]{8}.*device\"|wc -l` \n (($device!=0))"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "执行清理":"cd ${ProjectRoot}/;gradle clean",
+        "执行单元测试":"cd ${ProjectRoot}/;gradle jacocoTestReport --stacktrace"
+      }
+    },
+    "执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/build/outputs/androidTest-results/connected/*.xml"
+    },
+    "执行Jacoco插件": {
+      "Type": "JACOCO_PLUG_IN",
+      "classPattern":"${PROJECT_PATH}/build/intermediates/classes/debug",
+      "execPattern":"${PROJECT_PATH}/build/outputs/code-coverage/connected/*.ec",
+      "FailPrompt":"FAILURE",
+      "LineCoverage":"95",
+      "InstructionCoverage":"0",
+      "MethodCoverage":"100",
+      "BranchCoverage":"95",
+      "ClassCoverage":"100",
+      "ComplexityCoverage":"0"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
