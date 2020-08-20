@@ -16,6 +16,10 @@ enum StepType {
 	 */
 	GLOBAL_VARIABLE,
 	/**
+	 * 通过SH或BAT执行的获得标准输出结果
+	 */
+	COMMAND_STDOUT,
+	/**
 	 * 通过SH或BAT执行的判定执行状态，返回0代表成功
 	 */
 	COMMAND_STATUS,
@@ -23,10 +27,6 @@ enum StepType {
 	 * 根据模版循环创造命令、执行并判定执行状态
 	 */
 	COMMAND_STATUS_FOR,
-	/**
-	 * 通过SH或BAT执行的获得标准输出结果
-	 */
-	COMMAND_STDOUT,
 	/**
 	 * 通过COMMAND_STATUS执行并根据NotExpect或Expect进行判断，如果为true则执行脚本命令否则不执行
 	 */

@@ -8,13 +8,17 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 import com.bluersw.jenkins.libraries.model.Step
+import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 
 /**
  * 分析MSBuild产生的覆盖率报告并判断是否通过
  * @param  step MSBuild覆盖率分析步骤
  */
-void call(Step step)
-{
+void call(Step step) {
+	//判断是否是开发环境
+	if (env != null && !(env instanceof EnvActionImpl)){
+		return
+	}
 	String reportDir = step.getStepPropertyValue('ReportDir')
 
 	if(reportDir == '')

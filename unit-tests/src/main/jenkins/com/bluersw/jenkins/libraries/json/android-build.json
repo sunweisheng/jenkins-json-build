@@ -44,8 +44,8 @@
     "执行单元测试脚本": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "执行清理":"cd ${ProjectRoot}/;gradle clean",
-        "执行单元测试":"cd ${ProjectRoot}/;gradle jacocoTestReport --stacktrace"
+        "执行清理":"cd ${PROJECT_PATH}/;gradle clean",
+        "执行单元测试":"cd ${PROJECT_PATH}/;gradle jacocoTestReport --stacktrace"
       }
     },
     "执行JUnit插件": {

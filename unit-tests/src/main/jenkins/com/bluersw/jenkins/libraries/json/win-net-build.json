@@ -1,0 +1,63 @@
+{
+  "GlobalVariable": {
+    "MSBuildBinDir": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin"
+  },
+  "初始化": {
+    "检查MSBuild环境": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出MSBuild版本": "${MSBuildBinDir}\\MSBuild.exe\" -version"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出SonarScanner版本": "SonarScanner.MSBuild.exe /?"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "运行单元测试": "cd ${PROJECT_PATH}\\ && MSBuild  My.msbuild /t:GenerateCoverageHtmlReport"
+      }
+    },
+    "分析单元测试覆盖率": {
+      "Type": "MSBUILD_COVERAGE_ANALYSIS",
+      "ReportDir": "${PROJECT_PATH}\\Cover\\",
+      "Lines": "0"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE",
+      "Variable": {
+        "project_key": "Test:test",
+        "project_name": "Test:test",
+        "project_version": "4.66"
+      },
+      "?ScannerScript": "SonarScanner加日志参数 /d:sonar.verbose=true",
+      "ScannerScript": "cd ${PROJECT_PATH}\\ && SonarScanner.MSBuild.exe begin /k:\"${project_key}\" /n:\"${project_name}\" /v:\"${project_version}\"  && \"${MSBuildBinDir}\\MSBuild.exe\" /t:Rebuild  /p:VisualStudioVersion=12.0  && SonarScanner.MSBuild.exe end"
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
