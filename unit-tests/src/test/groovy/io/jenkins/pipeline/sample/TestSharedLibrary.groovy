@@ -227,7 +227,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             result = 'react-native-cli: 2.0.1'
             break
         case ('xcodebuild -version'):
-            result = 'Xcode 11.1'
+            result = 'Xcode 10'
             break
         case ('oclint -version'):
             result = 'OCLint version 0.13.'

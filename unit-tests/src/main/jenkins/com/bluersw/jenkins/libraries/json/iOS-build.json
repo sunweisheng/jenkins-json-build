@@ -13,7 +13,7 @@
     },
     "检查Xcode环境": {
       "Type": "COMMAND_STDOUT",
-      "Success-IndexOf": "Xcode 11.1",
+      "Success-IndexOf": "Xcode 10",
       "Script": {
         "输出Xcode版本": "xcodebuild -version"
       }
