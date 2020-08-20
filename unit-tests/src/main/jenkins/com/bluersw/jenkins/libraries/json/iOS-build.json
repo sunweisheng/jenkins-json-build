@@ -1,6 +1,6 @@
 {
   "GlobalVariable": {
-    "ProjectName": "TestIOSBuild",
+    "ProjectName": "CICD-ObjectC-Test",
     "TestDeviceID": "FFE62E50-459C-4A0E-B57C-F2BFF00A50B8"
   },
   "初始化": {
@@ -92,7 +92,7 @@
         "PlistPath": "~/TestBuild.plist"
       },
       "Script": {
-        "清理构建环境": "cd ${PROJECT_PATH};xcodebuild -target ${ProjectName} clean",
+        "清理构建环境": "xcodebuild -workspace ${ProjectName}.xcworkspace -scheme CICD-ObjectC-Test clean",
         "执行构建": "cd ${PROJECT_PATH};xcodebuild -workspace ${ProjectName}.xcworkspace -scheme ${ProjectName} -configuration Debug -archivePath build/${ProjectName}.xcarchive archive",
         "导出ipa": "cd ${PROJECT_PATH};xcodebuild -exportArchive -archivePath build/${ProjectName}.xcarchive -exportPath build -exportOptionsPlist ${PlistPath}"
       }
