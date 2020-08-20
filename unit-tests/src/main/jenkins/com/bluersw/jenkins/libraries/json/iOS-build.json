@@ -75,8 +75,8 @@
       "Script": {
         "清理build目录": "cd ${PROJECT_PATH};rm -rf build",
         "Xcode构建清理": "cd ${PROJECT_PATH}; xcodebuild clean",
-        "删除文件": "cd ${PROJECT_PATH};rm -rf compile_commands.json;rm -rf xcodebuild.log;rm -rf compile_commands.json",
-        "创建目录": "cd ${PROJECT_PATH}; rm -rf sonar-reports;mkdir sonar-reports",
+        "删除文件": "cd ${PROJECT_PATH};rm -rf compile_commands.json;rm -rf xcodebuild.log;rm -rf compile_commands.json;rm -rf sonar-reports",
+        "创建目录": "cd ${PROJECT_PATH};mkdir sonar-reports",
         "构建": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}; xcodebuild -scheme ${ProjectName} -workspace ${ProjectName}.xcworkspace -configuration Release clean build | tee xcodebuild.log | xcpretty -r json-compilation-database --output compile_commands.json",
         "OLint处理": "cd ${PROJECT_PATH}; oclint-json-compilation-database -- -max-priority-1 10000 -max-priority-2 10000 -max-priority-3 10000 -rc LONG_LINE=150 -report-type pmd -o ./sonar-reports/oclint.xml"
       }
