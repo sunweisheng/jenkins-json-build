@@ -395,7 +395,7 @@ BUILD_NUMBER:28
 BUILD_TAG:jenkins-Test-Jenkins-Json-Build-28
 BUILD_URL:http://ops.gydev.cn:8080/job/Test-Jenkins-Json-Build/28/
 CLASSPATH:
-Deploy_Choice:模拟部署脚本-1
+deploy-choice:模拟部署脚本-1
 HUDSON_HOME:/root/.jenkins
 HUDSON_SERVER_COOKIE:04f54204dabc2b46
 HUDSON_URL:http://ops.gydev.cn:8080/
