@@ -11,11 +11,8 @@ import java.util.regex.Matcher
 import com.bluersw.jenkins.libraries.model.LogContainer
 import com.bluersw.jenkins.libraries.model.LogType
 import com.cloudbees.groovy.cps.NonCPS
-import hudson.FilePath
-import hudson.remoting.VirtualChannel
 import net.sf.json.JSONObject
 
-import static com.bluersw.jenkins.libraries.model.Constants.FILE_SEPARATOR
 import static com.bluersw.jenkins.libraries.model.Constants.GLOBAL_VARIABLE_NODE_NAME
 import static com.bluersw.jenkins.libraries.model.Constants.LOCAL_VARIABLE_NODE_NAME
 import static com.bluersw.jenkins.libraries.model.Constants.FIND_VARIABLE_PATTERN
@@ -26,9 +23,6 @@ import static com.bluersw.jenkins.libraries.model.Constants.JUDGE_VARIABLE_PATTE
  * @auther SunWeiSheng
  */
 class JSONExtend{
-
-	private FilePath filePath
-	private String path
 	private String text
 	private JSONObject jsonObject
 	private LinkedHashMap<String, String> globalVariable = new LinkedHashMap<>()
@@ -37,16 +31,13 @@ class JSONExtend{
 
 
 	/**
-	 * 构造函数
-	 * @param channel 运行构建脚本的服务器环境，如果为null就代表当前环境
-	 * @param path 文件路径
+	 * 构建函数
+	 * @param text json文件内容
 	 * @param envVars Jenkins构建环境变量
 	 */
-	JSONExtend(VirtualChannel channel, String path, Map<String, String> envVars) {
+	JSONExtend(String text, Map<String, String> envVars){
 		this.envVars = envVars == null ? new LinkedHashMap<String, String>() : envVars
-		this.path = path.replace("/", FILE_SEPARATOR).replace("\\", FILE_SEPARATOR)
-		this.filePath = new FilePath(channel, path)
-		this.text = filePath.readToString()
+		this.text = text
 		this.jsonObject = JSONObject.fromObject(this.text)
 		setEnvVarsForJSONObject(this.jsonObject, this.envVars)
 		setEnvVarsForGlobalVariable(this.globalVariable, this.envVars)

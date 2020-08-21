@@ -32,12 +32,11 @@ import static com.bluersw.jenkins.libraries.model.Constants.RUNTIME_VARIABLE_NOD
 /**
  * 加载JSON配置文件合集
  * @param jsonPaths json文件路径集合，用","分割
- * @param computerName 远程计算机名称
  */
-void loadJSON(String jsonPaths, String computerName) {
+void loadJSON(String jsonPaths) {
 	this.envVars = jenkinsVariable.getEnvironment()
 	this.jsonFilePaths = getJSONFilePath(jsonPaths)
-	this.factories = createStepFactory(this.jsonFilePaths, this.envVars, computerName)
+	this.factories = createStepFactory(this.jsonFilePaths, this.envVars)
 	CURRENT_STEP_FACTORY = null
 }
 
@@ -299,19 +298,19 @@ private void runCommand(Step step) {
  * 创建JSON文件对应的StepFactory对象
  * @param jsonFile json配置文件
  * @param envVars Jenkins环境变量
- * @param computerName 远程计算机名称
  * @return StepFactory对象列表
  */
-private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars, String computerName) {
+private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,String> envVars) {
 	LinkedList<StepFactory> factoryList = new LinkedList<>()
 	for (String json in jsonFile) {
+		JSONObject jsonObject = readJSON(file: json)
 		Map<String, String> stepFactoryEnv = new LinkedHashMap<>()
 		//复制环境变量避免公用同一个引用
 		copyMap(envVars, stepFactoryEnv)
 		//获取运行时变量的名称和值并存入环境变量中
-		bindRuntimeVariable(json, stepFactoryEnv)
+		bindRuntimeVariable(jsonObject, stepFactoryEnv)
 		//整体加载json配置文档
-		StepFactory factory = new StepFactory(json, stepFactoryEnv, computerName)
+		StepFactory factory = new StepFactory(json, jsonObject.toString(), stepFactoryEnv)
 		//初始化构建需要的对象
 		factory.initialize()
 		factoryList.add(factory)
@@ -321,12 +320,10 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
 
 /**
  * 在获得Jenkins全局变量之后，绑定运行时变量，此类变量在RuntimeVariables节点中定义，如果是json格式可加入@path[]属性标示节点搜索路径
- * @param jsonFile json文件路径
+ * @param json json配置文档内容
  * @param stepFactoryEnv jenkins环境变量
  */
-private void bindRuntimeVariable(String jsonFile, Map<String,String> stepFactoryEnv) {
-	//本次读取json配置文件只为了读出RuntimeVariables节点，其他节点不做处理
-	JSONObject json = readJSON(file: jsonFile)
+private void bindRuntimeVariable(JSONObject json, Map<String,String> stepFactoryEnv) {
 	JSONObject runtimeVariables = json[RUNTIME_VARIABLE_NODE_NAME] as JSONObject
 	if (runtimeVariables != null) {
 		println('发现运行时变量节点：')

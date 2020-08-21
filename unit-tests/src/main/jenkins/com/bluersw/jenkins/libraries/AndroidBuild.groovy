@@ -9,7 +9,7 @@ pipeline {
 		stage('初始化') {
 			steps {
 				script{
-					runWrapper.loadJSON('/json/android-build.json',null)
+					runWrapper.loadJSON('/json/android-build.json')
 					runWrapper.runSteps('初始化')
 				}
 			}

@@ -9,7 +9,7 @@ pipeline {
 		stage('初始化') {
 			steps {
 				script{
-					runWrapper.loadJSON('/json/rn-ios-build.json',null)
+					runWrapper.loadJSON('/json/rn-ios-build.json')
 					runWrapper.runSteps('初始化')
 				}
 			}
