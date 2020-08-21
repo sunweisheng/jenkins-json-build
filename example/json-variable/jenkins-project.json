@@ -1,6 +1,6 @@
 {
   "RuntimeVariable": {
-    "JENKINS_PARAMS_DEPLOY": "echo ${Deploy_Choice}",
+    "JENKINS_PARAMS_DEPLOY": "echo ${deploy-choice}",
     "JENKINS_BUILD_URL": "echo ${BUILD_URL}",
     "SCRIPT_PWD": "pwd",
     "SCM_CHANGE_TITLE": "git --no-pager show -s --format=\"%s\" -n 1",

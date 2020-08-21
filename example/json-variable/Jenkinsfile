@@ -2,7 +2,7 @@
 
 pipeline {
 	parameters { //定义构建参数
-        choice choices: ['部署全部'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+        choice choices: ['部署全部'], description: '请选择要部署的项目', name: 'deploy-choice'
     }
 	agent any
 	stages {
