@@ -241,6 +241,9 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         case ('gradle -v'):
             result = 'Gradle 5.6.2'
             break
+        case ('ruby -v'):
+            result = 'ruby 2.6'
+            break
         default:
             if(map["returnStatus"] as boolean) {
                 result = 0
