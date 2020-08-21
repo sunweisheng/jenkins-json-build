@@ -1,0 +1,81 @@
+{
+  "初始化": {
+    "检查Nodejs环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "v11.6.0",
+      "Script": {
+        "输出Node版本": "node -v"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarQube Scanner 4.0.0.1744",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "检查react-native-cli环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "react-native-cli: 2.0.1",
+      "Script": {
+        "输出react-native-cli版本": "react-native -version"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    },
+    "jest组件全局安装": {
+      "Type": "COMMAND_STATUS_IF",
+      "TestScript": "jest -v",
+      "NotExpect": "0",
+      "Script": {
+        "安装jest": "npm install -g jest"
+      }
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "更新库":"cd ${PROJECT_PATH};npm install",
+        "运行单元测试":"cd ${PROJECT_PATH};npm test"
+      }
+    },
+    "分析单元测试覆盖率": {
+      "Type": "JEST_COVERAGE_ANALYSIS",
+      "Statements":"100",
+      "Branches":"100",
+      "Functions":"100",
+      "Lines":"100"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行RN-Android构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "构建脚本": "cd ${PROJECT_PATH}/android/;./gradlew assembleRelease --stacktrace"
+      }
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
