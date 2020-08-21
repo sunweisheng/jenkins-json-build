@@ -3,7 +3,7 @@
 pipeline {
 	agent { label params['agent-name'] }
 	parameters { //定义构建参数
-		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
+		choice choices: ['-'], description: '请选择要部署的项目', name: 'deploy-choice'
 		agentParameter name:'agent-name'
 	}
 	stages {
@@ -39,7 +39,7 @@ pipeline {
 		stage('部署') {
 			steps {
 				script{
-					runWrapper.runStepForEnv('部署','Deploy_Choice')
+					runWrapper.runStepForEnv('部署','deploy-choice')
 				}
 			}
 		}

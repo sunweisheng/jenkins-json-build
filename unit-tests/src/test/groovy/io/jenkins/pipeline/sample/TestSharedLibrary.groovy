@@ -239,7 +239,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             result = 'Android Debug Bridge version 1.0.41'
             break
         case ('gradle -v'):
-            result = 'Gradle 6'
+            result = 'Gradle 5'
             break
         case ('ruby -v'):
             result = 'ruby 2.6'

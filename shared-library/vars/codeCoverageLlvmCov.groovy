@@ -75,7 +75,11 @@ void call(Step step) {
 
 	println("productsBin:${productsBin}")
 
-	def reportString = runStdoutScript("${perfectionCommand} ${coverageProfdata} ${productsBin}")
+	String reportCommand = "${perfectionCommand} ${coverageProfdata} ${productsBin}"
+
+	println("reportCommand:${reportCommand}")
+
+	def reportString = runStdoutScript(reportCommand)
 
 	def report = readJSON(text: reportString)
 
