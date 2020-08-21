@@ -23,7 +23,7 @@
     },
     "检查Gradle环境": {
       "Type": "COMMAND_STDOUT",
-      "Success-IndexOf": "Gradle 6",
+      "Success-IndexOf": "Gradle 5",
       "Script": {
         "输出Gradle版本": "gradle -v"
       }
@@ -44,8 +44,8 @@
     "执行单元测试脚本": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "执行清理":"cd ${PROJECT_PATH}/;gradle clean",
-        "执行单元测试":"cd ${PROJECT_PATH}/;gradle jacocoTestReport --stacktrace"
+        "执行清理":"cd ${PROJECT_PATH}/;./gradlew clean",
+        "执行单元测试":"cd ${PROJECT_PATH}/;./gradlew jacocoTestReport --stacktrace"
       }
     },
     "执行JUnit插件": {
@@ -54,8 +54,8 @@
     },
     "执行Jacoco插件": {
       "Type": "JACOCO_PLUG_IN",
-      "classPattern":"${PROJECT_PATH}/build/intermediates/classes/debug",
-      "execPattern":"${PROJECT_PATH}/build/outputs/code-coverage/connected/*.ec",
+      "classPattern":"${PROJECT_PATH}app/build/intermediates/javac/debug/classes/",
+      "execPattern":"**/${PROJECT_PATH}app/build/outputs/**/*.ec",
       "FailPrompt":"FAILURE",
       "LineCoverage":"95",
       "InstructionCoverage":"0",
@@ -68,6 +68,14 @@
   "代码检查": {
     "执行SQ代码扫描": {
       "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "执行构建": "cd ${PROJECT_PATH}/;./gradlew assembleRelease --stacktrace"
+      }
     }
   },
   "部署": {
