@@ -43,15 +43,19 @@ void call(Step step) {
 	if (fileNameContains == '')
 		throw new Exception('llvm-cov处理环节出错,FileNameContains子节点没有设置。')
 
+	DecimalFormat df = new DecimalFormat('#.##')
+
 	def reachedFunctions = step.getStepPropertyValue('Functions')
 	def reachedInstantiations = step.getStepPropertyValue('Instantiations')
 	def reachedLines = step.getStepPropertyValue('Lines')
 	def reachedRegions = step.getStepPropertyValue('Regions')
 
-	reachedFunctions = reachedFunctions == '' ? 0 : reachedFunctions
-	reachedInstantiations = reachedInstantiations == '' ? 0 : reachedInstantiations
-	reachedLines = reachedLines == '' ? 0 : reachedLines
-	reachedRegions = reachedRegions == '' ? 0 : reachedRegions
+	println("预期：reachedFunctions：${reachedFunctions} reachedInstantiations：${reachedInstantiations} reachedLines：${reachedLines} reachedRegions：${reachedRegions}")
+
+	reachedFunctions = reachedFunctions == '' ? 0 : df.parse(reachedFunctions.toString())
+	reachedInstantiations = reachedInstantiations == '' ? 0 : df.parse(reachedInstantiations.toString())
+	reachedLines = reachedLines == '' ? 0 : df.parse(reachedLines.toString())
+	reachedRegions = reachedRegions == '' ? 0 : df.parse(reachedRegions.toString())
 
 	def xcodePath = runStdoutScript(xcodePathScript)
 
@@ -67,7 +71,7 @@ void call(Step step) {
 
 	println("paramPrefix:${paramPrefix}")
 
-	String coverageProfdata = "${paramPrefix}Build/ProfileData/${testDeviceID}/codeCoverageLlvmCov.profdata"
+	String coverageProfdata = "${paramPrefix}Build/ProfileData/${testDeviceID}/Coverage.profdata"
 
 	println("coverageProfdata:${coverageProfdata}")
 
@@ -136,12 +140,16 @@ void call(Step step) {
 		}
 	}
 
-	DecimalFormat df = new DecimalFormat('#.##')
+	println("检索文件名包含：${fileNameContains}的文件完成。")
+
+
 
 	functionsPercent = functionsCount == 0.00 ? 0.00 : (functionsCovered / functionsCount) * 100
 	instantiationsPercent = instantiationsCount == 0.00 ? 0.00 : (instantiationsCovered / instantiationsCount) * 100
 	linesPercent = linesCount == 0.00 ? 0.00 : (linesCovered / linesCount) * 100
 	regionsPercent = regionsCount == 0.00 ? 0.00 : (regionsCovered / regionsCount) * 100
+
+	println("functionsPercent:${functionsPercent} instantiationsPercent:${instantiationsPercent} linesPercent:${linesPercent} regionsPercent:${regionsPercent}")
 
 	if (functionsPercent < reachedFunctions)
 		throw new Exception("llvn-cov覆盖率分析时覆盖率不达标，要求Functions达到${reachedFunctions}%，实际${df.format(functionsPercent)}%")

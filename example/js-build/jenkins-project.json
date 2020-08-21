@@ -17,7 +17,7 @@
     "绑定构建参数": {
       "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
       "StepsName": "部署",
-      "ParamName": "Deploy_Choice"
+      "ParamName": "deploy-choice"
     },
     "gulp组件全局安装": {
       "Type": "COMMAND_STATUS_IF",

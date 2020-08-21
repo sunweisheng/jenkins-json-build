@@ -1,7 +1,7 @@
 {
   "GlobalVariable": {
     "ProjectName": "CICD-ObjectC-Test",
-    "TestDeviceID": "FFE62E50-459C-4A0E-B57C-F2BFF00A50B8"
+    "TestDeviceID": "1BE7CA48-97D8-4D04-88C5-A14971AFE737"
   },
   "初始化": {
     "检查SonarScanner环境": {
@@ -13,7 +13,7 @@
     },
     "检查Xcode环境": {
       "Type": "COMMAND_STDOUT",
-      "Success-IndexOf": "Xcode 10",
+      "Success-IndexOf": "Xcode 11",
       "Script": {
         "输出Xcode版本": "xcodebuild -version"
       }
@@ -35,7 +35,7 @@
     "绑定构建参数": {
       "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
       "StepsName": "部署",
-      "ParamName": "Deploy_Choice"
+      "ParamName": "deploy-choice"
     },
     "获取钥匙串权限": {
       "Type": "COMMAND_STATUS_WITH_CREDENTIALS",
@@ -54,6 +54,10 @@
       "Script": {
         "运行单元测试": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/;xcodebuild -scheme ${ProjectName} -destination '${TestDevice}' -workspace ${ProjectName}.xcworkspace test | tee xcodebuild.log | xcpretty -t -r html -r junit"
       }
+    },
+    "执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/build/reports/*.xml"
     },
     "分析单元测试覆盖率": {
       "Type": "LLVM_COV_COVERAGE_ANALYSIS",
@@ -89,7 +93,7 @@
     "执行iOS构建": {
       "Type": "COMMAND_STATUS",
       "Variable": {
-        "PlistPath": "~/TestBuild.plist"
+        "PlistPath": "${PROJECT_PATH}CICDTestApp.plist"
       },
       "Script": {
         "清理构建环境": "xcodebuild -workspace ${ProjectName}.xcworkspace -scheme CICD-ObjectC-Test clean",

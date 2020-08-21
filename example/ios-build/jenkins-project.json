@@ -35,7 +35,7 @@
     "绑定构建参数": {
       "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
       "StepsName": "部署",
-      "ParamName": "Deploy_Choice"
+      "ParamName": "deploy-choice"
     },
     "获取钥匙串权限": {
       "Type": "COMMAND_STATUS_WITH_CREDENTIALS",
@@ -54,6 +54,10 @@
       "Script": {
         "运行单元测试": "export LC_ALL=en_US.UTF-8;cd ${PROJECT_PATH}/;xcodebuild -scheme ${ProjectName} -destination '${TestDevice}' -workspace ${ProjectName}.xcworkspace test | tee xcodebuild.log | xcpretty -t -r html -r junit"
       }
+    },
+    "执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/build/reports/*.xml"
     },
     "分析单元测试覆盖率": {
       "Type": "LLVM_COV_COVERAGE_ANALYSIS",

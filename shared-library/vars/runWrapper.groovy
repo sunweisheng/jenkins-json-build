@@ -377,12 +377,16 @@ private String[] getJSONFilePath(String jsonPaths) {
 			dirs[i] = dirs[i].substring(1, dirs[i].size())
 		}
 		if (!dirs[i].endsWith('.json')) {
+			if(!dirs[i].endsWith(FILE_SEPARATOR)){
+				dirs[i] = dirs[i] + FILE_SEPARATOR
+			}
 			//默认项目根目录或子项目目录下jenkins-project.json作为构建配置文件
 			dirs[i] = dirs[i] + 'jenkins-project.json'
 		}
 		if (!dirs[i].startsWith(FILE_SEPARATOR)) {
 			dirs[i] = FILE_SEPARATOR + dirs[i]
 		}
+
 		dirs[i] = currentDirectory + dirs[i]
 
 		dirs[i] = dirs[i].replace('/', FILE_SEPARATOR)
