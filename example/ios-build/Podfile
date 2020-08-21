@@ -1,0 +1,15 @@
+# Uncomment the next line to define a global platform for your project
+platform :ios, '9.0'
+
+target 'CICD-ObjectC-Test' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for CICD-ObjectC-Test
+  
+  target 'CICD-ObjectC-UnitTests' do
+  pod 'OCMock', '~> 3.3'
+  pod 'OCHamcrest', '~> 5.4.0'
+  pod 'XcodeCoverage','~>1.4.0'
+  end
+end

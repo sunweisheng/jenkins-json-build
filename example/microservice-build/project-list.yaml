@@ -1,0 +1,7 @@
+CheckboxParameter:
+  - key: project01
+    value: /project01
+  - key: project02
+    value: /project02
+  - key: project03
+    value: /project03

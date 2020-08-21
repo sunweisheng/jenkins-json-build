@@ -1,0 +1,80 @@
+{
+  "初始化": {
+    "检查Java环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "java version \"1.8.0_211\"",
+      "Script": {
+        "输出Java版本": "java -version 2>&1"
+      }
+    },
+    "检查Maven环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "Apache Maven 3.6.3",
+      "Script": {
+        "输出Maven版本": "mvn -v"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STDOUT",
+      "Success-IndexOf": "SonarScanner 4.4.0.2170",
+      "Script": {
+        "输出SonarScanner版本": "sonar-scanner -v"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "Deploy_Choice"
+    }
+  },
+  "单元测试": {
+    "执行Maven单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "Maven单元测试": "cd ${PROJECT_PATH};mvn clean test"
+      }
+    },
+    "执行JUnit插件": {
+      "Type": "JUNIT_PLUG_IN",
+      "JunitReportPath": "**/${PROJECT_DIR}/**/target/**/TEST-*.xml"
+    },
+    "执行Jacoco插件": {
+      "Type": "JACOCO_PLUG_IN",
+      "classPattern":"${PROJECT_PATH}/target/classes",
+      "InclusionPattern":"${PROJECT_PATH}/**",
+      "LineCoverage":"95",
+      "InstructionCoverage":"0",
+      "MethodCoverage":"100",
+      "BranchCoverage":"95",
+      "ClassCoverage":"100",
+      "ComplexityCoverage":"0"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE"
+    }
+  },
+  "编译构建": {
+    "执行Maven构建": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "Maven构建": "cd ${PROJECT_PATH};mvn clean package -U -DskipTests"
+      }
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
