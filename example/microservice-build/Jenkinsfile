@@ -5,7 +5,7 @@ pipeline {
 	parameters { //定义构建参数
 		choice choices: ['-'], description: '请选择要部署的项目', name: 'Deploy_Choice'
 		agentParameter name:'agent-name'
-		checkboxParameter name:'project-list', format:'YAML', uri:'https://raw.githubusercontent.com/sunweisheng/Jenkins/master/examples/example.json'
+		checkboxParameter name:'project-list', format:'YAML', uri:'https://raw.githubusercontent.com/sunweisheng/jenkins-json-build/master/example/microservice-build/project-list.yaml'
 	}
 	stages {
 		stage('初始化') {
