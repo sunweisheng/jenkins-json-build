@@ -1322,49 +1322,49 @@ Jenkinsfile是Declarative语法，在post声明中可以对构建的成功和失
 @Library('shared-library') _
 
 pipeline {
-	agent any
-	stages {
-		stage('处理过程1') {
-			steps {
-				script{
-					Exception ex
-					runWrapper.loadJSON('/json/post-send-email.json')
-				}
-			}
-		}
-		stage('处理过程2') {
+  agent any
+  stages {
+    stage('处理过程1') {
       steps {
         script{
-        	println('处理过程2')
-        	try{
-        		throw new Exception('模拟异常')
-        	}catch(Exception e){
-        		ex = e
-        		throw e
-        	}
+          Exception ex
+          runWrapper.loadJSON('/jenkins-project.json')
+          }
+        }
+      }
+    stage('处理过程2') {
+      steps {
+        script{
+          println('处理过程2')
+          try{
+              throw new Exception('模拟异常')
+          }catch(Exception e){
+              ex = e
+              throw e
+          }
         }
       }
     }
-		stage('处理过程3') {
-			steps {
-				script{
-					println('处理过程3')
-				}
-			}
-		}
-	}
-	post {
-		failure {
-			script{
-				runWrapper.postFailure(ex)
-			}
-		}
-		success{
-			script{
-				runWrapper.postSuccess()
-			}
-		}
-	}
+    stage('处理过程3') {
+      steps {
+        script{
+          println('处理过程3')
+          }
+        }
+      }
+    }
+  post {
+    failure {
+      script{
+        runWrapper.postFailure(ex)
+    }
+  }
+  success{
+    script{
+      runWrapper.postSuccess()
+        }
+    }
+  }
 }
 ```
 
