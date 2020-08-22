@@ -3,7 +3,7 @@
 pipeline {
 	agent { label params['agent-name'] }
 	parameters { //定义构建参数
-		choice choices: ['-'], description: '请选择要部署的项目', name: 'deploy-choice'
+		choice choices: ['-'], description: '请选择部署方式', name: 'deploy-choice'
 		agentParameter name:'agent-name'
 		checkboxParameter name:'project-list', format:'YAML', uri:'https://raw.githubusercontent.com/sunweisheng/jenkins-json-build/master/example/microservice-build/project-list.yaml'
 	}

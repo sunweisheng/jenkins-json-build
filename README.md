@@ -17,6 +17,7 @@
 1. [构建多个子项目](#构建多个子项目)
 1. [构建成功和失败处理](#构建成功和失败处理)
 1. [在K8S内创建Pod进行构建](#在K8S内创建Pod进行构建)
+1. [最简构建脚本](#最简构建脚本)
 
 ## 准备工作
 
@@ -261,7 +262,7 @@ Jenkinsfile文件内容：
 
 pipeline {
 	parameters { //定义构建参数
-        choice choices: ['部署全部'], description: '请选择要部署的项目', name: 'deploy-choice'
+        choice choices: ['部署全部'], description: '请选择部署方式', name: 'deploy-choice'
     }
 	agent any
 	stages {
@@ -436,7 +437,7 @@ PROJECT_DIR:
 pipeline {
 	agent { label params['agent-name'] }
 	parameters { //定义构建参数
-		choice choices: ['-'], description: '部署选择', name: 'deploy-choice'
+		choice choices: ['-'], description: '请选择部署方式', name: 'deploy-choice'
 		agentParameter name:'agent-name'
 		checkboxParameter name:'project-list', format:'YAML', uri:'https://raw.githubusercontent.com/sunweisheng/jenkins-json-build/master/example/microservice-build/project-list.yaml'
 	}
@@ -490,7 +491,7 @@ pipeline {
 
 ```groovy
 //选择某个部署过程执行而不是执行所以的部署过程
-choice choices: ['-'], description: '部署选择', name: 'deploy-choice'
+choice choices: ['-'], description: '请选择部署方式', name: 'deploy-choice'
 ```
 
 ```groovy
@@ -1397,7 +1398,7 @@ GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发�
 
 [Kubernetes plugin for Jenkins](https://github.com/jenkinsci/kubernetes-plugin)
 
-### KubernetesPod
+### KubernetesPod和Jenkinsfile
 
 在仓库根目录下创建KubernetesPod.yaml，该文件内的Docker镜像需要符合项目构建的要求，比如安装了Java、Maven等，示例：
 
@@ -1521,3 +1522,41 @@ pipeline {
 说明：
 
 container用于切换不同的容器环境（一个Pod中可以由多个容器，Docker也是一样），但工作目录不变，container('jnlp')是Jenkins用于执行Agent程序和Git程序的容器由Jenkins自动创建，container('docker-build')是自定义的容器在KubernetesPod.yaml中定义。
+
+## 最简构建脚本
+
+如果项目内的json配置文件的构建步骤是按照：初始化、单元测试、代码检查、编译构建、部署这5个步骤集合编写的，那么可以使用以下语句最大化的简化构建脚本：
+
+使用Jenkins的Agent服务器进行构建单项目：
+
+```groovy
+@Library('shared-library') _
+
+singleAgentBuild()
+```
+
+使用Jenkins的Agent服务器进行构建多项目：
+
+```groovy
+@Library('shared-library') _
+
+multipleAgentBuild('子项目列表的yaml文档或json文档的URL')
+```
+
+使用Kubernetes的Pod进行构建单项目：
+
+```groovy
+@Library('shared-library') _
+
+singleK8SBuild()
+```
+
+使用Kubernetes的Pod进行构建多项目：
+
+```groovy
+@Library('shared-library') _
+
+multipleK8SBuild('子项目列表的yaml文档或json文档的URL')
+```
+
+这些方法都在共享类库的vars目录中定义，可以根据需要直接修改。
