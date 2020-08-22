@@ -15,6 +15,7 @@
 1. [构建Android项目](#构建Android项目)
 1. [构建iOS项目](#构建iOS项目)
 1. [构建多个子项目](#构建多个子项目)
+1. [构建成功和失败处理](#构建成功和失败处理)
 
 ## 准备工作
 
@@ -28,7 +29,7 @@
 
 ### 依赖插件（最少）
 
-* Pipeline Utility Steps
+* [Pipeline Utility Steps](https://github.com/jenkinsci/pipeline-utility-steps-plugin)
 
 ### 新建流水线
 
@@ -1303,3 +1304,81 @@ Jenkinsfile和json构建配置文件没有任何不同，只是存放的目录�
 ![project doc image](docs/images/jenkins-json-build-05.png)
 
 配合[Custom Checkbox Parameter Plugin](https://github.com/jenkinsci/custom-checkbox-parameter-plugin)插件可以方便的选择子项目进行构建。
+
+## 构建成功和失败处理
+
+Jenkinsfile是Declarative语法，在post声明中可以对构建的成功和失败进行对应的处理。[示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/post-send-email)
+
+### 依赖的Jenkins插件
+
+* [Email Extension Template](https://github.com/jenkinsci/emailext-template-plugin)
+* [Rich Text Publisher](https://github.com/jenkinsci/rich-text-publisher-plugin)
+
+### 构建异常处理示例
+
+以下是一个构建异常处理方案：
+
+```groovy
+@Library('shared-library') _
+
+pipeline {
+	agent any
+	stages {
+		stage('处理过程1') {
+			steps {
+				script{
+					Exception ex
+					runWrapper.loadJSON('/json/post-send-email.json')
+				}
+			}
+		}
+		stage('处理过程2') {
+      steps {
+        script{
+        	println('处理过程2')
+        	try{
+        		throw new Exception('模拟异常')
+        	}catch(Exception e){
+        		ex = e
+        		throw e
+        	}
+        }
+      }
+    }
+		stage('处理过程3') {
+			steps {
+				script{
+					println('处理过程3')
+				}
+			}
+		}
+	}
+	post {
+		failure {
+			script{
+				runWrapper.postFailure(ex)
+			}
+		}
+		success{
+			script{
+				runWrapper.postSuccess()
+			}
+		}
+	}
+}
+```
+
+说明：
+
+runWrapper.postFailure(ex)方法用于处理构建失败的情况，runWrapper.postSuccess()用于处理成功的情况，它们都会发送邮件，邮件接收者和抄送者的地址在json构建配置文件中设置：
+
+```json
+{
+  "GlobalVariable": {
+    "Email-TO": "sunweisheng@live.cn",
+    "Email-CC": "sunweisheng@live.cn"
+  }
+}
+```
+
+GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发送邮件时使用，多个接收者或抄送者时，用","号分隔。
