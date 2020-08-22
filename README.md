@@ -1357,12 +1357,12 @@ pipeline {
     failure {
       script{
         runWrapper.postFailure(ex)
+      }
     }
-  }
-  success{
-    script{
-      runWrapper.postSuccess()
-        }
+    success{
+      script{
+        runWrapper.postSuccess()
+      }
     }
   }
 }
