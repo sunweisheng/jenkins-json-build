@@ -38,7 +38,7 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         helper.registerAllowedMethod('isUnix',[],{true})
         helper.registerAllowedMethod('sh',[Map.class],{sh(it)})
         helper.registerAllowedMethod('sonarQube',[],{})
-        helper.registerAllowedMethod('emailext')
+        helper.registerAllowedMethod('emailext',[Map.class],{})
         helper.registerAllowedMethod('jacoco',[Map.class],{})
         helper.registerAllowedMethod(MethodSignature.method("readJSON",Map.class),{return this.readJSON(it)})
         helper.registerAllowedMethod('pwd',[],{return './src/main/jenkins/com/bluersw/jenkins/libraries'})
@@ -189,6 +189,22 @@ class TestSharedLibrary extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test
+    void testPostSendEmail() throws Exception{
+        boolean exception = false
+        def library = library().name('shared-library')
+                               .defaultVersion("master")
+                               .allowOverride(false)
+                               .implicit(false)
+                               .targetPath(sharedLibs)
+                               .retriever(localSource(sharedLibs))
+                               .build()
+        helper.registerSharedLibrary(library)
+        runScript('com/bluersw/jenkins/libraries/PostSendEmail.groovy')
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+
     JSONObject readJSON(Map<String,String> map){
         if(map.containsKey('file')) {
             FileInputStream fs = new FileInputStream(map['file'])
@@ -197,8 +213,8 @@ class TestSharedLibrary extends DeclarativePipelineTest {
             return jo
         }
 
-        if(map.containsKey('test')){
-            JSONObject jo = (JSONObject) JSONSerializer.toJSON(map['test'])
+        if(map.containsKey('text')){
+            JSONObject jo = (JSONObject) JSONSerializer.toJSON(map['text'])
             return jo
         }
     }

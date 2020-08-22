@@ -107,6 +107,7 @@ void printLoadFactoryLog() {
 
 /**
  * 构建过程失败处理
+ * 需要Email Extension Template插件
  * @param ex 失败时抛出的异常
  */
 void postFailure(Exception ex) {
@@ -116,7 +117,7 @@ void postFailure(Exception ex) {
 		String to = factory.getGlobalVariableValue('Email-TO')
 		String cc = factory.getGlobalVariableValue('Email-CC')
 		if(to != '') {
-			def response = libraryResource 'com/bluersw/default.json'
+			def response = libraryResource 'com/bluersw/jenkins/libraries/default.json'
 			JSONObject defaultJson = readJSON(text: response)
 			def subject = "${JOB_NAME}-第${BUILD_NUMBER}次构建失败!"
 			String message = defaultJson['FailMailTemplate'].toString().replace('FailReasons', errorMessage)
@@ -125,14 +126,17 @@ void postFailure(Exception ex) {
 
 			def redTextErrorMessageTemplate = defaultJson['RedTextErrorMessageTemplate']
 			if (redTextErrorMessageTemplate != null) {
+				//需要Rich Text Publisher插件
 				rtp failedAsStable: false, parserName: 'HTML', failedText: redTextErrorMessageTemplate.toString().replace('errorMessage', errorMessage)
 			}
 		}
 	}
+	println('异常处理完成！')
 }
 
 /**
  * 构建过程成功处理
+ * 需要Email Extension Template插件
  */
 void postSuccess() {
 	StringBuilder toBuilder = new StringBuilder()
@@ -169,7 +173,7 @@ void postSuccess() {
 	if (to != '') {
 		def recipient = "${to},cc:${cc}".trim()
 		def subject = "${JOB_NAME}-第${BUILD_NUMBER}次构建成功!"
-		def response = libraryResource 'com/bluersw/default.json'
+		def response = libraryResource 'com/bluersw/jenkins/libraries/default.json'
 		JSONObject defaultJson = readJSON(text: response)
 		String successMailTemplate = defaultJson['SuccessMailTemplate'].toString()
 		emailext(to: recipient, mimeType: 'text/html', subject: subject, body: successMailTemplate)
