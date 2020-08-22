@@ -16,6 +16,7 @@
 1. [构建iOS项目](#构建iOS项目)
 1. [构建多个子项目](#构建多个子项目)
 1. [构建成功和失败处理](#构建成功和失败处理)
+1. [在K8S内创建Pod进行构建](#在K8S内创建Pod进行构建)
 
 ## 准备工作
 
@@ -1382,3 +1383,18 @@ runWrapper.postFailure(ex)方法用于处理构建失败的情况，runWrapper.p
 ```
 
 GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发送邮件时使用，多个接收者或抄送者时，用","号分隔。
+
+## 在K8S内创建Pod进行构建
+
+此方式是在Kubernetes集群内创建临时的Pod，该Pod就是Jenkins Agent的构建服务器，构建部署结束后Pod被Kubernetes回收销毁，此方案需要配置Jenkins的Kubernetes使用环境：
+
+* [Jenkins的kubernetes-plugin使用方法](https://github.com/sunweisheng/Jenkins/blob/master/Jenkins-Kubernetes.md)
+* [Jenkins在Pod中实现Docker in Docker并用kubectl进行部署](https://github.com/sunweisheng/Jenkins/blob/master/Docker-In-Docker-Kubectl.md)
+
+### 依赖Jenkins插件
+
+[Kubernetes plugin for Jenkins](https://github.com/jenkinsci/kubernetes-plugin)
+
+### KubernetesPod
+
+在项目根目录下创建KubernetesPod.yaml

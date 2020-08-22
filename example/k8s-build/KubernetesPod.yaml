@@ -1,0 +1,46 @@
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+spec:
+  containers:
+    - name: "docker-build"
+      image: "repo.bluersw.com:8083/bluersw/centos-7-docker-kubectl:2.0"
+      command:
+        - "cat"
+      tty: true
+      volumeMounts:
+        - mountPath: "/etc/docker/daemon.json"
+          name: "volume-0"
+          readOnly: false
+        - mountPath: "/root/.docker/config.json"
+          name: "volume-1"
+          readOnly: false
+        - mountPath: "/var/lib/kubelet/pki"
+          name: "volume-2"
+          readOnly: false
+        - mountPath: "/var/run/docker.sock"
+          name: "volume-3"
+          readOnly: false
+        - mountPath: "/root/.kube"
+          name: "volume-4"
+          readOnly: false
+      workingDir: "/home/jenkins/agent"
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
+  volumes:
+    - hostPath:
+        path: "/etc/docker/daemon.json"
+      name: "volume-0"
+    - hostPath:
+        path: "/root/.docker/config.json"
+      name: "volume-1"
+    - hostPath:
+        path: "/var/lib/kubelet/pki"
+      name: "volume-2"
+    - hostPath:
+        path: "/var/run/docker.sock"
+      name: "volume-3"
+    - hostPath:
+        path: "/root/.kube"
+      name: "volume-4"

@@ -106,6 +106,15 @@ void printLoadFactoryLog() {
 }
 
 /**
+ * 打印环境变量
+ */
+void printEnvVars(){
+	for(Map.Entry<String,String> entry in this.envVars){
+		println("${entry.key}:${entry.value}")
+	}
+}
+
+/**
  * 构建过程失败处理
  * 需要Email Extension Template插件
  * @param ex 失败时抛出的异常
