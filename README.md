@@ -1386,6 +1386,8 @@ GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发�
 
 ## 在K8S内创建Pod进行构建
 
+[示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/k8s-build)
+
 此方式是在Kubernetes集群内创建临时的Pod，该Pod就是Jenkins Agent的构建服务器，构建部署结束后Pod被Kubernetes回收销毁，此方案需要配置Jenkins的Kubernetes使用环境：
 
 * [Jenkins的kubernetes-plugin使用方法](https://github.com/sunweisheng/Jenkins/blob/master/Jenkins-Kubernetes.md)
@@ -1397,4 +1399,125 @@ GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发�
 
 ### KubernetesPod
 
-在项目根目录下创建KubernetesPod.yaml
+在仓库根目录下创建KubernetesPod.yaml，该文件内的Docker镜像需要符合项目构建的要求，比如安装了Java、Maven等，示例：
+
+```yaml
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+spec:
+  containers:
+    - name: "docker-build"
+      image: "repo.bluersw.com:8083/bluersw/centos-7-docker-kubectl:2.0"
+      command:
+        - "cat"
+      tty: true
+      volumeMounts:
+        - mountPath: "/etc/docker/daemon.json"
+          name: "volume-0"
+          readOnly: false
+        - mountPath: "/root/.docker/config.json"
+          name: "volume-1"
+          readOnly: false
+        - mountPath: "/var/lib/kubelet/pki"
+          name: "volume-2"
+          readOnly: false
+        - mountPath: "/var/run/docker.sock"
+          name: "volume-3"
+          readOnly: false
+        - mountPath: "/root/.kube"
+          name: "volume-4"
+          readOnly: false
+      workingDir: "/home/jenkins/agent"
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
+  volumes:
+    - hostPath:
+        path: "/etc/docker/daemon.json"
+      name: "volume-0"
+    - hostPath:
+        path: "/root/.docker/config.json"
+      name: "volume-1"
+    - hostPath:
+        path: "/var/lib/kubelet/pki"
+      name: "volume-2"
+    - hostPath:
+        path: "/var/run/docker.sock"
+      name: "volume-3"
+    - hostPath:
+        path: "/root/.kube"
+      name: "volume-4"
+```
+
+挂载了很多目录是为了实现Docker In Docker和在Pod部署K8S的资源（Service或Pod等）。
+
+在Jenkinsfile中会加载此文件创建构建项目的Pod：
+
+```groovy
+@Library('shared-library') _
+
+pipeline {
+  agent {
+    kubernetes {
+      yamlFile 'KubernetesPod.yaml'
+    }
+  }
+  stages {
+    stage('初始化') {
+      steps {
+        container('jnlp') {
+          println('jnlp:' + pwd())
+        }
+        container('docker-build'){
+          script{
+            runWrapper.loadJSON('/jenkins-project.json')
+            runWrapper.runSteps('初始化')
+            runWrapper.printEnvVars()
+          }
+        }
+      }
+    }
+    stage('单元测试') {
+      steps {
+        container('docker-build'){
+          script{
+            runWrapper.runSteps('单元测试')
+          }
+        }
+      }
+    }
+    stage('代码检查') {
+      steps {
+        container('docker-build'){
+          script{
+            runWrapper.runSteps('代码检查')
+          }
+        }
+      }
+    }
+    stage('编译构建') {
+      steps {
+        container('docker-build'){
+          script{
+            runWrapper.runSteps('编译构建')
+          }
+        }
+      }
+    }
+    stage('部署') {
+      steps {
+        container('docker-build'){
+          script{
+            runWrapper.runSteps('部署')
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+说明：
+
+container用于切换不同的容器环境（一个Pod中可以由多个容器，Docker也是一样），但工作目录不变，container('jnlp')是Jenkins用于执行Agent程序和Git程序的容器由Jenkins自动创建，container('docker-build')是自定义的容器在KubernetesPod.yaml中定义。
