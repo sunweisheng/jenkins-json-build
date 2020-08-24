@@ -6,7 +6,7 @@
     "检查MSBuild环境": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "输出MSBuild版本": "${MSBuildBinDir}\\MSBuild.exe\" -version"
+        "输出MSBuild版本": "\"${MSBuildBinDir}\\MSBuild.exe\" -version"
       }
     },
     "检查SonarScanner环境": {
@@ -38,12 +38,14 @@
     "执行SQ代码扫描": {
       "Type": "SONAR_QUBE",
       "Variable": {
-        "project_key": "Test:test",
-        "project_name": "Test:test",
-        "project_version": "4.66"
+        "project_key": "Jenkins:WinBuild",
+        "project_name": "Jenkins:WinBuild",
+        "project_version": "1.0"
       },
+      "ReportTaskPath": "${PROJECT_PATH}\\.sonarqube\\out\\.sonar\\report-task.txt",
       "?ScannerScript": "SonarScanner加日志参数 /d:sonar.verbose=true",
-      "ScannerScript": "cd ${PROJECT_PATH}\\ && SonarScanner.MSBuild.exe begin /k:\"${project_key}\" /n:\"${project_name}\" /v:\"${project_version}\"  && \"${MSBuildBinDir}\\MSBuild.exe\" /t:Rebuild  /p:VisualStudioVersion=12.0  && SonarScanner.MSBuild.exe end"
+      "ScannerScript": "cd ${PROJECT_PATH}\\ && SonarScanner.MSBuild.exe begin /k:\"${project_key}\" /n:\"${project_name}\" /v:\"${project_version}\"  && \"${MSBuildBinDir}\\MSBuild.exe\" /t:Rebuild  /p:VisualStudioVersion=12.0  && SonarScanner.MSBuild.exe end",
+      "Gate": "NONE"
     }
   },
   "部署": {

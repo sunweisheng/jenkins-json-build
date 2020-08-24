@@ -17,6 +17,7 @@
 1. [构建ReactNative项目](#构建ReactNative项目)
 1. [构建Android项目](#构建Android项目)
 1. [构建iOS项目](#构建iOS项目)
+1. [构建.NET项目](#构建.NET项目)
 1. [构建多个子项目](#构建多个子项目)
 1. [构建成功和失败处理](#构建成功和失败处理)
 1. [在K8S内创建Pod进行构建](#在K8S内创建Pod进行构建)
@@ -1319,6 +1320,86 @@ sudo gem install cocoa pods
 ```
 
 LLVM_COV_COVERAGE_ANALYSIS节点使用llvm-cov分析单元测试覆盖率，FileNameContains节点是定义要被统计的类文件名的关键字，文件名含有关键字的类文件会被计算在覆盖率统计中，这主要为了实现计算某一层代码的单元测试覆盖率。
+
+## 构建.NET项目
+
+[示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/net-build)
+
+构建.NET项目需要在Windows操作系统中安装VS2013或更高版本，先用VS2013或更高版本打开项目后用Nuget获取需要引用的包(这些包比较大没有放在示例项目中)，Nuget成功之后再构建.NET项目。
+
+### .NET项目构建配置文件内容
+
+```json
+{
+  "GlobalVariable": {
+    "MSBuildBinDir": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin"
+  },
+  "初始化": {
+    "检查MSBuild环境": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出MSBuild版本": "\"${MSBuildBinDir}\\MSBuild.exe\" -version"
+      }
+    },
+    "检查SonarScanner环境": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "输出SonarScanner版本": "SonarScanner.MSBuild.exe /?"
+      }
+    },
+    "绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "deploy-choice"
+    }
+  },
+  "单元测试": {
+    "执行单元测试脚本": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "运行单元测试": "cd ${PROJECT_PATH}\\ && MSBuild  My.msbuild /t:GenerateCoverageHtmlReport"
+      }
+    },
+    "分析单元测试覆盖率": {
+      "Type": "MSBUILD_COVERAGE_ANALYSIS",
+      "ReportDir": "${PROJECT_PATH}\\Cover\\",
+      "Lines": "0"
+    }
+  },
+  "代码检查": {
+    "执行SQ代码扫描": {
+      "Type": "SONAR_QUBE",
+      "Variable": {
+        "project_key": "Jenkins:WinBuild",
+        "project_name": "Jenkins:WinBuild",
+        "project_version": "1.0"
+      },
+      "ReportTaskPath": "${PROJECT_PATH}\\.sonarqube\\out\\.sonar\\report-task.txt",
+      "?ScannerScript": "SonarScanner加日志参数 /d:sonar.verbose=true",
+      "ScannerScript": "cd ${PROJECT_PATH}\\ && SonarScanner.MSBuild.exe begin /k:\"${project_key}\" /n:\"${project_name}\" /v:\"${project_version}\"  && \"${MSBuildBinDir}\\MSBuild.exe\" /t:Rebuild  /p:VisualStudioVersion=12.0  && SonarScanner.MSBuild.exe end",
+      "Gate": "NONE"
+    }
+  },
+  "部署": {
+    "模拟部署脚本-1": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "拷贝文件": "echo 模拟拷贝文件"
+      }
+    },
+    "模拟部署脚本-2": {
+      "Type": "COMMAND_STATUS",
+      "Script": {
+        "HTTP传输文件": "echo HTTP传输文件"
+      }
+    }
+  }
+}
+```
+
+首先构建.NET项目依靠MSBuild工具，该工具有自己的构建配置文件，[MSBuild工具配置文件示例](https://github.com/sunweisheng/jenkins-json-build/blob/master/example/net-build/My.msbuild)，该配置文件定义了大部分构建过程。
+
+MSBUILD_COVERAGE_ANALYSIS类型节点是根据MSBuild工具生成的单元测试报告，计算单元测试覆盖度，目前只能计算代码行覆盖率，另外在Windows环境下SonarQube代码扫描指令和在Linux下区别很大，需要对应的调整SonarQube扫描节点的属性。
 
 ## 构建多个子项目
 
