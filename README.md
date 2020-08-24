@@ -250,7 +250,7 @@ Finished: SUCCESS
 
 ## json中的变量
 
-为了方便在json中方便的配置构建步骤，本项目允许在json中定义变量并使用变量简化配置内容。变量的作用域程序编写一致：就近原则，GlobalVariable节点定义的变量作用域是整个文档，但在每个节点可以用Variable定义局部变量，如果Variable变量名称和GlobalVariable定义的变量名称相同则会覆盖GlobalVariable变量的值（就近原则），并且Variable定义的局部变量离开定义的节点则无效，另外定义变量和使用变量有先后顺序，如果在使用之前文档没有定义该变量则变量无效，在定义变量之后使用变量才是正确的。
+为了在json中方便配置构建步骤节点，本项目允许在json文档中定义变量并使用变量简化配置内容（因为实际工作中会有大量重复的配置信息）。变量的作用域概念与编写程序一致：就近原则，GlobalVariable节点定义的变量作用域是整个文档，但在每个节点内可以用Variable节点定义多个局部变量，如果Variable变量名称和GlobalVariable定义的变量名称相同，局部变量则会覆盖GlobalVariable定义的全局变量（就近原则），并且Variable定义的局部变量离开定义的节点后则无效，另外定义变量和使用变量有先后顺序，如果在使用之前文档没有定义该变量则变量无效，在定义变量之后使用变量才是正确的，定义变量和引用变量示例：
 
 ```json
 //定义变量
@@ -262,7 +262,7 @@ Finished: SUCCESS
 "节点名称": "${变量名称}"
 ```
 
-在文档中可使用Jenkins的env全局变量，比如BUILD_NUMBER、JOB_NAME、JENKINS_URL等，也可以在运行时使用json配置文件中的RuntimeVariable节点定义的内容创建自己的全局变量，还可以直接用GlobalVariable和Variable节点直接在文档中定义全局和局部变量，上述变量加载的顺序是：Jenkins的env全局变量（含构建参数变量）、RuntimeVariable节点定义的变量、GlobalVariable节点定义的变量、Variable节点定义的变量，按照上述变量加载顺序，变量加载后就能使用，其中Jenkins的env全局变量和RuntimeVariable节点定义的变量都会隐式的加载到GlobalVariable定义的全局变量中，而且是优先其他变量被加载，以下是定义变量和使用变量的示例([示例文件](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/json-variable))：
+在文档中可使用Jenkins的env全局变量，比如BUILD_NUMBER、JOB_NAME、JENKINS_URL等，也可以在运行时使用json配置文件中的RuntimeVariable节点定义自己的env变量，还可以直接用GlobalVariable和Variable节点直接在文档中定义全局和局部变量，上述变量加载的顺序是：文档首先加载Jenkins的env全局变量（含构建参数变量）、然后是RuntimeVariable节点定义的变量、然后是GlobalVariable节点定义的变量、最后是Variable节点定义的变量，按照上述变量加载顺序，变量加载后就能使用，其中Jenkins的env全局变量会隐式的加载到文档的全局变量中不用声明即可使用，以下是定义变量和使用变量的示例([示例文件](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/json-variable))：
 
 Jenkinsfile文件内容：
 
@@ -1402,6 +1402,7 @@ GlobalVariable中定义的Email-TO(接收者)和Email-CC(发送者)，用于发�
 
 * [Jenkins的kubernetes-plugin使用方法](https://github.com/sunweisheng/Jenkins/blob/master/Jenkins-Kubernetes.md)
 * [Jenkins在Pod中实现Docker in Docker并用kubectl进行部署](https://github.com/sunweisheng/Jenkins/blob/master/Docker-In-Docker-Kubectl.md)
+* [Kubernetes配置文件示例](https://github.com/sunweisheng/Kubernetes/blob/master/Kubernetes-Configuration.md)
 
 ### 依赖Jenkins插件
 
