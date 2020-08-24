@@ -434,11 +434,12 @@ PROJECT_DIR:
 
 * json配置文件放在项目根目录下
 * PROJECT_PATH是距离加载的Json配置文件最近的目录路径
-* PROJECT_DIR是WORKSPACE和Json配置文件之间的第一层目录的名称，所以如果仓库根目录就是项目根目录PROJECT_DIR是''，否则PROJECT_DIR是仓库目录下的项目子目录名称
+* PROJECT_DIR是仓库根目录和Json配置文件目录之间的第一层目录的路径，所以如果仓库根目录就是项目根目录PROJECT_DIR是''
+* WORKSPACE是仓库的根目录路径
 
 ## 统一的构建脚本
 
-构建脚本不是必须只有一个，而是我们可以编写一个或几个适合绝大多数项目使用，这样可以方便开发人员使用和维护，比如如下典型的构建脚本(Jenkinsfile)：
+可以编写一个或几个统一的构建脚本给所有项目使用，这样可以方便开发人员使用和维护，比如如下典型的构建脚本(Jenkinsfile)：
 
 ```groovy
 @Library('shared-library') _
@@ -491,17 +492,32 @@ pipeline {
 }
 ```
 
-上述构建过程分为初始化（一般内含加载构建配置文件、检查构建环境、参数绑定等内容）、单元测试、代码检查（代码规范）、编译、部署共5个大步骤，适合大多数项目，其中有两个配套的Jenkins插件：
+上述构建过程分为初始化（一般初始化内含加载构建配置文件、检查构建环境、构建参数的值绑定等内容）、单元测试、代码检查（代码规范）、编译、部署共5个大步骤，适合大多数项目，其中有两个配合使用的Jenkins插件：
 
 * [Agent Server Parameter Plugin](https://github.com/jenkinsci/agent-server-parameter-plugin)
 * [Custom Checkbox Parameter Plugin](https://github.com/jenkinsci/custom-checkbox-parameter-plugin)
 
-一般情况下还会使用[Git Parameter](https://github.com/jenkinsci/git-parameter-plugin)插件一起使用，Git Parameter插件用于选择分支进行源码获取，Agent Server Parameter Plugin插件用于选择构建服务器（Jenkins Agent Node），Custom Checkbox Parameter Plugin用于选择仓库根目录下的子项目实现选择性的构建子项目（如果没有子项目可以不使用此插件）。
+Agent Server Parameter Plugin插件用于选择构建服务器（Jenkins Agent Node），Custom Checkbox Parameter Plugin用于选择仓库根目录下的子项目实现选择性的构建子项目（如果没有子项目可以不使用此插件），
+一般情况下还会使用[Git Parameter](https://github.com/jenkinsci/git-parameter-plugin)插件一起使用，Git Parameter插件用于选择分支进行源码获取。
+
+定义一个下拉菜单方式的构建参数：
 
 ```groovy
-//选择某个部署过程执行而不是执行所以的部署过程
+//选择某个部署步骤而不是执行所有的部署步骤
 choice choices: ['-'], description: '请选择部署方式', name: 'deploy-choice'
 ```
+
+绑定下拉菜单方式构建参数的值：
+
+```json
+"绑定构建参数": {
+      "Type": "BUILD_PARAMETER_DROP_DOWN_MENU",
+      "StepsName": "部署",
+      "ParamName": "deploy-choice"
+    }
+```
+
+根据选择的值执行对应名称的构建步骤：
 
 ```groovy
 runWrapper.runStepForEnv('部署','deploy-choice')
@@ -509,7 +525,7 @@ runWrapper.runStepForEnv('部署','deploy-choice')
 
 runWrapper.runStepForEnv()方法是根据某个全局变量的值来执行Steps中对应名称的构建步骤，在Jenkinsfile中定义了一个下拉菜单用于选择部署方式，在Json配置文件中会配置为其绑定一个Steps内的步骤列表，这样配合runStepForEnv()方法就能达到选择步骤执行的目的。
 
-后面介绍的示例项目都是用统一的Jenkinsfile构建脚本执行，只是示例项目内的json构建配置文件的内容不同。
+后面介绍的示例项目都是用统一的Jenkinsfile构建脚本执行，但项目内的json构建配置文件的内容不同，所以构建的内容也不相同。
 
 ## 构建Java项目
 
