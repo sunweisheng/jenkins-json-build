@@ -17,7 +17,7 @@
 1. [构建ReactNative项目](#构建ReactNative项目)
 1. [构建Android项目](#构建Android项目)
 1. [构建iOS项目](#构建iOS项目)
-1. [构建.NET项目](#构建.NET项目)
+1. [构建.NET项目](#构建NET项目)
 1. [构建多个子项目](#构建多个子项目)
 1. [构建成功和失败处理](#构建成功和失败处理)
 1. [在K8S内创建Pod进行构建](#在K8S内创建Pod进行构建)
@@ -1321,7 +1321,7 @@ sudo gem install cocoa pods
 
 LLVM_COV_COVERAGE_ANALYSIS节点使用llvm-cov分析单元测试覆盖率，FileNameContains节点是定义要被统计的类文件名的关键字，文件名含有关键字的类文件会被计算在覆盖率统计中，这主要为了实现计算某一层代码的单元测试覆盖率。
 
-## 构建.NET项目
+## 构建NET项目
 
 [示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example/net-build)
 
