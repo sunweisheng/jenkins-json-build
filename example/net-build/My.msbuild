@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Clean">
+
+    <!-- 定义公用变量，如工具目录、报告目录  -->
+    <ItemGroup>
+        <!--**********************以下变量需要修改**********************************-->
+        <SolutionFile Include="WinBuild.sln"/>
+        <UnitTestsDLL Include="WinBuild.Tests.dll"/>
+        <!--********************以下变量不用修改***************************-->
+        <BuildBinDir Include="BuildBin\"/>
+        <VSTestResultsDir Include="TestResults\"/>
+        <CoverHtmlResultsDir Include="Cover\"/>
+        <!--跑单元测试的vstest.console工具，目录固定不变-->
+        <VSTestConsole Include="D:\Microsoft Visual Studio 12.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"/>
+        <!--这个MSBuild脚本中所用到的工具类的根目录，目录固定不变-->
+        <ToolsRootPath Include="D:\CSharpCiTools"/>
+        <!--提供给vstest.console使用的nunit适配器所在目录，目录固定不变-->
+        <NunitTestAdapterPath Include="D:\NUnit3TestAdapter-3.14.0\build\net35"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+        <BuildPlatform Condition=" '$(BuildPaltform)'== '' ">Any CPU</BuildPlatform>
+    </PropertyGroup>
+
+    <!--编译前先清理相关目录-->
+    <Target Name="Clean">
+        <RemoveDir Directories="@(BuildBinDir)"/>
+        <RemoveDir Directories="@(VSTestResultsDir)"/>
+        <RemoveDir Directories="@(CoverHtmlResultsDir)"/>
+    </Target>
+
+    <!--创建相关目录，如编译产物、报告目录-->
+    <Target Name="Init" DependsOnTargets="Clean">
+        <MakeDir Directories="@(BuildBinDir)"/>
+        <MakeDir Directories="@(CoverHtmlResultsDir)"/>
+        <MakeDir Directories="@(CoverHtmlResultsDir)"/>
+    </Target>
+
+    <!--执行编译任务-->
+    <Target Name="Compile" DependsOnTargets="Init">
+        <MSBuild Projects="@(SolutionFile)" Targets="Rebuild" Properties="OutDir=%(BuildBinDir.FullPath);Configuration=$(Configuration);Platform=$(BuildPlatform)"/>
+    </Target>
+
+    <!--执行单元测试，这一步同时生成trx后缀的单元测试报告和coverage后缀的覆盖率报告-->
+    <Target Name="RunUnitTestsInMs" DependsOnTargets="Compile">
+        <Exec Command='"@(VSTestConsole)" @(BuildBinDir)\@(UnitTestsDLL) /TestAdapterPath:@(NunitTestAdapterPath) /EnableCodeCoverage /logger:trx'/>
+    </Target>
+
+    <!--到这一步需要干两件事：1.重命名trx后缀的单元测试报告；2.将coverage后缀的覆盖率报告转化成XML格式的覆盖率报告-->
+    <Target Name="RenameAndConvertFormat" DependsOnTargets="RunUnitTestsInMs">
+        <Exec Command="@(ToolsRootPath)\CoverToXml\CoverToXml.exe @(VSTestResultsDir)"/>
+    </Target>
+
+    <!--这一步利用上面RunUnitTestsInMs生成的trx后缀的单元测试报告转成html格式的单元测试报告-->
+    <UsingTask TaskName="RidoTasks.trx2html" AssemblyFile="@(ToolsRootPath)\trx2html_0.7.3\0.7.3\RidoTasks.dll" />
+    <Target Name="CreateTRXReports" DependsOnTargets="RenameAndConvertFormat">
+        <CreateItem Include="%(VSTestResultsDir.FullPath)\*.trx">
+            <Output TaskParameter="Include" ItemName="trxfiles"/>
+        </CreateItem>
+        <RidoTasks.trx2html FileName="%(trxfiles.Identity)" />
+    </Target>
+
+    <!--将代码覆盖率XML报告转为Html可视化报告-->
+    <UsingTask TaskName="ReportGenerator" AssemblyFile="@(ToolsRootPath)\ReportGenerator.3.0.2\tools\ReportGenerator.exe"/>
+    <Target Name="GenerateCoverageHtmlReport" DependsOnTargets="CreateTRXReports">
+        <ReportGenerator ReportFiles="%(VSTestResultsDir.FullPath)\unittests.coverage.xml" TargetDirectory="@(CoverHtmlResultsDir)" ReportTypes="Html;Latex" SourceDirectories="@(VSTestResultsDir)" VerbosityLevel="Verbose"/>
+    </Target>
+</Project>

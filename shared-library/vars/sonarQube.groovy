@@ -60,7 +60,7 @@ void call(Step step) {
 				println("SonarQube质量检查通过，${dashboardUrl}")
 			}
 			else {
-				println("SonarQube质量检查未通过，浏览地址：${dashboardUrl}")
+				throw new Exception("SonarQube质量检查未通过，浏览地址：${dashboardUrl}")
 			}
 		}
 	}
