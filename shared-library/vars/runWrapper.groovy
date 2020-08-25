@@ -308,6 +308,36 @@ private void runCommand(Step step) {
 }
 
 /**
+ * 根据Json文件路径设置项目目录
+ * @param jsonPath Json文件路径
+ */
+private static void setProjectDir(String jsonPath, Map<String,String> stepFactoryEnv) {
+	String dir = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR))
+	String workSpace = ''
+	if (stepFactoryEnv.containsKey('WORKSPACE')) {
+		workSpace = stepFactoryEnv['WORKSPACE']
+	}
+	dir = dir.replace(workSpace, '')
+	if (dir.size() > 1) {
+		dir = dir.substring(dir.lastIndexOf(FILE_SEPARATOR) + 1, dir.size())
+	}
+	if (!stepFactoryEnv.containsKey('PROJECT_DIR')) {
+		stepFactoryEnv.put('PROJECT_DIR', dir)
+	}
+}
+
+/**
+ * 根据Json文件路径设置项目目录路径
+ * @param jsonPath Json文件路径
+ */
+private static void setProjectRoot(String jsonPath, Map<String,String> stepFactoryEnv) {
+	String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
+	if (!stepFactoryEnv.containsKey('PROJECT_PATH')) {
+		stepFactoryEnv.put('PROJECT_PATH', projectRoot)
+	}
+}
+
+/**
  * 创建JSON文件对应的StepFactory对象
  * @param jsonFile json配置文件
  * @param envVars Jenkins环境变量
@@ -320,6 +350,10 @@ private LinkedList<StepFactory> createStepFactory(String[] jsonFile, Map<String,
 		Map<String, String> stepFactoryEnv = new LinkedHashMap<>()
 		//复制环境变量避免公用同一个引用
 		copyMap(envVars, stepFactoryEnv)
+		//根据Json文件路径设置项目目录路径
+		setProjectRoot(json, stepFactoryEnv)
+		//根据Json文件路径设置项目目录
+		setProjectDir(json, stepFactoryEnv)
 		//获取运行时变量的名称和值并存入环境变量中
 		bindRuntimeVariable(jsonObject, stepFactoryEnv)
 		//整体加载json配置文档

@@ -49,10 +49,10 @@ class StepFactory {
 		this.configPath = configPath
 		//设置Jenkins环境变量
 		this.envVars = envVars == null ? new LinkedHashMap<String, String>() : envVars
-		//设置项目目录要后于this.envVars的赋值，因为会改变this.envVars内容
-		this.projectRoot = setProjectRoot(this.configPath)
-		//设置配置文件所在目录要后于this.envVars的赋值，因为会改变this.envVars内容
-		this.projectDir = setProjectDir(this.configPath)
+		//设置项目目录要后于this.envVars的赋值，因为会使用this.envVars内容
+		this.projectRoot = setProjectRoot(this.envVars)
+		//设置配置文件所在目录要后于this.envVars的赋值，因为会使用this.envVars内容
+		this.projectDir = setProjectDir(this.envVars)
 		//加载配置文件
 		this.json = new JSONExtend(text, envVars)
 		//获取经过变量赋值的配置文件JSON对象
@@ -181,39 +181,32 @@ class StepFactory {
 	}
 
 	/**
-	 * 根据Json文件路径设置项目目录路径
-	 * @param jsonPath Json文件路径
+	 * 从Jenkins环境变量中设置项目目录路径
+	 * @param envVars Jenkins变量
 	 * @return 项目目录路径
 	 */
 	@NonCPS
-	private String setProjectRoot(String jsonPath) {
-		String projectRoot = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR) + 1)
-		if (!this.envVars.containsKey('PROJECT_PATH')) {
-			this.envVars.put('PROJECT_PATH', projectRoot)
+	private static String setProjectRoot(Map<String, String> envVars) {
+		if (envVars.containsKey('PROJECT_PATH')) {
+			return envVars['PROJECT_PATH']
 		}
-		return projectRoot
+		else {
+			return ''
+		}
 	}
 
 	/**
-	 * 根据Json文件路径设置项目目录
-	 * @param jsonPath Json文件路径
-	 * @return 项目目录
+	 * 从Jenkins环境变量中设置项目目录名称
+	 * @param envVars Jenkins环境变量
+	 * @return 项目目录名称
 	 */
 	@NonCPS
-	private String setProjectDir(String jsonPath) {
-		String dir = jsonPath.substring(0, jsonPath.lastIndexOf(FILE_SEPARATOR))
-		String workSpace = ''
-		if (this.envVars.containsKey('WORKSPACE')) {
-			workSpace = envVars['WORKSPACE']
+	private static String setProjectDir(Map<String, String> envVars) {
+		if (envVars.containsKey('PROJECT_DIR')) {
+			return envVars['PROJECT_DIR']
+		}else{
+			return ''
 		}
-		dir = dir.replace(workSpace, '')
-		if (dir.size() > 1) {
-			dir = dir.substring(dir.lastIndexOf(FILE_SEPARATOR) + 1, dir.size())
-		}
-		if (!this.envVars.containsKey('PROJECT_DIR')) {
-			this.envVars.put('PROJECT_DIR', dir)
-		}
-		return dir
 	}
 
 	/**
