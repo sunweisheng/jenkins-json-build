@@ -1,4 +1,8 @@
+import groovy.transform.Field
+
 @Library('shared-library') _
+
+@Field public Exception ex
 
 pipeline {
 	agent any
@@ -6,7 +10,6 @@ pipeline {
 		stage('处理过程1') {
 			steps {
 				script{
-					Exception ex
 					runWrapper.loadJSON('/json/post-send-email.json')
 				}
 			}

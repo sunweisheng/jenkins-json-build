@@ -140,7 +140,7 @@ void postFailure(Exception ex) {
 			}
 		}
 	}
-	println('异常处理完成！')
+	println("发现异常:${ex.message},异常处理过程结束。")
 }
 
 /**

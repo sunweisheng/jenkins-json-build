@@ -1,9 +1,13 @@
+import groovy.transform.Field
+
 /*
 * Copyright (C) MIT License
 *
 * @version 2.0
 * @date 2020-8-15
 */
+@Field public Exception ex
+
 def call(String projectListURL){
 	pipeline {
 		agent { label params['agent-name'] }
@@ -16,7 +20,6 @@ def call(String projectListURL){
 			stage('初始化') {
 				steps {
 					script{
-						Exception ex
 						try{
 							runWrapper.loadJSON(params['project-list'])
 							runWrapper.runSteps('初始化')

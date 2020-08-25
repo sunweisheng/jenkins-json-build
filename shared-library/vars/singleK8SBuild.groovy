@@ -1,9 +1,13 @@
+import groovy.transform.Field
+
 /*
 * Copyright (C) MIT License
 *
 * @version 2.0
 * @date 2020-8-15
 */
+@Field public Exception ex
+
 def call(){
 	pipeline {
 		agent {
@@ -19,7 +23,6 @@ def call(){
 				steps {
 					container('docker-build'){
 						script{
-							Exception ex
 							try{
 								runWrapper.loadJSON('/jenkins-project.json')
 								runWrapper.runSteps('初始化')

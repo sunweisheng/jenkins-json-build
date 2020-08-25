@@ -1,9 +1,13 @@
+import groovy.transform.Field
+
 /*
 * Copyright (C) MIT License
 *
 * @version 2.0
 * @date 2020-8-15
 */
+@Field public Exception ex
+
 def call(){
 	pipeline {
 		agent { label params['agent-name'] }
@@ -15,7 +19,6 @@ def call(){
 			stage('初始化') {
 				steps {
 					script{
-						Exception ex
 						try{
 							runWrapper.loadJSON('/jenkins-project.json')
 							runWrapper.runSteps('初始化')
