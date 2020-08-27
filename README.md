@@ -1679,4 +1679,14 @@ singleK8SBuild()
 multipleK8SBuild('子项目列表的yaml文档或json文档的URL')
 ```
 
+以上方法都隐藏了一个闭包参数，该闭包是成功后的处理过程，可以自定义一些构建成功后的行为，比如用git打个标签,示例如下：
+
+```groovy
+@Library('shared-library') _
+
+multipleK8SBuild('http://xyz.com/project-list.yaml',{
+    it.runSteps('打标签')
+})
+```
+
 这些方法都在共享类库的vars目录中定义，可以根据需要直接修改。

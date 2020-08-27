@@ -8,7 +8,7 @@ import groovy.transform.Field
 */
 @Field public Exception ex
 
-def call(){
+def call(Closure successProcess = {}){
 	pipeline {
 		agent {
 			kubernetes {
@@ -102,6 +102,9 @@ def call(){
 			success{
 				container('docker-build'){
 					script{
+						if(successProcess != null){
+							successProcess(runWrapper)
+						}
 						runWrapper.postSuccess()
 					}
 				}

@@ -8,7 +8,7 @@ import groovy.transform.Field
 */
 @Field public Exception ex
 
-def call(String projectListURL){
+def call(String projectListURL, Closure successProcess = {}){
 	pipeline {
 		agent { label params['agent-name'] }
 		parameters { //定义构建参数
@@ -87,6 +87,9 @@ def call(String projectListURL){
 			}
 			success{
 				script{
+					if(successProcess != null){
+						successProcess(runWrapper)
+					}
 					runWrapper.postSuccess()
 				}
 			}
