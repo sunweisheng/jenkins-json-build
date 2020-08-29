@@ -1663,7 +1663,7 @@ agentServer()
 agentServer(projectURL: '子项目列表的yaml文档或json文档的URL')
 ```
 
-使用Kubernetes的Pod进行单项目构建：
+使用Kubernetes的Pod进行单项目构建（仓库根目录下存在KubernetesPod.yaml文件）：
 
 ```groovy
 @Library('shared-library') _
@@ -1671,7 +1671,7 @@ agentServer(projectURL: '子项目列表的yaml文档或json文档的URL')
 k8sCluster()
 ```
 
-使用Kubernetes的Pod进行多项目构建：
+使用Kubernetes的Pod进行多项目构建（仓库根目录下存在KubernetesPod.yaml文件）：
 
 ```groovy
 @Library('shared-library') _
