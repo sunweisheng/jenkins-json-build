@@ -46,7 +46,7 @@
 * 将任务配置的定义修改为pipeline script from SCM
 * SCM修改为Git，Repository URL修改为项目仓库地址
 * 取消最下面的轻量级检出复选框（因为以后会和Git Parameter插件冲突）
-* Additional Behaviours中选择高级的克隆行为，将克隆和拉取操作的超市时间（分钟）设定为10分钟（因为有的项目比较大首次克隆会比较慢）
+* Additional Behaviours中选择高级的克隆行为，将克隆和拉取操作的超时时间（分钟）设定为10分钟（因为有的项目比较大首次克隆会比较慢）
 
 ![project doc image](docs/images/jenkins-json-build-02.png)
 最后保存退出。
@@ -1652,7 +1652,7 @@ container用于切换不同的容器环境（一个Pod中可以由多个容器�
 ```groovy
 @Library('shared-library') _
 
-singleAgentBuild()
+agentServer()
 ```
 
 使用Jenkins的Agent服务器进行多项目构建：
@@ -1660,7 +1660,7 @@ singleAgentBuild()
 ```groovy
 @Library('shared-library') _
 
-multipleAgentBuild('子项目列表的yaml文档或json文档的URL')
+agentServer(projectURL: '子项目列表的yaml文档或json文档的URL')
 ```
 
 使用Kubernetes的Pod进行单项目构建：
@@ -1668,7 +1668,7 @@ multipleAgentBuild('子项目列表的yaml文档或json文档的URL')
 ```groovy
 @Library('shared-library') _
 
-singleK8SBuild()
+k8sCluster()
 ```
 
 使用Kubernetes的Pod进行多项目构建：
@@ -1676,7 +1676,7 @@ singleK8SBuild()
 ```groovy
 @Library('shared-library') _
 
-multipleK8SBuild('子项目列表的yaml文档或json文档的URL')
+k8sCluster(projectURL: '子项目列表的yaml文档或json文档的URL')
 ```
 
 以上方法都隐藏了一个闭包参数，该闭包是成功后的处理过程，可以自定义一些构建成功后的行为，比如用git打个标签,示例如下：
@@ -1684,9 +1684,66 @@ multipleK8SBuild('子项目列表的yaml文档或json文档的URL')
 ```groovy
 @Library('shared-library') _
 
-multipleK8SBuild('http://xyz.com/project-list.yaml',{
+k8sCluster(projectURL: 'http://xyz.com/project-list.yaml',{
     it.runSteps('打标签')
 })
+```
+
+因为[https://issues.jenkins-ci.org/browse/JENKINS-56943](https://issues.jenkins-ci.org/browse/JENKINS-56943)这个问题，所以在项目中使用Git Parameter插件，并且使用K8S集群进行构建的时候不能用File的方式加载Pod模版，需要直接加载Pod模版内容，例如：
+
+```groovy
+@Library('shared-library') _
+
+k8sCluster(podTemplate: 
+"""
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+spec:
+  containers:
+    - name: "docker-build"
+      image: "repo.bluersw.com:8083/bluersw/centos-7-docker-kubectl:2.0"
+      command:
+        - "cat"
+      tty: true
+      volumeMounts:
+        - mountPath: "/etc/docker/daemon.json"
+          name: "volume-0"
+          readOnly: false
+        - mountPath: "/root/.docker/config.json"
+          name: "volume-1"
+          readOnly: false
+        - mountPath: "/var/lib/kubelet/pki"
+          name: "volume-2"
+          readOnly: false
+        - mountPath: "/var/run/docker.sock"
+          name: "volume-3"
+          readOnly: false
+        - mountPath: "/root/.kube"
+          name: "volume-4"
+          readOnly: false
+      workingDir: "/home/jenkins/agent"
+  securityContext:
+    runAsGroup: 0
+    runAsUser: 0
+  volumes:
+    - hostPath:
+        path: "/etc/docker/daemon.json"
+      name: "volume-0"
+    - hostPath:
+        path: "/root/.docker/config.json"
+      name: "volume-1"
+    - hostPath:
+        path: "/var/lib/kubelet/pki"
+      name: "volume-2"
+    - hostPath:
+        path: "/var/run/docker.sock"
+      name: "volume-3"
+    - hostPath:
+        path: "/root/.kube"
+      name: "volume-4"
+"""
+)
 ```
 
 这些方法都在共享类库的vars目录中定义，可以根据需要直接修改。
