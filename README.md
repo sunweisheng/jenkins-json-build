@@ -22,6 +22,7 @@
 1. [构建成功和失败处理](#构建成功和失败处理)
 1. [在K8S内创建Pod进行构建](#在K8S内创建Pod进行构建)
 1. [最简构建脚本](#最简构建脚本)
+1. [其他设置](#其他设置)
 
 ## 准备工作
 
@@ -1747,3 +1748,33 @@ spec:
 ```
 
 这些方法都在共享类库的vars目录中定义，可以根据需要直接修改。
+
+## 其他设置
+
+### 显示Jenkins环境变量
+
+在Jenkinsfile中执行runWrapper.printEnvVars()可打印可以识别的Jenkins环境变量：
+
+```groovy
+runWrapper.printEnvVars()
+```
+
+### 显示加载JSON配置文件时的日志信息
+
+要在GlobalVariable节点内添加LogLevel字节点，LogLevel字节点的内容可以是DEBUG、INFO、WARNING、ERROR，其中DEBUG是日志最全的设置。
+
+```json
+"GlobalVariable": {
+  "LogLevel": "DEBUG"
+}
+```
+
+在Jenkinsfile中执行runWrapper.printLoadFactoryLog()方法可以输出加载Json文件的日志：
+
+```groovy
+runWrapper.printLoadFactoryLog()
+```
+
+### JSON配置文件编码
+
+JSON配置文件编码请使用UTF-8编码。
