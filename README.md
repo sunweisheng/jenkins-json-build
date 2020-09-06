@@ -1,6 +1,8 @@
 # Jenkins Json Build
 
-此项目是依靠Jenkins共享类库（Shared Libraries）机制，使用JSON配置文件驱动构建过程，以便于使开发人员不必编写大量的Jenkins构建脚本并且在众多项目中抽象复用Jenkins构建脚本的执行过程，此类库非常适合管理构建项目数量众多并且构建种类繁杂的工作场景，可以依靠一个或几个构建模版配合每个项目中的json构建配置文件，实现既统一管理又灵活多变的软件项目构建管理方案。
+我所在的组织项目数量众多，使用的语言和框架也很多，比如Java、ReactNative、C# .NET、Android、iOS等，部署环境也是多种多样比如Tomcat、K8S、IIS、客户端应用是局域网内企业证书安装等，我们没有专门的配置管理员或构建部署专员，都是开发人员自己在Jenkins中写构建脚本，每个项目都有自己的构建脚本（Scripted Pipelines），但类型相同的项目比如都是Java或都是.NET项目之间，构建脚本其实都很类似，都是靠几个已存在的构建脚本改写出来的，其实开发人员对编写Jenkins构建脚本了解也不多，另外因为没有规则和约束，更没有代码复用的机制，构建部署工作很混乱和难以管理。
+
+在上述情况下我们开发了Jenkins-Json-Build项目,该项目适合于有一些编程经验的人员在不需要了解Jenkins构建脚本如何编写的情况下，通过简单的配置Json文件，就可以轻松完成一个项目的获取源码、单元测试、代码检查、编译构建、部署等步骤，实现一个典型的CI过程，又因为此项目使用了Jenkins共享类库（Shared Libraries）机制，构建脚本复用率得到了大幅度提高，并且开发人员可以方便的扩展更多的功能，满足不同构建部署场景的需要，此项目非常适合那些开发人员自己管理构建部署的团队，通过Jenkins-Json-Build项目组织对构建部署过程进行了统一的管理和监督，又让每个项目有足够的灵活性和自主权满足各自项目构建部署的特殊性。
 
 * [共享类库源码](https://github.com/sunweisheng/jenkins-json-build/tree/master/shared-library)
 * [示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example)
