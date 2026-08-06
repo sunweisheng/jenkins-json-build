@@ -1,0 +1,41 @@
+{
+  "metadataNodes": ["RuntimeVariable", "GlobalVariable", "GlobalLogLevel"],
+  "commandTypes": ["COMMAND_STATUS", "COMMAND_STDOUT"],
+  "unsupportedTypes": [
+    "JEST_COVERAGE_ANALYSIS",
+    "LLVM_COV_COVERAGE_ANALYSIS",
+    "MSBUILD_COVERAGE_ANALYSIS"
+  ],
+  "mappings": {
+    "COMMAND_STATUS_FOR": "commandLoop",
+    "COMMAND_STATUS_IF": "conditionalCommand",
+    "COMMAND_STATUS_WITH_CREDENTIALS": "credentials",
+    "BUILD_PARAMETER_DROP_DOWN_MENU": "choiceParameter",
+    "JUNIT_PLUG_IN": "junit",
+    "JACOCO_PLUG_IN": "jacoco",
+    "SONAR_QUBE": "sonarqube"
+  },
+  "mavenCommandPattern": "^(?:cd\\s+([^;]+);\\s*)?(mvn|\\./mvnw)\\s+(.+)$",
+  "kanikoCommandPattern": "(?:^|\\s)/kaniko/executor(?:\\s|$)",
+  "helmCommandPattern": "(?:^|\\s)helm\\s+(lint|template|upgrade|status|rollback)(?:\\s|$)",
+  "unsupportedCommandPatterns": {
+    "Node": "(?:^|[;&|\\s])(node|npm|npx|yarn|pnpm|gulp|jest)(?:\\s|$)",
+    ".NET": "(?:^|[;&|\\s])(dotnet|MSBuild(?:\\.exe)?|SonarScanner\\.MSBuild(?:\\.exe)?)(?:\\s|$)",
+    "Android": "(?:^|[/\\\\;&|\\s])(gradlew(?:\\.bat)?|gradle|adb)(?:\\s|$)",
+    "iOS": "(?:^|[;&|\\s])(xcodebuild|xcrun|pod|oclint(?:-json-compilation-database)?)(?:\\s|$)",
+    "React Native": "(?:^|[;&|\\s])react-native(?:\\s|$)",
+    "LLVM": "(?:^|[;&|\\s])llvm-cov(?:\\s|$)"
+  },
+  "jacocoFields": {
+    "classPattern": "classPattern",
+    "execPattern": "execPattern",
+    "InclusionPattern": "inclusionPattern",
+    "ExclusionPattern": "exclusionPattern",
+    "LineCoverage": "maximumLineCoverage",
+    "InstructionCoverage": "maximumInstructionCoverage",
+    "MethodCoverage": "maximumMethodCoverage",
+    "BranchCoverage": "maximumBranchCoverage",
+    "ClassCoverage": "maximumClassCoverage",
+    "ComplexityCoverage": "maximumComplexityCoverage"
+  }
+}

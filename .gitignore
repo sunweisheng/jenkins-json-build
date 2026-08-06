@@ -46,3 +46,7 @@ work/
 *.iml
 /unit-tests/*.iml
 .scannerwork/
+
+# Python test cache
+__pycache__/
+*.py[cod]

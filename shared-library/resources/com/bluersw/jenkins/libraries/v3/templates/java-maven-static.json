@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 3,
+  "variables": {
+    "JAVA_VERSION": "21",
+    "MAVEN_EXECUTABLE": "./mvnw",
+    "ENABLE_SONAR": false,
+    "SONARQUBE_INSTALLATION": "SonarQube",
+    "JUNIT_REPORTS": "**/target/surefire-reports/TEST-*.xml",
+    "BUILD_ARTIFACTS": "**/target/*.jar"
+  },
+  "parameters": [],
+  "agent": {
+    "type": "static",
+    "label": ""
+  },
+  "stages": [
+    {
+      "id": "test",
+      "name": "Java tests",
+      "timeoutMinutes": 30,
+      "steps": [
+        {
+          "type": "maven",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["clean", "test"]
+        },
+        {
+          "type": "junit",
+          "testResults": "${JUNIT_REPORTS}"
+        },
+        {
+          "type": "jacoco",
+          "execPattern": "**/target/jacoco.exec",
+          "classPattern": "**/target/classes",
+          "sourcePattern": "**/src/main/java"
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "name": "Java quality",
+      "condition": {
+        "variable": "ENABLE_SONAR",
+        "operator": "equals",
+        "value": true
+      },
+      "timeoutMinutes": 20,
+      "steps": [
+        {
+          "type": "sonarqube",
+          "installation": "${SONARQUBE_INSTALLATION}",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["sonar:sonar"],
+          "qualityGate": true,
+          "abortPipeline": true
+        }
+      ]
+    },
+    {
+      "id": "package",
+      "name": "Java package",
+      "timeoutMinutes": 30,
+      "steps": [
+        {
+          "type": "maven",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["package"],
+          "arguments": ["-DskipTests"],
+          "artifacts": ["${BUILD_ARTIFACTS}"]
+        },
+        {
+          "type": "archive",
+          "artifacts": "${BUILD_ARTIFACTS}",
+          "fingerprint": true
+        }
+      ]
+    }
+  ],
+  "post": {
+    "always": []
+  }
+}

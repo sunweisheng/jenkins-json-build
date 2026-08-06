@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "merge-test"
+  },
+  "variables": {
+    "MESSAGE": "base"
+  },
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "capture",
+      "name": "Capture",
+      "steps": [
+        {
+          "type": "company.capture",
+          "message": "${MESSAGE}"
+        }
+      ]
+    }
+  ],
+  "post": {}
+}

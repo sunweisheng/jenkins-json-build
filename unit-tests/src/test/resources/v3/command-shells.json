@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "command-shells"
+  },
+  "variables": {},
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "commands",
+      "name": "Commands",
+      "steps": [
+        {"type": "command", "shell": "sh", "script": "echo sh"},
+        {"type": "command", "shell": "bash", "script": "echo bash"},
+        {"type": "command", "shell": "powershell", "script": "Write-Output windows"},
+        {"type": "command", "shell": "pwsh", "script": "Write-Output core"},
+        {"type": "command", "shell": "bat", "script": "echo bat"}
+      ]
+    }
+  ],
+  "post": {}
+}

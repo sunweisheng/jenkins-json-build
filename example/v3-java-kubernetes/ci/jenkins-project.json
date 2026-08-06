@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "extends": "java-maven-kubernetes",
+  "project": {
+    "id": "java-kubernetes-example"
+  },
+  "variables": {
+    "IMAGE_REPOSITORY": "ghcr.io/example/java-kubernetes-example",
+    "HELM_RELEASE": "java-kubernetes-example",
+    "HELM_CHART": "deploy/helm/java-kubernetes-example",
+    "KUBE_NAMESPACE": "java-kubernetes-example"
+  }
+}

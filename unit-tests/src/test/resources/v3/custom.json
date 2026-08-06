@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "custom-test"
+  },
+  "variables": {},
+  "agent": {
+    "type": "static",
+    "label": ""
+  },
+  "stages": [
+    {
+      "id": "extension",
+      "name": "Extension",
+      "steps": [
+        {
+          "type": "company.customStep",
+          "message": "ready"
+        }
+      ]
+    }
+  ],
+  "post": {}
+}

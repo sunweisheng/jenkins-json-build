@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 3,
+  "extends": "java-maven-static",
+  "project": {
+    "id": "java-test"
+  }
+}

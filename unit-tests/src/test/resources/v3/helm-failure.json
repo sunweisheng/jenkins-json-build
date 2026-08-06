@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "helm-failure"
+  },
+  "variables": {},
+  "agent": {
+    "type": "static",
+    "label": ""
+  },
+  "stages": [
+    {
+      "id": "deploy",
+      "name": "Deploy",
+      "steps": [
+        {
+          "type": "helm",
+          "action": "upgrade",
+          "release": "sample",
+          "chart": "deploy/helm/sample",
+          "namespace": "sample",
+          "rollbackOnFailure": true
+        }
+      ]
+    }
+  ],
+  "post": {}
+}

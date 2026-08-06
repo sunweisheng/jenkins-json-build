@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.bluersw.jenkins.libraries</groupId>
     <artifactId>jenkins-json-build</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <name>Global Shared Library - Tests</name>
     <description>TODO</description>
     <url>https://github.com/sunweisheng/jenkins-json-build</url>
@@ -15,20 +15,22 @@
         </license>
     </licenses>
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <!-- Dependency versions -->
-        <groovy.version>2.4.17</groovy.version>
-        <junit.version>4.12</junit.version>
-        <jenkins-pipeline-unit.version>1.5</jenkins-pipeline-unit.version>
-        <groovy-eclipse-compiler.version>3.5.0-01</groovy-eclipse-compiler.version>
+        <groovy.version>2.4.21</groovy.version>
+        <junit.version>4.13.2</junit.version>
+        <jenkins-pipeline-unit.version>1.31</jenkins-pipeline-unit.version>
+        <jenkins.version>2.568.2</jenkins.version>
+        <jenkins-bom.version>6783.v88c6c30f4b_db_</jenkins-bom.version>
+        <gmavenplus.version>4.2.1</gmavenplus.version>
+        <maven-surefire.version>3.5.4</maven-surefire.version>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.164.x</artifactId>
-                <version>3</version>
+                <artifactId>bom-2.568.x</artifactId>
+                <version>${jenkins-bom.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -56,38 +58,50 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-job</artifactId>
-            <version>2.35</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-cps</artifactId>
-            <version>2.74</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>jenkins-core</artifactId>
-            <version>2.164.3</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
+            <version>${jenkins.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kohsuke.stapler</groupId>
             <artifactId>json-lib</artifactId>
-            <version>2.4-jenkins-2</version>
+            <version>2.4-jenkins-3</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
-            <scope>compile</scope>
+            <version>2.0.17</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>jenkins-releases</id>
+            <url>https://repo.jenkins-ci.org/releases/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jenkins-releases</id>
+            <url>https://repo.jenkins-ci.org/releases/</url>
+        </pluginRepository>
+    </pluginRepositories>
     <build>
         <testSourceDirectory>src/test/groovy</testSourceDirectory>
         <resources>
@@ -103,30 +117,37 @@
         </testResources>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-eclipse-compiler</artifactId>
-                <version>${groovy-eclipse-compiler.version}</version>
-                <extensions>true</extensions>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${gmavenplus.version}</version>
+                <configuration>
+                    <testSources>
+                        <testSource>
+                            <directory>${project.basedir}/src/test/groovy</directory>
+                            <includes>
+                                <include>**/*.groovy</include>
+                            </includes>
+                        </testSource>
+                        <testSource>
+                            <directory>${project.basedir}/../shared-library/src</directory>
+                            <includes>
+                                <include>com/bluersw/jenkins/libraries/v3/**/*.groovy</include>
+                            </includes>
+                        </testSource>
+                    </testSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compileTests</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <compilerId>groovy-eclipse-compiler</compilerId>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-compiler</artifactId>
-                        <version>${groovy-eclipse-compiler.version}</version>
-                    </dependency>
-                    <!-- for 2.8.0-01 and later you must have an explicit dependency on groovy-eclipse-batch -->
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-batch</artifactId>
-                        <version>2.5.8-02</version>
-                    </dependency>
-                </dependencies>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire.version}</version>
             </plugin>
         </plugins>
     </build>

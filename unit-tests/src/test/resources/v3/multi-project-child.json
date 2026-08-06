@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 3,
+  "variables": {},
+  "parameters": [
+    {
+      "name": "RUN_MULTI",
+      "type": "boolean",
+      "defaultValue": true
+    }
+  ],
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "capture",
+      "name": "Capture",
+      "steps": [
+        {
+          "type": "company.capture",
+          "message": "${SERVICE_NAME}"
+        }
+      ]
+    }
+  ],
+  "post": {}
+}

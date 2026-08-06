@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 3,
+  "extends": "java-maven-static",
+  "project": {
+    "id": "java-static-example"
+  },
+  "variables": {
+    "ENABLE_SONAR": false
+  }
+}

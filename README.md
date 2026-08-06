@@ -7,6 +7,20 @@
 * [共享类库源码](https://github.com/sunweisheng/jenkins-json-build/tree/master/shared-library)
 * [示例项目](https://github.com/sunweisheng/jenkins-json-build/tree/master/example)
 
+## V3
+
+V3 继续使用通用 JSON 流水线，不是 Spring Boot 专用脚本。`v3.0.0` 正式实现 Java、Maven、JUnit、Jacoco、SonarQube、Kaniko 和 Helm；Node、.NET、Android、iOS、React Native 目前只有扩展接口，不宣称已经支持。V2 用户继续固定使用 `v2.1`。
+
+最简 Jenkinsfile：
+
+```groovy
+@Library('jenkins-json-build@v3.0.0') _
+
+jenkinsJsonBuild(configFiles: ['ci/jenkins-project.json'])
+```
+
+V3 配置、变量顺序、步骤、自定义扩展、多项目和平台升级说明见 [V3 使用说明](docs/V3.md)。现有文档其余部分描述 V2 行为。
+
 ## 内容列表
 
 1. [准备工作](#准备工作)

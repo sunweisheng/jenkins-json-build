@@ -1,0 +1,69 @@
+{
+  "stepHandlers": {
+    "command": "runCommandStep",
+    "maven": "runMavenStep",
+    "junit": "runJunitStep",
+    "jacoco": "runJacocoStep",
+    "sonarqube": "runSonarQubeStep",
+    "archive": "runArchiveStep",
+    "credentials": "runCredentialsStep",
+    "condition": "runConditionStep",
+    "retry": "runRetryStep",
+    "timeout": "runTimeoutStep",
+    "setVariable": "runSetVariableStep",
+    "containerImage": "runContainerImageStep",
+    "helm": "runHelmStep"
+  },
+  "supportedShells": ["sh", "bash", "powershell", "pwsh", "bat"],
+  "templates": {
+    "java-maven-static": "com/bluersw/jenkins/libraries/v3/templates/java-maven-static.json",
+    "java-maven-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes.json"
+  },
+  "podTemplates": {
+    "java-kaniko-helm": "com/bluersw/jenkins/libraries/v3/pods/java-kaniko-helm.yaml"
+  },
+  "agent": {
+    "type": "static",
+    "label": ""
+  },
+  "stage": {
+    "timeoutMinutes": 60,
+    "retries": 0
+  },
+  "command": {
+    "shell": "sh"
+  },
+  "maven": {
+    "executable": "./mvnw",
+    "settingsVariable": "V3_MAVEN_SETTINGS"
+  },
+  "sonarqube": {
+    "qualityGateTimeoutMinutes": 10
+  },
+  "containerImage": {
+    "builder": "kaniko",
+    "executor": "/kaniko/executor",
+    "digestFile": ".jenkins-json-build/image-digest",
+    "digestVariable": "IMAGE_DIGEST",
+    "referenceVariable": "IMAGE_REFERENCE"
+  },
+  "helm": {
+    "executable": "helm",
+    "actions": ["lint", "template", "upgrade", "status", "rollback"]
+  },
+  "projects": {
+    "execution": "sequential",
+    "maxParallel": 1,
+    "selectionParameter": "PROJECTS"
+  },
+  "podSecurity": {
+    "forbiddenPatterns": [
+      "privileged\\s*:\\s*true",
+      "hostPath\\s*:",
+      "docker\\.sock",
+      "hostNetwork\\s*:\\s*true",
+      "hostPID\\s*:\\s*true",
+      "hostIPC\\s*:\\s*true"
+    ]
+  }
+}

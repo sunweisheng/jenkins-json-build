@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "common-controls"
+  },
+  "variables": {
+    "ENABLE_CONTROL": true
+  },
+  "runtimeVariables": [
+    {"name": "FROM_ENV", "source": "env", "key": "BUILD_NUMBER"},
+    {"name": "FROM_COMMAND", "source": "command", "script": "printf output"},
+    {"name": "FROM_FILE", "source": "file", "path": "src/test/resources/v3/runtime-value.txt"},
+    {"name": "FROM_HTTP", "source": "http", "url": "https://config.example.test/value"},
+    {"name": "FROM_JSON", "source": "json", "value": "{\"node\":{\"value\":\"json-value\"}}", "jsonPath": "node.value"}
+  ],
+  "parameters": [
+    {"name": "TEXT_VALUE", "type": "string", "defaultValue": "text"},
+    {"name": "BOOLEAN_VALUE", "type": "boolean", "defaultValue": true},
+    {"name": "CHOICE_VALUE", "type": "choice", "choices": ["one", "two"]},
+    {"name": "MULTI_VALUE", "type": "multiChoice", "defaultValue": ["one", "two"]}
+  ],
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "controls",
+      "name": "Controls",
+      "timeoutMinutes": 5,
+      "retries": 1,
+      "steps": [
+        {
+          "type": "condition",
+          "when": {"variable": "ENABLE_CONTROL", "operator": "equals", "value": true},
+          "steps": [
+            {"type": "setVariable", "name": "DYNAMIC", "value": "ready"},
+            {
+              "type": "retry",
+              "count": 3,
+              "steps": [
+                {
+                  "type": "timeout",
+                  "time": 1,
+                  "unit": "SECONDS",
+                  "steps": [
+                    {
+                      "type": "credentials",
+                      "bindings": [
+                        {"kind": "string", "credentialsId": "test-secret", "variable": "BOUND_SECRET"}
+                      ],
+                      "steps": [
+                        {"type": "command", "shell": "sh", "script": "printf '%s:%s' '${DYNAMIC}' \"$BOUND_SECRET\" >/dev/null"}
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {"type": "junit", "testResults": "**/TEST-*.xml", "allowEmptyResults": true},
+        {"type": "jacoco", "execPattern": "**/jacoco.exec"},
+        {"type": "archive", "artifacts": "**/*.jar", "allowEmptyArchive": true},
+        {
+          "type": "sonarqube",
+          "installation": "SonarQube",
+          "goals": ["sonar:sonar"],
+          "qualityGate": true,
+          "qualityGateTimeoutMinutes": 3
+        }
+      ]
+    }
+  ],
+  "post": {
+    "success": [
+      {"type": "setVariable", "name": "POST_SUCCESS", "value": "success"}
+    ],
+    "always": [
+      {"type": "setVariable", "name": "POST_ALWAYS", "value": "always"}
+    ]
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 3,
+  "variables": {
+    "JAVA_VERSION": "21",
+    "MAVEN_IMAGE": "docker.io/library/maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237",
+    "MAVEN_EXECUTABLE": "./mvnw",
+    "ENABLE_SONAR": false,
+    "SONARQUBE_INSTALLATION": "SonarQube",
+    "JUNIT_REPORTS": "**/target/surefire-reports/TEST-*.xml",
+    "BUILD_ARTIFACTS": "**/target/*.jar",
+    "IMAGE_REPOSITORY": "ghcr.io/example/change-me",
+    "HELM_RELEASE": "change-me",
+    "HELM_CHART": "deploy/helm",
+    "KUBE_NAMESPACE": "default",
+    "KANIKO_SECRET_NAME": "ghcr-push-config",
+    "DEPLOY_SERVICE_ACCOUNT": "jenkins-deployer"
+  },
+  "parameters": [],
+  "agent": {
+    "type": "kubernetes",
+    "podTemplate": "java-kaniko-helm"
+  },
+  "stages": [
+    {
+      "id": "test",
+      "name": "Java tests",
+      "container": "maven",
+      "timeoutMinutes": 30,
+      "steps": [
+        {
+          "type": "maven",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["clean", "test"]
+        },
+        {
+          "type": "junit",
+          "testResults": "${JUNIT_REPORTS}"
+        },
+        {
+          "type": "jacoco",
+          "execPattern": "**/target/jacoco.exec",
+          "classPattern": "**/target/classes",
+          "sourcePattern": "**/src/main/java"
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "name": "Java quality",
+      "container": "maven",
+      "condition": {
+        "variable": "ENABLE_SONAR",
+        "operator": "equals",
+        "value": true
+      },
+      "timeoutMinutes": 20,
+      "steps": [
+        {
+          "type": "sonarqube",
+          "installation": "${SONARQUBE_INSTALLATION}",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["sonar:sonar"],
+          "qualityGate": true,
+          "abortPipeline": true
+        }
+      ]
+    },
+    {
+      "id": "package",
+      "name": "Java package",
+      "container": "maven",
+      "timeoutMinutes": 30,
+      "steps": [
+        {
+          "type": "maven",
+          "executable": "${MAVEN_EXECUTABLE}",
+          "goals": ["package"],
+          "arguments": ["-DskipTests"],
+          "artifacts": ["${BUILD_ARTIFACTS}"]
+        }
+      ]
+    },
+    {
+      "id": "image",
+      "name": "OCI image",
+      "container": "kaniko",
+      "timeoutMinutes": 30,
+      "steps": [
+        {
+          "type": "containerImage",
+          "builder": "kaniko",
+          "context": ".",
+          "dockerfile": "Dockerfile",
+          "destinations": ["${IMAGE_REPOSITORY}:${BUILD_NUMBER}"],
+          "cache": true
+        }
+      ]
+    },
+    {
+      "id": "deploy",
+      "name": "Helm deploy",
+      "container": "helm",
+      "timeoutMinutes": 20,
+      "steps": [
+        {
+          "type": "helm",
+          "action": "lint",
+          "chart": "${HELM_CHART}"
+        },
+        {
+          "type": "helm",
+          "action": "template",
+          "release": "${HELM_RELEASE}",
+          "chart": "${HELM_CHART}",
+          "namespace": "${KUBE_NAMESPACE}",
+          "setValues": {
+            "image.repository": "${IMAGE_REPOSITORY}",
+            "image.digest": "${IMAGE_DIGEST}"
+          }
+        },
+        {
+          "type": "helm",
+          "action": "upgrade",
+          "release": "${HELM_RELEASE}",
+          "chart": "${HELM_CHART}",
+          "namespace": "${KUBE_NAMESPACE}",
+          "createNamespace": true,
+          "wait": true,
+          "timeout": "10m",
+          "rollbackOnFailure": true,
+          "setValues": {
+            "image.repository": "${IMAGE_REPOSITORY}",
+            "image.digest": "${IMAGE_DIGEST}"
+          }
+        },
+        {
+          "type": "helm",
+          "action": "status",
+          "release": "${HELM_RELEASE}",
+          "namespace": "${KUBE_NAMESPACE}"
+        }
+      ]
+    }
+  ],
+  "post": {
+    "always": [
+      {
+        "type": "archive",
+        "artifacts": ".jenkins-json-build/image-digest",
+        "allowEmptyArchive": true,
+        "fingerprint": true
+      }
+    ]
+  }
+}

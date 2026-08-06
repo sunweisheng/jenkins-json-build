@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 3,
+  "variables": {
+    "SERVICE_NAME": "root"
+  },
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "capture",
+      "name": "Capture",
+      "steps": [
+        {
+          "type": "company.capture",
+          "message": "${SERVICE_NAME}"
+        }
+      ]
+    }
+  ],
+  "post": {},
+  "projects": {
+    "execution": "parallel",
+    "maxParallel": 2,
+    "items": [
+      {"id": "api", "configFiles": ["v3/multi-project-child.json"], "variables": {"SERVICE_NAME": "api"}},
+      {"id": "worker", "configFiles": ["v3/multi-project-child.json"], "variables": {"SERVICE_NAME": "worker"}},
+      {"id": "scheduler", "configFiles": ["v3/multi-project-child.json"], "variables": {"SERVICE_NAME": "scheduler"}},
+      {"id": "report", "configFiles": ["v3/multi-project-child.json"], "variables": {"SERVICE_NAME": "report"}},
+      {"id": "gateway", "configFiles": ["v3/multi-project-child.json"], "variables": {"SERVICE_NAME": "gateway"}}
+    ]
+  }
+}
