@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 3,
+  "extends": "java-maven-kubernetes-kaniko",
+  "project": {"id": "kaniko-test"},
+  "variables": {
+    "IMAGE_REPOSITORY": "ghcr.io/example/kaniko-test",
+    "KANIKO_IMAGE": "registry.example.test/kaniko:custom@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "KANIKO_EXECUTOR": "/opt/kaniko/executor",
+    "KANIKO_DOCKER_CONFIG": "/config/kaniko",
+    "KANIKO_SECRET_NAME": "private-kaniko-config",
+    "IMAGE_BUILDER_MEMORY_LIMIT": "3Gi",
+    "HELM_RELEASE": "kaniko-test",
+    "HELM_CHART": "deploy/helm/kaniko-test",
+    "KUBE_NAMESPACE": "kaniko-test"
+  }
+}

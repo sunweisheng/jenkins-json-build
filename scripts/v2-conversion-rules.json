@@ -16,7 +16,16 @@
     "SONAR_QUBE": "sonarqube"
   },
   "mavenCommandPattern": "^(?:cd\\s+([^;]+);\\s*)?(mvn|\\./mvnw)\\s+(.+)$",
-  "kanikoCommandPattern": "(?:^|\\s)/kaniko/executor(?:\\s|$)",
+  "imageBuilderCommandPatterns": {
+    "kaniko": {
+      "displayName": "Kaniko",
+      "pattern": "(?:^|\\s)/kaniko/executor(?:\\s|$)"
+    },
+    "buildkit": {
+      "displayName": "BuildKit",
+      "pattern": "(?:^|[;&|\\s])(?:buildctl\\s+build|docker\\s+buildx\\s+build)(?:\\s|$)"
+    }
+  },
   "helmCommandPattern": "(?:^|\\s)helm\\s+(lint|template|upgrade|status|rollback)(?:\\s|$)",
   "unsupportedCommandPatterns": {
     "Node": "(?:^|[;&|\\s])(node|npm|npx|yarn|pnpm|gulp|jest)(?:\\s|$)",

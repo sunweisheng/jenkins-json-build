@@ -43,7 +43,10 @@ class V2Converter:
     def __init__(self, rules: dict[str, Any]) -> None:
         self.rules = rules
         self.maven_pattern = re.compile(rules["mavenCommandPattern"])
-        self.kaniko_pattern = re.compile(rules["kanikoCommandPattern"], re.IGNORECASE)
+        self.image_builder_patterns = [
+            (builder, definition["displayName"], re.compile(definition["pattern"], re.IGNORECASE))
+            for builder, definition in rules["imageBuilderCommandPatterns"].items()
+        ]
         self.helm_pattern = re.compile(rules["helmCommandPattern"], re.IGNORECASE)
         self.unsupported_command_patterns = [
             (name, re.compile(pattern, re.IGNORECASE))
@@ -238,8 +241,11 @@ class V2Converter:
                     f"{parent_name}/{command_name} 检测到 V3.0 尚未支持的技术栈: {', '.join(unsupported)}"
                 )
                 continue
-            if self.kaniko_pattern.search(command_text):
-                report.suggestions.append(f"{parent_name}/{command_name} 检测到 Kaniko 命令，请人工改用 containerImage 步骤")
+            for builder, display_name, pattern in self.image_builder_patterns:
+                if pattern.search(command_text):
+                    report.suggestions.append(
+                        f"{parent_name}/{command_name} 检测到 {display_name} 命令，请人工改用 builder={builder} 的 containerImage 步骤"
+                    )
             if self.helm_pattern.search(command_text):
                 report.suggestions.append(f"{parent_name}/{command_name} 检测到 Helm 命令，请人工改用 helm 步骤")
             result.append(self._command(command_text, command_name))

@@ -21,7 +21,9 @@ The image digests were checked against the official image manifests on 2026-08-0
 5. Install Chart `5.9.49` with the generated `values.yaml`.
 6. Create a GitHub Organization Folder or Multibranch Pipeline. Git Parameter is only for old jobs.
 
-The controller service account can provision build Pods but cannot read Kubernetes Secrets. Ordinary build Pods use `jenkins-build` without an API token. The Java deployment Pod mounts the GHCR config only in Kaniko and a short-lived projected Kubernetes token only in Helm. The deployer role intentionally has no Secret permissions and Helm uses ConfigMaps for release storage.
+The controller service account can provision build Pods but cannot read Kubernetes Secrets. Ordinary build Pods use `jenkins-build` without an API token. The default Java deployment Pod mounts the registry config only in rootless BuildKit and a short-lived projected Kubernetes token only in Helm; the Kaniko compatibility template keeps the same separation. The deployer role intentionally has no Secret permissions and Helm uses ConfigMaps for release storage.
+
+The bundled rootless BuildKit Pod requires Kubernetes 1.30 or later, an admission policy that permits the container-level `Unconfined` seccomp and AppArmor settings, and nodes with unprivileged user namespaces enabled. It remains non-privileged and does not mount a Docker socket. Image names, executables, credential mount paths, cache references, and resource limits are template variables so installations can use private registries or internally maintained images without editing the shared library.
 
 ## Backup and restore rehearsal
 

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "unknown-builder"},
+  "variables": {},
+  "agent": {"type": "static", "label": "linux"},
+  "stages": [
+    {
+      "id": "image",
+      "name": "Unknown builder",
+      "steps": [
+        {
+          "type": "containerImage",
+          "builder": "unknown",
+          "dockerfile": "Dockerfile",
+          "destinations": ["ghcr.io/example/unknown:1"]
+        }
+      ]
+    }
+  ],
+  "post": {"always": []}
+}

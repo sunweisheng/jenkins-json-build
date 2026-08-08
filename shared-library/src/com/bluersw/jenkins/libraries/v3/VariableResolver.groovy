@@ -46,13 +46,56 @@ class VariableResolver implements Serializable {
         Map<String, Object> resolved = new LinkedHashMap<String, Object>()
         Map<String, Object> available = new LinkedHashMap<String, Object>()
         available.putAll(inherited ?: [:])
-        (definitions ?: [:]).each { key, value ->
-            String name = key.toString()
-            Object resolvedValue = resolve(value, available, "${location}.${name}")
-            resolved[name] = resolvedValue
-            available[name] = resolvedValue
+
+        Map<String, Object> pending = new LinkedHashMap<String, Object>()
+        (definitions ?: [:]).each { key, value -> pending[key.toString()] = value }
+        while (!pending.isEmpty()) {
+            boolean progressed = false
+            List<String> names = new ArrayList<String>(pending.keySet())
+            for (String name : names) {
+                Set<String> dependencies = variableNames(pending[name])
+                if (!dependencies.every { dependency ->
+                    (!pending.containsKey(dependency) || dependency == name) &&
+                        available.containsKey(dependency) && available[dependency] != null
+                }) {
+                    continue
+                }
+                Object resolvedValue = resolve(pending.remove(name), available, "${location}.${name}")
+                resolved[name] = resolvedValue
+                available[name] = resolvedValue
+                progressed = true
+            }
+            if (!progressed) {
+                String name = pending.keySet().iterator().next()
+                Set<String> dependencies = variableNames(pending[name])
+                String missing = dependencies.find { dependency ->
+                    (!available.containsKey(dependency) || available[dependency] == null) && !pending.containsKey(dependency)
+                }
+                if (missing != null || dependencies.contains(name) &&
+                    (!available.containsKey(name) || available[name] == null)) {
+                    resolve(pending[name], available, "${location}.${name}")
+                }
+                throw new V3ConfigException("${location} 存在循环变量引用: ${pending.keySet().join(', ')}")
+            }
         }
         return resolved
+    }
+
+    private static Set<String> variableNames(Object value) {
+        Set<String> names = new LinkedHashSet<String>()
+        collectVariableNames(value, names)
+        return names
+    }
+
+    private static void collectVariableNames(Object value, Set<String> names) {
+        if (value instanceof Map) {
+            (value as Map).values().each { collectVariableNames(it, names) }
+        } else if (value instanceof Collection) {
+            (value as Collection).each { collectVariableNames(it, names) }
+        } else if (value instanceof CharSequence) {
+            Matcher matcher = VARIABLE.matcher(value.toString())
+            while (matcher.find()) names.add(matcher.group(1))
+        }
     }
 
     private static void requireVariable(String name, Map variables, String location) {

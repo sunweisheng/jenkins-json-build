@@ -17,9 +17,11 @@
   "supportedShells": ["sh", "bash", "powershell", "pwsh", "bat"],
   "templates": {
     "java-maven-static": "com/bluersw/jenkins/libraries/v3/templates/java-maven-static.json",
-    "java-maven-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes.json"
+    "java-maven-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes.json",
+    "java-maven-kubernetes-kaniko": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes-kaniko.json"
   },
   "podTemplates": {
+    "java-buildkit-helm": "com/bluersw/jenkins/libraries/v3/pods/java-buildkit-helm.yaml",
     "java-kaniko-helm": "com/bluersw/jenkins/libraries/v3/pods/java-kaniko-helm.yaml"
   },
   "agent": {
@@ -41,11 +43,24 @@
     "qualityGateTimeoutMinutes": 10
   },
   "containerImage": {
-    "builder": "kaniko",
-    "executor": "/kaniko/executor",
+    "builder": "buildkit",
     "digestFile": ".jenkins-json-build/image-digest",
     "digestVariable": "IMAGE_DIGEST",
-    "referenceVariable": "IMAGE_REFERENCE"
+    "referenceVariable": "IMAGE_REFERENCE",
+    "builders": {
+      "buildkit": {
+        "handler": "runBuildKitContainerImage",
+        "executor": "buildctl-daemonless.sh",
+        "frontend": "dockerfile.v0",
+        "metadataFile": ".jenkins-json-build/image-metadata.json",
+        "metadataDigestKey": "containerimage.digest",
+        "secretDirectory": ".jenkins-json-build/buildkit-secrets"
+      },
+      "kaniko": {
+        "handler": "runKanikoContainerImage",
+        "executor": "/kaniko/executor"
+      }
+    }
   },
   "helm": {
     "executable": "helm",

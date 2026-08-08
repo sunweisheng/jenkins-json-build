@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "buildkit-cache-conflict"},
+  "variables": {},
+  "agent": {"type": "static", "label": "linux"},
+  "stages": [
+    {
+      "id": "image",
+      "name": "BuildKit cache conflict",
+      "steps": [
+        {
+          "type": "containerImage",
+          "dockerfile": "Dockerfile",
+          "destinations": ["ghcr.io/example/conflict:1"],
+          "cache": false,
+          "cacheFrom": ["type=registry,ref=ghcr.io/example/conflict:cache"]
+        }
+      ]
+    }
+  ],
+  "post": {"always": []}
+}

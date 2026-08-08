@@ -25,13 +25,16 @@ spec:
         allowPrivilegeEscalation: false
         capabilities:
           drop: ["ALL"]
-    - name: kaniko
-      image: ${KANIKO_IMAGE}
-      command: ["/busybox/cat"]
+    - name: buildkit
+      image: ${BUILDKIT_IMAGE}
+      command: ["sh", "-c", "cat"]
       tty: true
       env:
+        - name: BUILDKITD_FLAGS
+          value: >-
+            ${BUILDKITD_FLAGS} --root ${BUILDKIT_STATE_DIR}
         - name: DOCKER_CONFIG
-          value: ${KANIKO_DOCKER_CONFIG}
+          value: ${BUILDKIT_DOCKER_CONFIG}
       resources:
         requests:
           cpu: "${IMAGE_BUILDER_CPU_REQUEST}"
@@ -40,13 +43,21 @@ spec:
           cpu: "${IMAGE_BUILDER_CPU_LIMIT}"
           memory: "${IMAGE_BUILDER_MEMORY_LIMIT}"
       securityContext:
-        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: ${BUILDKIT_RUN_AS_USER}
+        runAsGroup: ${BUILDKIT_RUN_AS_GROUP}
+        seccompProfile:
+          type: Unconfined
+        appArmorProfile:
+          type: Unconfined
         capabilities:
           drop: ["ALL"]
       volumeMounts:
-        - name: kaniko-config
-          mountPath: ${KANIKO_DOCKER_CONFIG}
+        - name: buildkit-config
+          mountPath: ${BUILDKIT_DOCKER_CONFIG}
           readOnly: true
+        - name: buildkit-state
+          mountPath: ${BUILDKIT_STATE_DIR}
     - name: helm
       image: ${HELM_IMAGE}
       command: ["cat"]
@@ -70,12 +81,14 @@ spec:
           mountPath: /var/run/secrets/kubernetes.io/serviceaccount
           readOnly: true
   volumes:
-    - name: kaniko-config
+    - name: buildkit-config
       secret:
-        secretName: ${KANIKO_SECRET_NAME}
+        secretName: ${BUILDKIT_REGISTRY_SECRET_NAME}
         items:
           - key: .dockerconfigjson
             path: config.json
+    - name: buildkit-state
+      emptyDir: {}
     - name: deploy-api
       projected:
         defaultMode: 420

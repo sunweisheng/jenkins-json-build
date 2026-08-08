@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "buildkit-advanced"},
+  "variables": {},
+  "agent": {"type": "static", "label": "linux"},
+  "stages": [
+    {
+      "id": "image",
+      "name": "BuildKit image",
+      "steps": [
+        {
+          "type": "credentials",
+          "bindings": [
+            {"kind": "string", "credentialsId": "build-secret", "variable": "BUILD_SECRET"},
+            {"kind": "file", "credentialsId": "build-secret-file", "variable": "BUILD_SECRET_FILE"},
+            {
+              "kind": "sshUserPrivateKey",
+              "credentialsId": "build-ssh",
+              "keyFileVariable": "BUILD_SSH_KEY"
+            }
+          ],
+          "steps": [
+            {
+              "type": "containerImage",
+              "workDir": "service",
+              "context": ".",
+              "dockerfile": "docker/Dockerfile.release",
+              "destinations": ["ghcr.io/example/app:42", "ghcr.io/example/app:latest"],
+              "platforms": ["linux/amd64", "linux/arm64"],
+              "target": "runtime",
+              "buildArgs": {"VERSION": "42"},
+              "cacheFrom": ["type=registry,ref=ghcr.io/example/app:buildcache"],
+              "cacheTo": ["type=registry,ref=ghcr.io/example/app:buildcache,mode=max"],
+              "metadataFile": ".jenkins-json-build/custom-metadata.json",
+              "secrets": [
+                {"id": "token", "envVariable": "BUILD_SECRET"},
+                {"id": "config", "fileVariable": "BUILD_SECRET_FILE"}
+              ],
+              "ssh": [{"variable": "BUILD_SSH_KEY"}],
+              "arguments": ["--progress=plain"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "post": {"always": []}
+}

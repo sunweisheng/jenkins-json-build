@@ -9,12 +9,12 @@
 
 ## V3
 
-V3 继续使用通用 JSON 流水线，不是 Spring Boot 专用脚本。`v3.0.0` 正式实现 Java、Maven、JUnit、Jacoco、SonarQube、Kaniko 和 Helm；Node、.NET、Android、iOS、React Native 目前只有扩展接口，不宣称已经支持。V2 用户继续固定使用 `v2.1`。
+V3 继续使用通用 JSON 流水线，不是 Spring Boot 专用脚本。当前实现 Java、Maven、JUnit、Jacoco、SonarQube、BuildKit、Kaniko 和 Helm；容器镜像、执行器、缓存和 Kubernetes 资源都提供可覆盖的安全默认值。Node、.NET、Android、iOS、React Native 目前只有扩展接口，不宣称已经支持。V2 用户继续固定使用 `v2.1`。
 
 最简 Jenkinsfile：
 
 ```groovy
-@Library('jenkins-json-build@v3.0.0') _
+@Library('jenkins-json-build@v3.1.0') _
 
 jenkinsJsonBuild(configFiles: ['ci/jenkins-project.json'])
 ```

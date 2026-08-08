@@ -77,6 +77,21 @@ class ConvertV2ToV3Test(unittest.TestCase):
         for stack in ["Node", ".NET", "Android", "iOS", "React Native", "LLVM"]:
             self.assertIn(stack, errors)
 
+    def test_reports_registered_image_builder_commands(self):
+        payload = {
+            "构建": {
+                "Kaniko": {"Type": "COMMAND_STATUS", "Script": {"kaniko": "/kaniko/executor --context ."}},
+                "Buildctl": {"Type": "COMMAND_STATUS", "Script": {"buildctl": "buildctl build --local context=."}},
+                "Buildx": {"Type": "COMMAND_STATUS", "Script": {"buildx": "docker buildx build --push ."}},
+            }
+        }
+        temporary, process, source, output, report = self.run_converter(payload)
+        self.addCleanup(temporary.cleanup)
+        self.assertEqual(0, process.returncode)
+        suggestions = "\n".join(json.loads(report.read_text(encoding="utf-8"))["files"][0]["suggestions"])
+        self.assertIn("builder=kaniko", suggestions)
+        self.assertEqual(2, suggestions.count("builder=buildkit"))
+
 
 if __name__ == "__main__":
     unittest.main()

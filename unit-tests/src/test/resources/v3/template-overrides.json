@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 3,
+  "extends": "java-maven-kubernetes",
+  "project": {"id": "template-overrides"},
+  "variables": {
+    "IMAGE_REPOSITORY": "registry.example.test/app",
+    "HELM_RELEASE": "override",
+    "HELM_CHART": "deploy/helm/override",
+    "KUBE_NAMESPACE": "override",
+    "MAVEN_IMAGE": "registry.example.test/maven:custom@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "BUILDKIT_IMAGE": "registry.example.test/buildkit:custom@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "HELM_IMAGE": "registry.example.test/helm:custom@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "BUILDKIT_EXECUTOR": "/opt/buildkit/buildctl-daemonless.sh",
+    "BUILDKIT_FRONTEND": "company.dockerfile.v0",
+    "BUILDKITD_FLAGS": "--oci-worker-no-process-sandbox --debug",
+    "BUILDKIT_STATE_DIR": "/cache/buildkit",
+    "BUILDKIT_DOCKER_CONFIG": "/config/docker",
+    "BUILDKIT_REGISTRY_SECRET_NAME": "private-registry-config",
+    "IMAGE_BUILDER_CPU_LIMIT": "7",
+    "HELM_EXECUTABLE": "/opt/helm"
+  }
+}

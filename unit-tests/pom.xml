@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.bluersw.jenkins.libraries</groupId>
     <artifactId>jenkins-json-build</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <name>Global Shared Library - Tests</name>
     <description>TODO</description>
     <url>https://github.com/sunweisheng/jenkins-json-build</url>

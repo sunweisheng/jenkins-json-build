@@ -8,7 +8,7 @@ class ImageReference implements Serializable {
     static String requireDigest(String value) {
         String digest = value?.trim()
         if (!digest || !DIGEST.matcher(digest).matches()) {
-            throw new V3ConfigException('Kaniko 未生成有效的 sha256 镜像摘要')
+            throw new V3ConfigException('镜像构建器未生成有效的 sha256 镜像摘要')
         }
         return digest.toLowerCase(Locale.ENGLISH)
     }

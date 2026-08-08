@@ -9,20 +9,14 @@
     "JUNIT_REPORTS": "**/target/surefire-reports/TEST-*.xml",
     "BUILD_ARTIFACTS": "**/target/*.jar",
     "IMAGE_REPOSITORY": "ghcr.io/example/change-me",
-    "BUILDKIT_CACHE_REF": "${IMAGE_REPOSITORY}:buildcache",
     "HELM_RELEASE": "change-me",
     "HELM_CHART": "deploy/helm",
     "KUBE_NAMESPACE": "default",
     "BUILDKIT_IMAGE": "docker.io/moby/buildkit:v0.32.2-rootless@sha256:504731e577c20559c00f968f33219f30115e70be29ab96728d1d06e963fc494b",
     "KANIKO_IMAGE": "gcr.io/kaniko-project/executor:v1.24.0-debug@sha256:2562c4fe551399514277ffff7dcca9a3b1628c4ea38cb017d7286dc6ea52f4cd",
-    "BUILDKIT_EXECUTOR": "buildctl-daemonless.sh",
-    "BUILDKIT_FRONTEND": "dockerfile.v0",
-    "BUILDKITD_FLAGS": "--oci-worker-no-process-sandbox",
-    "BUILDKIT_STATE_DIR": "/home/user/.local/share/buildkit",
-    "BUILDKIT_DOCKER_CONFIG": "/home/user/.docker",
-    "BUILDKIT_REGISTRY_SECRET_NAME": "ghcr-push-config",
-    "BUILDKIT_RUN_AS_USER": 1000,
-    "BUILDKIT_RUN_AS_GROUP": 1000,
+    "KANIKO_EXECUTOR": "/kaniko/executor",
+    "KANIKO_DOCKER_CONFIG": "/kaniko/.docker",
+    "KANIKO_SECRET_NAME": "ghcr-push-config",
     "HELM_IMAGE": "docker.io/alpine/k8s:1.36.2@sha256:44ef4942e171939b9c665a4a84beb80e2dcdb9a24330d4651cfdfd2e9deecc47",
     "HELM_EXECUTABLE": "helm",
     "HELM_DRIVER": "configmap",
@@ -43,7 +37,7 @@
   "parameters": [],
   "agent": {
     "type": "kubernetes",
-    "podTemplate": "java-buildkit-helm"
+    "podTemplate": "java-kaniko-helm"
   },
   "stages": [
     {
@@ -108,20 +102,17 @@
     {
       "id": "image",
       "name": "OCI image",
-      "container": "buildkit",
+      "container": "kaniko",
       "timeoutMinutes": 30,
       "steps": [
         {
           "type": "containerImage",
-          "builder": "buildkit",
-          "executor": "${BUILDKIT_EXECUTOR}",
-          "frontend": "${BUILDKIT_FRONTEND}",
+          "builder": "kaniko",
+          "executor": "${KANIKO_EXECUTOR}",
           "context": ".",
           "dockerfile": "Dockerfile",
           "destinations": ["${IMAGE_REPOSITORY}:${BUILD_NUMBER}"],
-          "cache": true,
-          "cacheFrom": ["type=registry,ref=${BUILDKIT_CACHE_REF}"],
-          "cacheTo": ["type=registry,ref=${BUILDKIT_CACHE_REF},mode=max"]
+          "cache": true
         }
       ]
     },

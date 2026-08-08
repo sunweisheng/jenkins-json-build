@@ -7,6 +7,8 @@ import java.util.regex.Pattern
 class V3Pipeline implements Serializable {
     private static final String DEFAULTS_RESOURCE = 'com/bluersw/jenkins/libraries/v3/defaults.json'
     private static final Pattern VARIABLE = Pattern.compile(/\$\{([A-Za-z_][A-Za-z0-9_.-]*)\}/)
+    private static final Pattern ENVIRONMENT_NAME = Pattern.compile(/[A-Za-z_][A-Za-z0-9_]*/)
+    private static final Pattern BUILDKIT_IDENTIFIER = Pattern.compile(/[A-Za-z0-9][A-Za-z0-9_.-]*/)
 
     private final def steps
     private final Map options
@@ -498,21 +500,38 @@ class V3Pipeline implements Serializable {
 
     private void runContainerImageStep(BuildContext context, Map config, Map stageVariables) {
         String builder = config.builder?.toString() ?: defaults.containerImage.builder.toString()
-        if (builder != 'kaniko') {
-            throw new V3ConfigException("containerImage.builder 尚未支持 ${builder}")
+        Map registeredBuilders = defaults.containerImage.builders as Map
+        Map builderDefaults = registeredBuilders[builder] as Map
+        if (builderDefaults == null) {
+            throw new V3ConfigException("containerImage.builder 不支持 ${builder}，可用值: ${registeredBuilders.keySet().join(', ')}")
         }
+        Map buildConfig = merger.merge(builderDefaults, config)
         List<String> destinations = stringList(config.destinations ?: config.destination)
         if (destinations.isEmpty()) {
             throw new V3ConfigException('containerImage.destinations 不能为空')
         }
         String digestFile = config.digestFile?.toString() ?: defaults.containerImage.digestFile.toString()
-        if (digestFile.contains('/')) {
-            String digestDirectory = digestFile.substring(0, digestFile.lastIndexOf('/'))
-            runCommandStep(context, [type: 'command', shell: 'sh', script: "mkdir -p ${ShellEscaper.posix(digestDirectory)}",
-                workDir: config.workDir], stageVariables)
+        Closure build = {
+            String methodName = required(builderDefaults, 'handler')
+            String digest = this."${methodName}"(context, buildConfig, stageVariables, destinations, digestFile).toString()
+            String reference = ImageReference.withDigest(destinations[0], digest)
+            context.setRuntimeVariable(config.digestVariable?.toString() ?: defaults.containerImage.digestVariable.toString(), digest)
+            context.setRuntimeVariable(config.referenceVariable?.toString() ?: defaults.containerImage.referenceVariable.toString(), reference)
+            context.outputs.image = [digest: digest, reference: reference, destinations: destinations]
         }
-        List<String> command = [config.executor?.toString() ?: defaults.containerImage.executor.toString(),
-            '--context', config.context?.toString() ?: '.', '--dockerfile', required(config, 'dockerfile'), '--digest-file', digestFile]
+
+        if (config.workDir) {
+            steps.dir(config.workDir.toString()) { build.call() }
+        } else {
+            build.call()
+        }
+    }
+
+    private String runKanikoContainerImage(BuildContext context, Map config, Map stageVariables,
+                                           List<String> destinations, String digestFile) {
+        ensureParentDirectory(context, digestFile, stageVariables)
+        List<String> command = [required(config, 'executor'), '--context', config.context?.toString() ?: '.',
+            '--dockerfile', required(config, 'dockerfile'), '--digest-file', digestFile]
         for (String destination : destinations) {
             command.addAll(['--destination', destination])
         }
@@ -522,13 +541,161 @@ class V3Pipeline implements Serializable {
         (config.buildArgs as Map ?: [:]).each { key, value -> command.add("--build-arg=${key}=${value}") }
         command.addAll(stringList(config.arguments))
         runCommandStep(context, [type: 'command', shell: 'sh', script: command.collect { ShellEscaper.posix(it) }.join(' '),
-            workDir: config.workDir], stageVariables)
+            workDir: null], stageVariables)
+        return ImageReference.requireDigest(steps.readFile(file: digestFile).toString())
+    }
 
-        String digest = ImageReference.requireDigest(steps.readFile(file: digestFile).toString())
-        String reference = ImageReference.withDigest(destinations[0], digest)
-        context.setRuntimeVariable(config.digestVariable?.toString() ?: defaults.containerImage.digestVariable.toString(), digest)
-        context.setRuntimeVariable(config.referenceVariable?.toString() ?: defaults.containerImage.referenceVariable.toString(), reference)
-        context.outputs.image = [digest: digest, reference: reference, destinations: destinations]
+    private String runBuildKitContainerImage(BuildContext context, Map config, Map stageVariables,
+                                              List<String> destinations, String digestFile) {
+        digestFile = requireWorkspaceRelativePath(digestFile, 'containerImage.digestFile')
+        String metadataFile = requireWorkspaceRelativePath(required(config, 'metadataFile'), 'containerImage.metadataFile')
+        ensureParentDirectory(context, digestFile, stageVariables)
+        ensureParentDirectory(context, metadataFile, stageVariables)
+        String dockerfile = required(config, 'dockerfile').replace('\\', '/')
+        int separator = dockerfile.lastIndexOf('/')
+        String dockerfileDirectory = separator >= 0 ? dockerfile.substring(0, separator) : '.'
+        String dockerfileName = separator >= 0 ? dockerfile.substring(separator + 1) : dockerfile
+
+        List<String> cacheFrom = stringList(config.cacheFrom)
+        List<String> cacheTo = stringList(config.cacheTo)
+        if (config.containsKey('cache') && !booleanValue(config.cache, true) && (!cacheFrom.isEmpty() || !cacheTo.isEmpty())) {
+            throw new V3ConfigException('containerImage.cache 为 false 时不能配置 cacheFrom 或 cacheTo')
+        }
+
+        List<String> command = [required(config, 'executor'), 'build', '--frontend', required(config, 'frontend'),
+            '--local', "context=${config.context?.toString() ?: '.'}", '--local', "dockerfile=${dockerfileDirectory}",
+            '--opt', "filename=${dockerfileName}"]
+        List<String> platforms = stringList(config.platforms)
+        if (!platforms.isEmpty()) command.addAll(['--opt', "platform=${platforms.join(',')}"])
+        if (config.target) command.addAll(['--opt', "target=${config.target}"])
+        (config.buildArgs as Map ?: [:]).each { key, value -> command.addAll(['--opt', "build-arg:${key}=${value}"]) }
+        if (config.containsKey('cache') && !booleanValue(config.cache, true)) {
+            command.add('--no-cache')
+        } else {
+            for (String source : cacheFrom) command.addAll(['--import-cache', source])
+            for (String destination : cacheTo) command.addAll(['--export-cache', destination])
+        }
+
+        Map secretSetup = buildKitSecretSetup(config)
+        command.addAll(secretSetup.arguments as List<String>)
+        command.addAll(['--output', "type=image,name=${destinations.join(',')},push=true", '--metadata-file', metadataFile])
+        command.addAll(stringList(config.arguments))
+        List<String> scriptLines = new ArrayList<String>(secretSetup.lines as List<String>)
+        scriptLines.add(command.collect { ShellEscaper.posix(it) }.join(' '))
+        String script = scriptLines.join('\n')
+        runCommandStep(context, [type: 'command', shell: 'sh', script: script, workDir: null], stageVariables)
+
+        Object parsed = parseJsonValue(steps.readFile(file: metadataFile).toString(), metadataFile)
+        if (!(parsed instanceof Map)) {
+            throw new V3ConfigException("BuildKit 元数据 ${metadataFile} 必须是 JSON 对象")
+        }
+        String metadataKey = required(config, 'metadataDigestKey')
+        String digest = ImageReference.requireDigest((parsed as Map)[metadataKey]?.toString())
+        steps.writeFile(file: digestFile, text: "${digest}\n", encoding: 'UTF-8')
+        return digest
+    }
+
+    private Map buildKitSecretSetup(Map config) {
+        List<Map> secrets = mapList(config.secrets, 'containerImage.secrets')
+        List<Map> sshEntries = mapList(config.ssh, 'containerImage.ssh')
+        if (secrets.isEmpty() && sshEntries.isEmpty()) return [lines: [], arguments: []]
+
+        String configuredDirectory = requireWorkspaceRelativePath(required(config, 'secretDirectory'), 'containerImage.secretDirectory')
+        String directory = configuredDirectory.startsWith('./') ? configuredDirectory : "./${configuredDirectory}"
+        String cleanup = "rm -rf ${ShellEscaper.posix(directory)}"
+        List<String> lines = ['set +x', 'umask 077', cleanup,
+            "mkdir -p ${ShellEscaper.posix(directory)}", "trap ${ShellEscaper.posix(cleanup)} EXIT",
+            "trap 'exit 1' HUP INT TERM"]
+        List<String> arguments = []
+        for (int index = 0; index < secrets.size(); index++) {
+            Map secret = secrets[index]
+            String id = requireBuildKitIdentifier(required(secret, 'id'), "containerImage.secrets[${index}].id")
+            boolean fromEnvironment = secret.envVariable != null
+            boolean fromFile = secret.fileVariable != null
+            if (fromEnvironment == fromFile) {
+                throw new V3ConfigException("containerImage.secrets[${index}] 必须且只能设置 envVariable 或 fileVariable")
+            }
+            String path = "${directory}/secret-${index}"
+            if (fromEnvironment) {
+                String variable = requireEnvironmentName(secret.envVariable, "containerImage.secrets[${index}].envVariable")
+                lines.add(requireBoundEnvironment(variable, "BuildKit secret ${id}"))
+                lines.add("printf %s \"\$${variable}\" > ${ShellEscaper.posix(path)}")
+                lines.add("chmod 600 ${ShellEscaper.posix(path)}")
+            } else {
+                String variable = requireEnvironmentName(secret.fileVariable, "containerImage.secrets[${index}].fileVariable")
+                lines.add(requireAbsoluteEnvironmentPath(variable, "BuildKit secret ${id}"))
+                lines.add(requireReadableEnvironmentFile(variable, "BuildKit secret ${id}"))
+                lines.add("ln -s \"\$${variable}\" ${ShellEscaper.posix(path)}")
+            }
+            arguments.addAll(['--secret', "id=${id},src=${path}"])
+        }
+        for (int index = 0; index < sshEntries.size(); index++) {
+            Map ssh = sshEntries[index]
+            String id = requireBuildKitIdentifier(ssh.id?.toString() ?: 'default', "containerImage.ssh[${index}].id")
+            String variable = requireEnvironmentName(required(ssh, 'variable'), "containerImage.ssh[${index}].variable")
+            String path = "${directory}/ssh-${index}"
+            lines.add(requireAbsoluteEnvironmentPath(variable, "BuildKit SSH ${id}"))
+            lines.add("ln -s \"\$${variable}\" ${ShellEscaper.posix(path)}")
+            arguments.addAll(['--ssh', "${id}=${path}"])
+        }
+        return [lines: lines, arguments: arguments]
+    }
+
+    private void ensureParentDirectory(BuildContext context, String path, Map stageVariables) {
+        String normalized = path.replace('\\', '/')
+        if (!normalized.contains('/')) return
+        String directory = normalized.substring(0, normalized.lastIndexOf('/'))
+        if (!directory) return
+        runCommandStep(context, [type: 'command', shell: 'sh', script: "mkdir -p ${ShellEscaper.posix(directory)}"], stageVariables)
+    }
+
+    private static List<Map> mapList(Object configured, String location) {
+        if (configured == null) return []
+        if (!(configured instanceof List)) throw new V3ConfigException("${location} 必须是数组")
+        List<Map> result = []
+        for (int index = 0; index < (configured as List).size(); index++) {
+            Object value = (configured as List)[index]
+            if (!(value instanceof Map)) throw new V3ConfigException("${location}[${index}] 必须是对象")
+            result.add(new LinkedHashMap(value as Map))
+        }
+        return result
+    }
+
+    private static String requireEnvironmentName(Object value, String location) {
+        String name = value?.toString()?.trim()
+        if (!name || !ENVIRONMENT_NAME.matcher(name).matches()) {
+            throw new V3ConfigException("${location} 不是有效的环境变量名")
+        }
+        return name
+    }
+
+    private static String requireBuildKitIdentifier(Object value, String location) {
+        String id = value?.toString()?.trim()
+        if (!id || !BUILDKIT_IDENTIFIER.matcher(id).matches()) {
+            throw new V3ConfigException("${location} 只能包含字母、数字、点、下划线和连字符")
+        }
+        return id
+    }
+
+    private static String requireWorkspaceRelativePath(String value, String location) {
+        String path = value.replace('\\', '/').trim()
+        List<String> segments = path.tokenize('/')
+        if (!path || path.startsWith('/') || path == '.' || segments.contains('..')) {
+            throw new V3ConfigException("${location} 必须是工作区内的相对路径")
+        }
+        return path
+    }
+
+    private static String requireBoundEnvironment(String variable, String description) {
+        return "if [ \"\${${variable}+x}\" != x ]; then echo ${ShellEscaper.posix(description + ' 未绑定环境变量 ' + variable)} >&2; exit 1; fi"
+    }
+
+    private static String requireReadableEnvironmentFile(String variable, String description) {
+        return "if [ ! -r \"\$${variable}\" ]; then echo ${ShellEscaper.posix(description + ' 对应文件不可读')} >&2; exit 1; fi"
+    }
+
+    private static String requireAbsoluteEnvironmentPath(String variable, String description) {
+        return "case \"\$${variable}\" in /*) ;; *) echo ${ShellEscaper.posix(description + ' 必须使用绝对路径')} >&2; exit 1 ;; esac"
     }
 
     private void runHelmStep(BuildContext context, Map config, Map stageVariables) {

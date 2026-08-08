@@ -16,6 +16,11 @@ class V3CoreTest {
 
         VariableResolver resolver = new VariableResolver()
         assertEquals('project/result', resolver.resolve('${VALUE}/result', context.variables()))
+        assertEquals([CACHE: 'registry.example/app:buildcache', IMAGE: 'registry.example/app'],
+            resolver.resolveVariableMap([
+                CACHE: '${IMAGE}:buildcache',
+                IMAGE: 'registry.example/app'
+            ], [IMAGE: 'environment.example/app'], 'variables'))
         try {
             resolver.resolve('${MISSING}', context.variables())
             fail('Expected unresolved variable failure')
