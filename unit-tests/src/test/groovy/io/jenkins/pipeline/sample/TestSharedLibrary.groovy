@@ -30,6 +30,8 @@ class TestSharedLibrary extends DeclarativePipelineTest {
     void setUp() throws Exception {
         scriptRoots += 'src/main/jenkins'
         super.setUp()
+        // Load library classes on demand so scripts reuse the same class definitions.
+        helper.libLoader.preloadLibraryClasses = false
         binding.setVariable('scm', [branch: 'master'])
         binding.setVariable('JENKINS_URL', 'JENKINS_URL')
         binding.setVariable('JOB_NAME', 'JOB_NAME')

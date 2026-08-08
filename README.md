@@ -1546,49 +1546,21 @@ metadata:
 spec:
   containers:
     - name: "docker-build"
-      image: "repo.bluersw.com:8083/bluersw/centos-7-docker-kubectl:2.0"
+      image: "docker.io/alpine/k8s:1.36.2@sha256:44ef4942e171939b9c665a4a84beb80e2dcdb9a24330d4651cfdfd2e9deecc47"
       command:
         - "cat"
       tty: true
-      volumeMounts:
-        - mountPath: "/etc/docker/daemon.json"
-          name: "volume-0"
-          readOnly: false
-        - mountPath: "/root/.docker/config.json"
-          name: "volume-1"
-          readOnly: false
-        - mountPath: "/var/lib/kubelet/pki"
-          name: "volume-2"
-          readOnly: false
-        - mountPath: "/var/run/docker.sock"
-          name: "volume-3"
-          readOnly: false
-        - mountPath: "/root/.kube"
-          name: "volume-4"
-          readOnly: false
       workingDir: "/home/jenkins/agent"
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
   securityContext:
-    runAsGroup: 0
-    runAsUser: 0
-  volumes:
-    - hostPath:
-        path: "/etc/docker/daemon.json"
-      name: "volume-0"
-    - hostPath:
-        path: "/root/.docker/config.json"
-      name: "volume-1"
-    - hostPath:
-        path: "/var/lib/kubelet/pki"
-      name: "volume-2"
-    - hostPath:
-        path: "/var/run/docker.sock"
-      name: "volume-3"
-    - hostPath:
-        path: "/root/.kube"
-      name: "volume-4"
+    seccompProfile:
+      type: RuntimeDefault
 ```
 
-挂载了很多目录是为了实现Docker In Docker和在Pod使用kubectl命令部署K8S资源。
+示例镜像来自 Docker Hub，提供 Helm 和 `kubectl`，并固定了镜像摘要。旧的私有镜像地址及宿主机 Docker Socket 挂载已移除。需要构建容器镜像的新项目请使用 [V3 Kubernetes + rootless BuildKit 模板](docs/V3.md#java-模板)；需要其他编译工具时，请把此处镜像替换为项目自己的构建镜像。
 
 在Jenkinsfile中会加载此yaml文件创建构建项目的临时Pod：
 
@@ -1719,46 +1691,18 @@ metadata:
 spec:
   containers:
     - name: "docker-build"
-      image: "repo.bluersw.com:8083/bluersw/centos-7-docker-kubectl:2.0"
+      image: "docker.io/alpine/k8s:1.36.2@sha256:44ef4942e171939b9c665a4a84beb80e2dcdb9a24330d4651cfdfd2e9deecc47"
       command:
         - "cat"
       tty: true
-      volumeMounts:
-        - mountPath: "/etc/docker/daemon.json"
-          name: "volume-0"
-          readOnly: false
-        - mountPath: "/root/.docker/config.json"
-          name: "volume-1"
-          readOnly: false
-        - mountPath: "/var/lib/kubelet/pki"
-          name: "volume-2"
-          readOnly: false
-        - mountPath: "/var/run/docker.sock"
-          name: "volume-3"
-          readOnly: false
-        - mountPath: "/root/.kube"
-          name: "volume-4"
-          readOnly: false
       workingDir: "/home/jenkins/agent"
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
   securityContext:
-    runAsGroup: 0
-    runAsUser: 0
-  volumes:
-    - hostPath:
-        path: "/etc/docker/daemon.json"
-      name: "volume-0"
-    - hostPath:
-        path: "/root/.docker/config.json"
-      name: "volume-1"
-    - hostPath:
-        path: "/var/lib/kubelet/pki"
-      name: "volume-2"
-    - hostPath:
-        path: "/var/run/docker.sock"
-      name: "volume-3"
-    - hostPath:
-        path: "/root/.kube"
-      name: "volume-4"
+    seccompProfile:
+      type: RuntimeDefault
 """
 )
 ```
