@@ -86,8 +86,11 @@ class V3PipelineTest {
         assertEquals(true, buildkit.securityContext.runAsNonRoot)
         assertEquals(1000, buildkit.securityContext.runAsUser)
         assertEquals(1000, buildkit.securityContext.runAsGroup)
+        assertEquals(true, buildkit.securityContext.allowPrivilegeEscalation)
         assertEquals('Unconfined', buildkit.securityContext.seccompProfile.type)
         assertEquals('Unconfined', buildkit.securityContext.appArmorProfile.type)
+        assertEquals(['SETUID', 'SETGID'], buildkit.securityContext.capabilities.add)
+        assertEquals(['ALL'], buildkit.securityContext.capabilities.drop)
         Map buildkitEnvironment = (buildkit.env as List).collectEntries { Map entry ->
             [(entry.name.toString()): entry.value]
         }

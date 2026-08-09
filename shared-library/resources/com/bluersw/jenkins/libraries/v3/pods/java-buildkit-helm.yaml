@@ -68,11 +68,13 @@ spec:
         runAsNonRoot: true
         runAsUser: ${BUILDKIT_RUN_AS_USER}
         runAsGroup: ${BUILDKIT_RUN_AS_GROUP}
+        allowPrivilegeEscalation: true
         seccompProfile:
           type: Unconfined
         appArmorProfile:
           type: Unconfined
         capabilities:
+          add: ["SETUID", "SETGID"]
           drop: ["ALL"]
       volumeMounts:
         - name: buildkit-config
