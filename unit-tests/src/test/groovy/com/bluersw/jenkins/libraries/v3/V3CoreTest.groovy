@@ -1,13 +1,48 @@
 package com.bluersw.jenkins.libraries.v3
 
+import com.cloudbees.groovy.cps.Continuable
+import com.cloudbees.groovy.cps.CpsTransformer
+import com.cloudbees.groovy.cps.NonCPS
+import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.Test
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
 
 class V3CoreTest {
+    @Test
+    void keepsBuildContextCopyOutsideCpsTransformation() {
+        assertNotNull(BuildContext.getDeclaredMethod('copy', Map).getAnnotation(NonCPS))
+    }
+
+    @Test
+    void constructsBuildContextFromCpsTransformedScript() {
+        CompilerConfiguration configuration = new CompilerConfiguration()
+        configuration.addCompilationCustomizers(new CpsTransformer())
+        String source = new File('../shared-library/src/com/bluersw/jenkins/libraries/v3/BuildContext.groovy')
+            .getText('UTF-8') + '''
+
+def context = new BuildContext('api', 'ci/project.json', [BUILD_NUMBER: 2, BRANCH_NAME: 'main'])
+return [
+    environment: context.environment,
+    variables: context.variables([STAGE_VALUE: 'stage'], [STEP_VALUE: 'step']),
+    status: context.result.status
+]
+'''
+        Script script = new GroovyShell(V3CoreTest.class.classLoader, new Binding(), configuration)
+            .parse(source, 'BuildContextCpsTest.groovy')
+
+        Map result = new Continuable(script).run(null) as Map
+
+        assertEquals([BUILD_NUMBER: 2, BRANCH_NAME: 'main'], result.environment)
+        assertEquals('stage', result.variables.STAGE_VALUE)
+        assertEquals('step', result.variables.STEP_VALUE)
+        assertEquals('PENDING', result.status)
+    }
+
     @Test
     void resolvesVariablesInDocumentedOrderAndRejectsUnknownValues() {
         BuildContext context = new BuildContext('api', 'ci/project.json', [VALUE: 'env'], [VALUE: 'global'],

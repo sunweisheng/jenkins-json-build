@@ -1,5 +1,7 @@
 package com.bluersw.jenkins.libraries.v3
 
+import com.cloudbees.groovy.cps.NonCPS
+
 /** A per-project execution context. Instances are never shared between builds. */
 class BuildContext implements Serializable {
     final String projectId
@@ -42,6 +44,7 @@ class BuildContext implements Serializable {
         runtimeVariables[name] = value
     }
 
+    @NonCPS
     private static Map<String, Object> copy(Map source) {
         Map<String, Object> result = new LinkedHashMap<String, Object>()
         if (source != null) {
