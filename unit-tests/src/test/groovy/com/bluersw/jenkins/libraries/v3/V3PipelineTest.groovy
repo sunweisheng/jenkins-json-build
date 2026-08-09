@@ -2,6 +2,7 @@ package com.bluersw.jenkins.libraries.v3
 
 import groovy.json.JsonSlurper
 import org.junit.Test
+import org.yaml.snakeyaml.Yaml
 
 import java.nio.file.Files
 
@@ -52,9 +53,70 @@ class V3PipelineTest {
         assertTrue(steps.podYaml.contains('serviceAccountName: jenkins-deployer'))
         assertTrue(steps.podYaml.contains('maven:3.9.11-eclipse-temurin-21@sha256:'))
         assertTrue(steps.podYaml.contains('moby/buildkit:v0.32.2-rootless@sha256:504731e577c20559c00f968f33219f30115e70be29ab96728d1d06e963fc494b'))
-        assertTrue(steps.podYaml.contains('appArmorProfile:'))
-        assertTrue(steps.podYaml.contains('type: Unconfined'))
-        assertTrue(steps.podYaml.contains('runAsNonRoot: true'))
+        Map pod = new Yaml().load(steps.podYaml) as Map
+        Map podSecurityContext = pod.spec.securityContext as Map
+        assertEquals(true, podSecurityContext.runAsNonRoot)
+        assertEquals(1000, podSecurityContext.runAsUser)
+        assertEquals(1000, podSecurityContext.runAsGroup)
+        assertEquals(1000, podSecurityContext.fsGroup)
+        assertEquals('OnRootMismatch', podSecurityContext.fsGroupChangePolicy)
+
+        Map<String, Map> containers = (pod.spec.containers as List).collectEntries { Map container ->
+            [(container.name.toString()): container]
+        }
+        Map maven = containers.maven
+        assertEquals([runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000,
+            allowPrivilegeEscalation: false, capabilities: [drop: ['ALL']]], maven.securityContext)
+        Map mavenEnvironment = (maven.env as List).collectEntries { Map entry ->
+            [(entry.name.toString()): entry.value]
+        }
+        assertEquals('/home/jenkins', mavenEnvironment.HOME)
+        assertEquals('/home/jenkins/.m2', mavenEnvironment.MAVEN_CONFIG)
+        assertTrue(mavenEnvironment.MAVEN_OPTS.toString().contains('-Duser.home=/home/jenkins'))
+        assertTrue(mavenEnvironment.MAVEN_OPTS.toString().contains('-Dmaven.repo.local=/home/jenkins/.m2/repository'))
+        Map<String, Map> mavenMounts = (maven.volumeMounts as List).collectEntries { Map mount ->
+            [(mount.name.toString()): mount]
+        }
+        assertEquals(['maven-home', 'maven-cache'],
+            (maven.volumeMounts as List).collect { it.name.toString() })
+        assertEquals('/home/jenkins', mavenMounts['maven-home'].mountPath)
+        assertEquals('/home/jenkins/.m2', mavenMounts['maven-cache'].mountPath)
+
+        Map buildkit = containers.buildkit
+        assertEquals(true, buildkit.securityContext.runAsNonRoot)
+        assertEquals(1000, buildkit.securityContext.runAsUser)
+        assertEquals(1000, buildkit.securityContext.runAsGroup)
+        assertEquals('Unconfined', buildkit.securityContext.seccompProfile.type)
+        assertEquals('Unconfined', buildkit.securityContext.appArmorProfile.type)
+        Map buildkitEnvironment = (buildkit.env as List).collectEntries { Map entry ->
+            [(entry.name.toString()): entry.value]
+        }
+        assertTrue(buildkitEnvironment.BUILDKITD_FLAGS.toString().contains('--oci-worker-no-process-sandbox'))
+        assertTrue(buildkitEnvironment.BUILDKITD_FLAGS.toString().contains('--root /home/user/.local/share/buildkit'))
+
+        Map helm = containers.helm
+        assertEquals(true, helm.securityContext.runAsNonRoot)
+        assertEquals(1000, helm.securityContext.runAsUser)
+        assertEquals(1000, helm.securityContext.runAsGroup)
+        assertEquals(false, helm.securityContext.allowPrivilegeEscalation)
+        Map helmEnvironment = (helm.env as List).collectEntries { Map entry ->
+            [(entry.name.toString()): entry.value]
+        }
+        assertEquals('/home/jenkins', helmEnvironment.HOME)
+        Map<String, Map> helmMounts = (helm.volumeMounts as List).collectEntries { Map mount ->
+            [(mount.name.toString()): mount]
+        }
+        assertEquals('/home/jenkins', helmMounts['helm-home'].mountPath)
+
+        Map<String, Map> volumes = (pod.spec.volumes as List).collectEntries { Map volume ->
+            [(volume.name.toString()): volume]
+        }
+        assertTrue(volumes['maven-home'].containsKey('emptyDir'))
+        assertTrue(volumes['maven-cache'].containsKey('emptyDir'))
+        assertTrue(volumes['helm-home'].containsKey('emptyDir'))
+        assertFalse(volumes.containsKey('maven-settings'))
+        assertFalse(steps.podYaml.contains('MAVEN_SETTINGS_CONFIG_MAP'))
+        assertFalse(steps.podYaml.contains('/root/.m2'))
         assertFalse(steps.podYaml.contains('privileged: true'))
         assertFalse(steps.podYaml.contains('docker.sock'))
         assertTrue(steps.commands.any { it.contains('buildctl-daemonless.sh') && it.contains('--metadata-file') &&

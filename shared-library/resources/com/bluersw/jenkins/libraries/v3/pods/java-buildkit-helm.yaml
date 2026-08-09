@@ -7,6 +7,11 @@ spec:
   serviceAccountName: ${DEPLOY_SERVICE_ACCOUNT}
   automountServiceAccountToken: false
   securityContext:
+    runAsNonRoot: true
+    runAsUser: ${POD_RUN_AS_USER}
+    runAsGroup: ${POD_RUN_AS_GROUP}
+    fsGroup: ${POD_FS_GROUP}
+    fsGroupChangePolicy: OnRootMismatch
     seccompProfile:
       type: RuntimeDefault
   containers:
@@ -14,6 +19,15 @@ spec:
       image: ${MAVEN_IMAGE}
       command: ["cat"]
       tty: true
+      env:
+        - name: HOME
+          value: ${MAVEN_USER_HOME}
+        - name: MAVEN_CONFIG
+          value: ${MAVEN_CONFIG}
+        - name: MAVEN_OPTS
+          value: >-
+            -Duser.home=${MAVEN_USER_HOME}
+            -Dmaven.repo.local=${MAVEN_REPOSITORY}
       resources:
         requests:
           cpu: "${MAVEN_CPU_REQUEST}"
@@ -22,9 +36,17 @@ spec:
           cpu: "${MAVEN_CPU_LIMIT}"
           memory: "${MAVEN_MEMORY_LIMIT}"
       securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
         allowPrivilegeEscalation: false
         capabilities:
           drop: ["ALL"]
+      volumeMounts:
+        - name: maven-home
+          mountPath: ${MAVEN_USER_HOME}
+        - name: maven-cache
+          mountPath: ${MAVEN_CONFIG}
     - name: buildkit
       image: ${BUILDKIT_IMAGE}
       command: ["sh", "-c", "cat"]
@@ -65,6 +87,8 @@ spec:
       env:
         - name: HELM_DRIVER
           value: ${HELM_DRIVER}
+        - name: HOME
+          value: ${HELM_USER_HOME}
       resources:
         requests:
           cpu: "${HELM_CPU_REQUEST}"
@@ -73,14 +97,25 @@ spec:
           cpu: "${HELM_CPU_LIMIT}"
           memory: "${HELM_MEMORY_LIMIT}"
       securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
         allowPrivilegeEscalation: false
         capabilities:
           drop: ["ALL"]
       volumeMounts:
+        - name: helm-home
+          mountPath: ${HELM_USER_HOME}
         - name: deploy-api
           mountPath: /var/run/secrets/kubernetes.io/serviceaccount
           readOnly: true
   volumes:
+    - name: maven-home
+      emptyDir: {}
+    - name: maven-cache
+      emptyDir: {}
+    - name: helm-home
+      emptyDir: {}
     - name: buildkit-config
       secret:
         secretName: ${BUILDKIT_REGISTRY_SECRET_NAME}
