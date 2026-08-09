@@ -24,6 +24,7 @@
         <jenkins-bom.version>6783.v88c6c30f4b_db_</jenkins-bom.version>
         <gmavenplus.version>4.2.1</gmavenplus.version>
         <maven-surefire.version>3.5.4</maven-surefire.version>
+        <snakeyaml.version>2.5</snakeyaml.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -47,6 +48,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
