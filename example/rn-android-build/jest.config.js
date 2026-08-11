@@ -1,5 +1,5 @@
 module.exports = {
-  preset: '@react-native/jest-preset',
+  preset: 'react-native',
   collectCoverage: true,
   collectCoverageFrom: ['source/**/*.js'],
 };
