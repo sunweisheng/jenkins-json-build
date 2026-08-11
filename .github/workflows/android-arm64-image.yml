@@ -46,6 +46,9 @@ jobs:
           context: images/android-arm64
           file: images/android-arm64/Dockerfile
           platforms: linux/arm64
+          build-args: |
+            ANDROID_BASE_IMAGE=${{ env.ANDROID_BASE_IMAGE }}
+            JDK17_IMAGE=${{ env.JDK17_IMAGE }}
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ env.ANDROID_IMAGE_REPOSITORY }}:${{ env.ANDROID_IMAGE_TAG }}
           provenance: mode=max

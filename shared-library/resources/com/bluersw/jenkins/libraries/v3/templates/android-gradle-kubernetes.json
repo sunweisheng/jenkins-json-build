@@ -12,7 +12,7 @@
     "ANDROID_USER_HOME": "/home/jenkins",
     "ANDROID_SDK_ROOT": "/opt/android-sdk-linux",
     "ANDROID_AAPT2_PATH": "${ANDROID_SDK_ROOT}/build-tools/${ANDROID_BUILD_TOOLS_VERSION}/aapt2",
-    "ANDROID_GRADLE_OPTS": "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_AAPT2_PATH}",
+    "ANDROID_GRADLE_OPTS": "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_AAPT2_PATH} -Dorg.gradle.java.installations.paths=/usr/lib/jvm/java-17-openjdk-arm64,/usr/lib/jvm/java-21-openjdk-arm64 -Dorg.gradle.java.installations.auto-download=false",
     "GRADLE_USER_HOME": "/home/jenkins/.gradle",
     "ANDROID_CPU_REQUEST": "500m",
     "ANDROID_MEMORY_REQUEST": "1Gi",
