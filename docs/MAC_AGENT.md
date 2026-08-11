@@ -39,6 +39,18 @@ bundle --version
 watchman --version
 ```
 
+2026-08-11 测试环境 `192.168.0.5` 的实际版本：
+
+| 工具 | 版本 |
+| --- | --- |
+| Xcode | `26.6` |
+| iOS Simulator Runtime | `26.5` |
+| OpenJDK | `21.0.12` |
+| Node.js | `24.19.0` |
+| CocoaPods | `1.17.0` |
+| Bundler | `4.0.16` |
+| Watchman | `2026.07.27.00` |
+
 ## SSH 凭据
 
 不要把 Mac 登录密码保存到仓库、JCasC 或脚本。创建 Jenkins 专用 Ed25519 密钥，私钥作为 Jenkins 的“SSH Username with private key”凭据，公钥加入 Mac 用户的 `~/.ssh/authorized_keys`。
@@ -58,6 +70,8 @@ memory_pressure
 ```
 
 Kubernetes Agent 与 Mac Agent 的真实构建串行执行，避免 16 GB 主机同时承受 Kubernetes Pod 和 Xcode 构建压力。
+
+测试节点 `mac-m2-16g` 已按上述名称、标签、远程目录和单执行器配置上线；工具检查、SSH 主机密钥校验、断线重连和 Jenkins Controller 重启后的自动恢复已验证。原生 iOS 与 React Native iOS 的真实构建结果记录在版本说明中。
 
 ## 源码检出前检查
 

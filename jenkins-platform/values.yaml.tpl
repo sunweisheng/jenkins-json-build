@@ -94,7 +94,7 @@ agent:
   jenkinsUrl: http://jenkins.${CI_NAMESPACE}.svc.cluster.local:8080
   websocket: true
   podRetention: Never
-  containerCap: 1
+  containerCap: 2
   showRawYaml: false
   privileged: false
   hostNetworking: false
