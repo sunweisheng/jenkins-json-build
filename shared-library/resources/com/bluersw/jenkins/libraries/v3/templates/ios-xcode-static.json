@@ -18,7 +18,7 @@
     "IOS_ARTIFACTS": "build/export/**/*.ipa"
   },
   "parameters": [],
-  "agent": {"type": "static", "label": "macos ios", "requirements": {"os": "macos", "architectures": ["arm64"], "tools": ["xcodebuild", "xcrun"]}},
+  "agent": {"type": "static", "label": "macos && ios", "requirements": {"os": "macos", "architectures": ["arm64"], "tools": ["xcodebuild", "xcrun"]}},
   "stages": [
     {"id": "clean", "name": "iOS clean", "steps": [
       {"type": "xcodebuild", "action": "clean", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "destination": "${XCODE_DESTINATION}", "workDir": "${IOS_WORK_DIR}"}

@@ -11,7 +11,7 @@
     "XCODE_EXPORT_PATH": "build/export",
     "IOS_ARTIFACTS": "ios/build/export/**/*.ipa"
   },
-  "agent": {"type": "static", "label": "macos ios", "requirements": {"os": "macos", "architectures": ["arm64"], "tools": ["node", "npm", "bundle", "pod", "xcodebuild", "xcrun"]}},
+  "agent": {"type": "static", "label": "macos && ios", "requirements": {"os": "macos", "architectures": ["arm64"], "tools": ["node", "npm", "bundle", "pod", "xcodebuild", "xcrun"]}},
   "stages": [
     {"id": "pods", "name": "CocoaPods dependencies", "steps": [
       {"type": "command", "shell": "sh", "script": "${COCOAPODS_INSTALL_SCRIPT}", "workDir": "${IOS_WORK_DIR}"}

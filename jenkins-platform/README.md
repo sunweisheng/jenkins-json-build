@@ -27,8 +27,18 @@ V3.2.0 固定增加以下插件：
 - `http_request:1.25`
 - `ssh-slaves:3.1097.v868116049892`
 - `agent-server-parameter:1.21.v71e7962a_b_456`
-- `custom-checkbox-parameter:1.69.v27b_2c5306e46`
+- `custom-checkbox-parameter:1.72.v6074130b_6587`
 - `coverage:3.3325.v2f3dd167a_b_e5`
+
+平台同时固定 Pipeline Declarative 的兼容版本，避免只升级部分传递依赖后导致插件加载失败：
+
+- `pipeline-model-api:2.2277.v00573e73ddf1`
+- `pipeline-model-definition:2.2277.v00573e73ddf1`
+- `pipeline-model-extensions:2.2277.v00573e73ddf1`
+- `pipeline-stage-step:322.vecffa_99f371c`
+- `pipeline-stage-tags-metadata:2.2277.v00573e73ddf1`
+- `pipeline-input-step:534.v352f0a_e98918`
+- `joda-time-api:2.14.0-149.v1c3ce991d1b_9`
 
 已存在且设置 `initializeOnce: true` 的 Jenkins 不会自动补装新增插件。升级时先备份 Jenkins Home 并完成隔离恢复检查，再渲染 values 和执行 Helm dry-run。临时设置 `initializeOnce: false` 完成插件安装，确认插件版本、任务配置和 Controller 重启正常后恢复 `initializeOnce: true`。不要在没有可恢复备份时直接修改运行中的 Jenkins PVC。
 

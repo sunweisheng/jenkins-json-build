@@ -12,7 +12,7 @@
     "MSBUILD_ARTIFACTS": "**/bin/Release/**"
   },
   "parameters": [],
-  "agent": {"type": "static", "label": "windows msbuild", "requirements": {"os": "windows", "architectures": ["AMD64"], "tools": ["MSBuild.exe"]}},
+  "agent": {"type": "static", "label": "windows && msbuild", "requirements": {"os": "windows", "architectures": ["AMD64"], "tools": ["MSBuild.exe"]}},
   "stages": [
     {"id": "test", "name": ".NET Framework tests", "steps": [
       {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_TEST_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}}

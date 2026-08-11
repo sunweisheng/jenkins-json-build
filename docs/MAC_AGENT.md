@@ -81,7 +81,7 @@ iOS 项目配置中保留下面的要求：
 {
   "agent": {
     "type": "static",
-    "label": "macos ios",
+    "label": "macos && ios",
     "requirements": {
       "os": "macos",
       "architectures": ["arm64"],

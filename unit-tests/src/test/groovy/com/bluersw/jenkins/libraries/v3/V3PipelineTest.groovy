@@ -549,6 +549,29 @@ class V3PipelineTest {
     }
 
     @Test
+    void usesExpressionsForStaticTemplatesThatRequireMultipleLabels() {
+        Map<String, String> expectedLabels = [
+            'ios-xcode-static': 'macos && ios',
+            'react-native-ios-static': 'macos && ios',
+            'dotnet-framework-msbuild-windows': 'windows && msbuild'
+        ]
+        expectedLabels.each { String template, String expectedLabel ->
+            FakeSteps steps = new FakeSteps()
+            steps.unix = template != 'dotnet-framework-msbuild-windows'
+            steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+                schemaVersion: 3,
+                extends: template,
+                project: [id: template]
+            ])
+
+            new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
+                onlyStages: ['not-selected']]).run()
+
+            assertTrue(template, steps.events.contains("node:${expectedLabel}".toString()))
+        }
+    }
+
+    @Test
     void retriesNpmDependencyInstallationAfterTransientRegistryFailures() {
         FakeSteps steps = new FakeSteps()
         steps.trustedFiles['generated.json'] = JsonOutput.toJson([

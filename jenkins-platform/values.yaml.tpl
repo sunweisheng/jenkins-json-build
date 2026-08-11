@@ -28,6 +28,13 @@ controller:
     - kubernetes:4540.v612369217f87
     - workflow-aggregator:608.v67378e9d3db_1
     - workflow-multibranch:841.vec5b_9e1806ec
+    - pipeline-model-api:2.2277.v00573e73ddf1
+    - pipeline-model-definition:2.2277.v00573e73ddf1
+    - pipeline-model-extensions:2.2277.v00573e73ddf1
+    - pipeline-stage-step:322.vecffa_99f371c
+    - pipeline-stage-tags-metadata:2.2277.v00573e73ddf1
+    - pipeline-input-step:534.v352f0a_e98918
+    - joda-time-api:2.14.0-149.v1c3ce991d1b_9
     - pipeline-groovy-lib:798.v5cc688825312
     - git:5.10.1
     - configuration-as-code:2111.v475308a_6c93b_
@@ -41,7 +48,7 @@ controller:
     - sonar:2.18.3
     - ssh-slaves:3.1097.v868116049892
     - agent-server-parameter:1.21.v71e7962a_b_456
-    - custom-checkbox-parameter:1.69.v27b_2c5306e46
+    - custom-checkbox-parameter:1.72.v6074130b_6587
     - coverage:3.3325.v2f3dd167a_b_e5
   installLatestPlugins: false
   installLatestSpecifiedPlugins: false

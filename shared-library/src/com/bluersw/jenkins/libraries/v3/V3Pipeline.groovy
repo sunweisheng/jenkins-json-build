@@ -1334,7 +1334,7 @@ class V3Pipeline implements Serializable {
             definition.setDefaultValue(defaultValue)
             return definition
         } catch (Throwable error) {
-            throw new V3ConfigException('Custom Checkbox Parameter 插件不可用或版本不兼容，需要 1.69.v27b_2c5306e46', error)
+            throw new V3ConfigException('Custom Checkbox Parameter 插件不可用或版本不兼容，需要 1.72.v6074130b_6587', error)
         }
     }
 

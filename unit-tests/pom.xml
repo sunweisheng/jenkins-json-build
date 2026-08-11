@@ -25,7 +25,7 @@
         <gmavenplus.version>4.2.1</gmavenplus.version>
         <maven-surefire.version>3.5.4</maven-surefire.version>
         <snakeyaml.version>2.5</snakeyaml.version>
-        <custom-checkbox-parameter.version>1.69.v27b_2c5306e46</custom-checkbox-parameter.version>
+        <custom-checkbox-parameter.version>1.72.v6074130b_6587</custom-checkbox-parameter.version>
     </properties>
     <dependencyManagement>
         <dependencies>
