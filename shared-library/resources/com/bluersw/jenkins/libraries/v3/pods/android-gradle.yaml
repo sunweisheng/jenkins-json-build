@@ -23,6 +23,8 @@ spec:
           value: ${ANDROID_USER_HOME}
         - name: GRADLE_USER_HOME
           value: ${GRADLE_USER_HOME}
+        - name: GRADLE_OPTS
+          value: ${ANDROID_GRADLE_OPTS}
         - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
         - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
         - {name: NO_PROXY, value: "${POD_NO_PROXY}"}

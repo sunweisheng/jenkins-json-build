@@ -579,6 +579,12 @@ class V3PipelineTest {
                     container.securityContext.allowPrivilegeEscalation == false &&
                     container.securityContext.capabilities.drop == ['ALL']
             })
+            if (names.contains('android')) {
+                Map androidEnvironment = (containers.android.env as List).collectEntries { Map entry ->
+                    [(entry.name.toString()): entry.value.toString()]
+                }
+                assertTrue(androidEnvironment.GRADLE_OPTS.contains('/build-tools/36.0.0/aapt2'))
+            }
             assertTrue(containers.values().every { Map container ->
                 Map containerEnvironment = (container.env as List).collectEntries { Map entry ->
                     [(entry.name.toString()): entry.value.toString()]
