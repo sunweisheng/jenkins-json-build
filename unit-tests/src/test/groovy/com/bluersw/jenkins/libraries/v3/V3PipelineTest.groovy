@@ -364,6 +364,7 @@ class V3PipelineTest {
         assertEquals('output', callbackVariables.success.FROM_COMMAND)
         assertEquals('file-value', callbackVariables.success.FROM_FILE)
         assertEquals('http-value', callbackVariables.success.FROM_HTTP)
+        assertEquals(30, steps.httpInvocations[0].timeout)
         assertEquals('json-value', callbackVariables.success.FROM_JSON)
         assertEquals('ready', callbackVariables.success.DYNAMIC)
         assertEquals('success', callbackVariables.success.POST_SUCCESS)
@@ -550,6 +551,7 @@ class FakeSteps {
     List<Map> jacocoInvocations = []
     List<Map> archiveInvocations = []
     List<Map> coverageInvocations = []
+    List<Map> httpInvocations = []
     List<String> directories = []
     List<String> events = []
     List<String> messages = []
@@ -644,6 +646,7 @@ class FakeSteps {
     }
     void recordCoverage(Map arguments) { coverageInvocations.add(new LinkedHashMap(arguments)) }
     Object httpRequest(Map arguments) {
+        httpInvocations.add(new LinkedHashMap(arguments))
         return [content: 'http-value\n', status: 200]
     }
     void parallel(Map<String, Closure> branches) {

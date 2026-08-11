@@ -1129,8 +1129,11 @@ class V3Pipeline implements Serializable {
                     String url = resolver.resolve(required(definition, 'url'), values, "runtimeVariables.${name}.url").toString()
                     List hosts = trustedHostsFromOptions() + stringList(config.security instanceof Map ? config.security.trustedHttpHosts : null)
                     requireTrustedHttps(url, hosts)
+                    Object configuredTimeout = definition.containsKey('timeoutSeconds') ? definition.timeoutSeconds :
+                        (options.containsKey('httpTimeoutSeconds') ? options.httpTimeoutSeconds : defaults.http.timeoutSeconds)
                     def response = steps.httpRequest(url: url, httpMode: 'GET', validResponseCodes: '200', quiet: true,
-                        consoleLogResponseBody: false)
+                        consoleLogResponseBody: false,
+                        timeout: integerValue(configuredTimeout, "runtimeVariables.${name}.timeoutSeconds", 1))
                     value = response.content
                     break
                 case 'json':
@@ -1357,8 +1360,10 @@ class V3Pipeline implements Serializable {
         }
         if (source.startsWith('https://')) {
             requireTrustedHttps(source, trustedHosts)
+            Object configuredTimeout = options.containsKey('httpTimeoutSeconds') ? options.httpTimeoutSeconds : defaults.http.timeoutSeconds
             def response = steps.httpRequest(url: source, httpMode: 'GET', validResponseCodes: '200', quiet: true,
-                consoleLogResponseBody: false)
+                consoleLogResponseBody: false,
+                timeout: integerValue(configuredTimeout, 'httpTimeoutSeconds', 1))
             return response.content.toString()
         }
         try {

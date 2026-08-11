@@ -35,6 +35,7 @@ controller:
     - github-branch-source:1983.vfa_27ed961853
     - credentials-binding:728.v902a_273b_8947
     - config-file-provider:1013.v73c323e52b_1f
+    - http_request:1.25
     - junit:1416.vd753e036de5e
     - jacoco:3.3.7
     - sonar:2.18.3

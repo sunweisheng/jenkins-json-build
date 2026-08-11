@@ -54,6 +54,9 @@
   "command": {
     "shell": "sh"
   },
+  "http": {
+    "timeoutSeconds": 30
+  },
   "maven": {
     "executable": "./mvnw",
     "settingsVariable": "V3_MAVEN_SETTINGS"

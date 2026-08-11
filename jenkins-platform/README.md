@@ -24,6 +24,7 @@ The image digests were checked against the official image manifests on 2026-08-0
 
 V3.2.0 固定增加以下插件：
 
+- `http_request:1.25`
 - `ssh-slaves:3.1097.v868116049892`
 - `agent-server-parameter:1.21.v71e7962a_b_456`
 - `custom-checkbox-parameter:1.69.v27b_2c5306e46`
