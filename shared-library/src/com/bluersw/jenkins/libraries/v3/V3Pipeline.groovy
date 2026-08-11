@@ -1088,8 +1088,16 @@ class V3Pipeline implements Serializable {
 
     private void checkoutSource(Map config) {
         if (booleanValue(options.containsKey('checkout') ? options.checkout : config.checkout, true)) {
-            steps.checkout(steps.scm)
+            steps.checkout(sourceControl())
         }
+    }
+
+    private Object sourceControl() {
+        if (options.containsKey('scm')) {
+            if (options.scm == null) throw new V3ConfigException('jenkinsJsonBuild.scm 不能为空')
+            return options.scm
+        }
+        return steps.scm
     }
 
     private void initializeWorkspaceVariables(BuildContext context) {
@@ -1375,7 +1383,7 @@ class V3Pipeline implements Serializable {
             } catch (Throwable readError) {
                 String content
                 steps.node(options.bootstrapAgent?.toString() ?: '') {
-                    if (booleanValue(options.checkout, true)) steps.checkout(steps.scm)
+                    if (booleanValue(options.checkout, true)) steps.checkout(sourceControl())
                     content = steps.readFile(file: source).toString()
                 }
                 return content

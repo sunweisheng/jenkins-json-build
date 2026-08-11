@@ -472,6 +472,20 @@ class V3PipelineTest {
     }
 
     @Test
+    void usesExplicitScmForCheckout() {
+        FakeSteps steps = new FakeSteps()
+        Map configuredScm = [url: 'https://example.test/project.git', branch: 'acceptance']
+
+        Map result = new V3Pipeline(steps, [
+            configFiles: ['v3/java-static.json'],
+            scm: configuredScm
+        ]).run()
+
+        assertEquals('SUCCESS', result['java-test'].status)
+        assertEquals([configuredScm], steps.checkoutInvocations)
+    }
+
+    @Test
     void cleansAppleSigningStateWhenNestedStepFails() {
         FakeSteps steps = new FakeSteps()
         steps.trustedFiles['generated.json'] = JsonOutput.toJson([
@@ -579,6 +593,7 @@ class FakeSteps {
     List<Map> archiveInvocations = []
     List<Map> coverageInvocations = []
     List<Map> httpInvocations = []
+    List<Object> checkoutInvocations = []
     List<String> directories = []
     List<String> events = []
     List<String> messages = []
@@ -633,7 +648,10 @@ class FakeSteps {
         return '/workspace'
     }
     boolean isUnix() { unix }
-    void checkout(Object scm) { events.add('checkout') }
+    void checkout(Object scm) {
+        events.add('checkout')
+        checkoutInvocations.add(scm)
+    }
     void junit(Map arguments) { junitInvocations.add(new LinkedHashMap(arguments)) }
     void jacoco(Map arguments) { jacocoInvocations.add(new LinkedHashMap(arguments)) }
     void archiveArtifacts(Map arguments) { archiveInvocations.add(new LinkedHashMap(arguments)) }
