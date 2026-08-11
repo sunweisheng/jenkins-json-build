@@ -51,6 +51,23 @@ watchman --version
 | Bundler | `4.0.16` |
 | Watchman | `2026.07.27.00` |
 
+## Git 检出与代理
+
+`@Library` 在 Pipeline 正文执行前由 Jenkins Controller 拉取；进入静态节点后的项目源码则由 Mac Agent 上的 Git 拉取。因此，写在 `jenkinsJsonBuild` 外层或步骤里的 `withEnv` 不能补救共享类库加载和首次源码检出。
+
+需要代理访问 GitHub 时，应分别配置实际执行 Git 的环境：
+
+- Controller 通过 Helm values 或其他平台级配置提供 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY`。
+- Mac Agent 为 Jenkins SSH 用户配置 Git 代理，或让 SSH Launcher 启动的进程继承等效代理环境。
+
+例如在 Mac Agent 上设置 Git 代理：
+
+```bash
+git config --global http.proxy http://proxy.example:7890
+```
+
+直连 GitHub 正常时不需要设置。代理含有身份信息时，不要把地址写进项目 JSON、Jenkinsfile、JCasC 或仓库；改用操作系统或 Jenkins 的安全配置，并在验收结束后检查 Git 全局配置是否符合长期运行要求。
+
 ## SSH 凭据
 
 不要把 Mac 登录密码保存到仓库、JCasC 或脚本。创建 Jenkins 专用 Ed25519 密钥，私钥作为 Jenkins 的“SSH Username with private key”凭据，公钥加入 Mac 用户的 `~/.ssh/authorized_keys`。
