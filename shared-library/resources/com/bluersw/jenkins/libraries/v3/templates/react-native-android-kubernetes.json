@@ -45,12 +45,12 @@
     {"id": "install", "container": "node"},
     {"id": "test", "steps": [
       {"type": "npm", "container": "node", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"},
-      {"type": "gradle", "container": "android", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_TEST_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}", "PATH+NODE": "${SHARED_NODE_BIN_DIR}"}}
+      {"type": "gradle", "container": "android", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_TEST_TASK}"], "arguments": ["--no-daemon", "${KOTLIN_COMPILER_EXECUTION_ARGUMENT}"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}", "PATH+NODE": "${SHARED_NODE_BIN_DIR}"}}
     ]},
     {"id": "coverage", "container": "node"},
     {"id": "quality", "container": "node"},
     {"id": "build", "container": "android", "steps": [
-      {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_BUILD_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}", "PATH+NODE": "${SHARED_NODE_BIN_DIR}"}, "artifacts": ["${ANDROID_ARTIFACTS}"]},
+      {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_BUILD_TASK}"], "arguments": ["--no-daemon", "${KOTLIN_COMPILER_EXECUTION_ARGUMENT}"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}", "PATH+NODE": "${SHARED_NODE_BIN_DIR}"}, "artifacts": ["${ANDROID_ARTIFACTS}"]},
       {"type": "archive", "artifacts": "${ANDROID_ARTIFACTS}", "fingerprint": true}
     ]}
   ]

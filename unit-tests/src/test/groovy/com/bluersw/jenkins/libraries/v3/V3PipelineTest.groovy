@@ -661,6 +661,7 @@ class V3PipelineTest {
         assertTrue(steps.commands.any { it.contains("'npm' 'test'") })
         assertTrue(steps.commands.any { it.contains("'./gradlew' 'test'") })
         assertTrue(steps.commands.any { it.contains("'./gradlew' 'assembleDebug'") })
+        assertEquals(2, steps.commands.count { it.contains("'-Pkotlin.compiler.execution.strategy=in-process'") })
         assertEquals(['node', 'android', 'android'], steps.containersUsed)
         assertEquals(2, steps.environmentInvocations.count { List<String> invocation ->
             invocation.any { it.toString() == 'PATH+NODE=/opt/jenkins-toolchain/bin' }
