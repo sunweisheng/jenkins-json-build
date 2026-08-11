@@ -566,6 +566,26 @@ class V3PipelineTest {
     }
 
     @Test
+    void keepsReactNativeAndroidJestCoverageAfterTemplateMerge() {
+        FakeSteps steps = new FakeSteps()
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            extends: 'react-native-android-static',
+            project: [id: 'react-native-android-coverage'],
+            agent: [type: 'none']
+        ])
+
+        Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
+            onlyStages: ['coverage']]).run()
+
+        assertEquals('SUCCESS', result['react-native-android-coverage'].status)
+        assertEquals(1, steps.coverageInvocations.size())
+        assertEquals(1, steps.coverageInvocations[0].tools.size())
+        assertEquals('LCOV', steps.coverageInvocations[0].tools[0].parser)
+        assertEquals('coverage/lcov.info', steps.coverageInvocations[0].tools[0].pattern)
+    }
+
+    @Test
     void rendersSecurePinnedLanguagePods() {
         Map<String, List<String>> expectedContainers = [
             'node-npm-kubernetes': ['node'],
