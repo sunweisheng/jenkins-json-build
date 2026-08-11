@@ -7,7 +7,9 @@
     "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
     "POD_NO_PROXY": "${NO_PROXY}",
     "ENABLE_SONAR": false,
+    "NPM_WORK_DIR": "example/js-build",
     "NPM_BUILD_COMMAND": "jsdoc",
-    "BUILD_ARTIFACTS": "jsdoc/**"
+    "LCOV_REPORT": "example/js-build/coverage/lcov.info",
+    "BUILD_ARTIFACTS": "example/js-build/jsdoc/**"
   }
 }
