@@ -47,7 +47,7 @@ controller:
     - jacoco:3.3.7
     - sonar:2.18.3
     - ssh-slaves:3.1097.v868116049892
-    - agent-server-parameter:1.21.v71e7962a_b_456
+    - agent-server-parameter:1.23.v3f9770f9cc1a_
     - custom-checkbox-parameter:1.72.v6074130b_6587
     - coverage:3.3325.v2f3dd167a_b_e5
   installLatestPlugins: false
