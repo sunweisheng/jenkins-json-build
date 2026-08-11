@@ -586,7 +586,7 @@ class V3PipelineTest {
     }
 
     @Test
-    void keepsReactNativeAndroidNpmAndGradleTestsInTheirContainers() {
+    void keepsReactNativeAndroidStepsInTheirContainersWithNodeToolchain() {
         FakeSteps steps = new FakeSteps()
         steps.trustedFiles['generated.json'] = JsonOutput.toJson([
             schemaVersion: 3,
@@ -596,12 +596,16 @@ class V3PipelineTest {
         ])
 
         Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
-            onlyStages: ['test']]).run()
+            onlyStages: ['test', 'build']]).run()
 
         assertEquals('SUCCESS', result['react-native-android-tests'].status)
         assertTrue(steps.commands.any { it.contains("'npm' 'test'") })
         assertTrue(steps.commands.any { it.contains("'./gradlew' 'test'") })
-        assertEquals(['node', 'android'], steps.containersUsed)
+        assertTrue(steps.commands.any { it.contains("'./gradlew' 'assembleDebug'") })
+        assertEquals(['node', 'android', 'android'], steps.containersUsed)
+        assertEquals(2, steps.environmentInvocations.count { List<String> invocation ->
+            invocation.any { it.toString() == 'PATH+NODE=/opt/jenkins-toolchain/bin' }
+        })
     }
 
     @Test
@@ -641,6 +645,12 @@ class V3PipelineTest {
                 }
                 assertTrue(androidEnvironment.GRADLE_OPTS.contains('/build-tools/36.0.0/aapt2'))
             }
+            if (template == 'react-native-android-kubernetes') {
+                String toolchainScript = pod.spec.initContainers[0].command[2].toString()
+                assertTrue(toolchainScript.contains('/usr/local/lib/node_modules/npm'))
+                assertTrue(toolchainScript.contains('npm-cli.js'))
+                assertTrue(toolchainScript.contains('npx-cli.js'))
+            }
             assertTrue(containers.values().every { Map container ->
                 Map containerEnvironment = (container.env as List).collectEntries { Map entry ->
                     [(entry.name.toString()): entry.value.toString()]
@@ -671,6 +681,7 @@ class FakeSteps {
     List<Map> shellInvocations = []
     List<Integer> retryCounts = []
     List<String> containersUsed = []
+    List<List<String>> environmentInvocations = []
     List<Map> timeoutInvocations = []
     List<List> credentialInvocations = []
     List<String> sonarQubeInstallations = []
@@ -728,7 +739,10 @@ class FakeSteps {
         directories.add(path)
         return body.call()
     }
-    Object withEnv(List<String> values, Closure body) { body.call() }
+    Object withEnv(List<String> values, Closure body) {
+        environmentInvocations.add(new ArrayList<String>(values))
+        body.call()
+    }
     void podTemplate(Map arguments, Closure body) {
         podTemplateArguments = new LinkedHashMap(arguments)
         podYaml = arguments.yaml.toString()

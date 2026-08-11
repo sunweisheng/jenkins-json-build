@@ -16,7 +16,17 @@ spec:
   initContainers:
     - name: node-toolchain
       image: ${NODE_IMAGE}
-      command: ["sh", "-c", "cp /usr/local/bin/node ${SHARED_NODE_BINARY} && chmod 0555 ${SHARED_NODE_BINARY}"]
+      command:
+        - sh
+        - -c
+        - |
+          set -eu
+          mkdir -p ${SHARED_NODE_BIN_DIR} ${SHARED_NODE_MODULES_DIR}
+          cp /usr/local/bin/node ${SHARED_NODE_BINARY}
+          cp -R /usr/local/lib/node_modules/npm ${SHARED_NODE_MODULES_DIR}/npm
+          ln -s ../lib/node_modules/npm/bin/npm-cli.js ${SHARED_NODE_BIN_DIR}/npm
+          ln -s ../lib/node_modules/npm/bin/npx-cli.js ${SHARED_NODE_BIN_DIR}/npx
+          chmod 0555 ${SHARED_NODE_BINARY}
       env:
         - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
         - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
@@ -33,7 +43,7 @@ spec:
           drop: ["ALL"]
       volumeMounts:
         - name: node-toolchain
-          mountPath: /opt/jenkins-toolchain
+          mountPath: ${SHARED_NODE_ROOT}
   containers:
     - name: node
       image: ${NODE_IMAGE}
@@ -104,7 +114,7 @@ spec:
         - name: android-home
           mountPath: ${ANDROID_USER_HOME}
         - name: node-toolchain
-          mountPath: /opt/jenkins-toolchain
+          mountPath: ${SHARED_NODE_ROOT}
           readOnly: true
   volumes:
     - name: node-home
