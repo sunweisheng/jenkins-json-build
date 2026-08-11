@@ -40,8 +40,9 @@
   },
   "stages": [
     {"id": "install", "container": "node"},
-    {"id": "test", "container": "node", "steps": [
-      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"}
+    {"id": "test", "steps": [
+      {"type": "npm", "container": "node", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"},
+      {"type": "gradle", "container": "android", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_TEST_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}"}}
     ]},
     {"id": "coverage", "container": "node"},
     {"id": "quality", "container": "node"},

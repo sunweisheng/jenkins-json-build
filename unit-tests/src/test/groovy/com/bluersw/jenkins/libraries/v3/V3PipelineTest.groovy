@@ -586,6 +586,25 @@ class V3PipelineTest {
     }
 
     @Test
+    void keepsReactNativeAndroidNpmAndGradleTestsInTheirContainers() {
+        FakeSteps steps = new FakeSteps()
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            extends: 'react-native-android-kubernetes',
+            project: [id: 'react-native-android-tests'],
+            agent: [type: 'none']
+        ])
+
+        Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
+            onlyStages: ['test']]).run()
+
+        assertEquals('SUCCESS', result['react-native-android-tests'].status)
+        assertTrue(steps.commands.any { it.contains("'npm' 'test'") })
+        assertTrue(steps.commands.any { it.contains("'./gradlew' 'test'") })
+        assertEquals(['node', 'android'], steps.containersUsed)
+    }
+
+    @Test
     void rendersSecurePinnedLanguagePods() {
         Map<String, List<String>> expectedContainers = [
             'node-npm-kubernetes': ['node'],
@@ -651,6 +670,7 @@ class FakeSteps {
     List<Map> parameterDefinitions = []
     List<Map> shellInvocations = []
     List<Integer> retryCounts = []
+    List<String> containersUsed = []
     List<Map> timeoutInvocations = []
     List<List> credentialInvocations = []
     List<String> sonarQubeInstallations = []
@@ -700,7 +720,10 @@ class FakeSteps {
         retryCounts.add(count)
         body.call()
     }
-    void container(String name, Closure body) { body.call() }
+    void container(String name, Closure body) {
+        containersUsed.add(name)
+        body.call()
+    }
     Object dir(String path, Closure body) {
         directories.add(path)
         return body.call()
