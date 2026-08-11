@@ -549,6 +549,23 @@ class V3PipelineTest {
     }
 
     @Test
+    void retriesNpmDependencyInstallationAfterTransientRegistryFailures() {
+        FakeSteps steps = new FakeSteps()
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            extends: 'node-npm-static',
+            project: [id: 'node-install-retry'],
+            agent: [type: 'none']
+        ])
+
+        Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
+            onlyStages: ['install']]).run()
+
+        assertEquals('SUCCESS', result['node-install-retry'].status)
+        assertEquals([3], steps.retryCounts)
+    }
+
+    @Test
     void rendersSecurePinnedLanguagePods() {
         Map<String, List<String>> expectedContainers = [
             'node-npm-kubernetes': ['node'],

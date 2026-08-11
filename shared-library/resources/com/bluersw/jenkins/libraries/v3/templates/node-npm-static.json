@@ -19,7 +19,7 @@
   "parameters": [],
   "agent": {"type": "static", "label": "", "requirements": {"tools": ["node", "npm"]}},
   "stages": [
-    {"id": "install", "name": "Node dependencies", "steps": [
+    {"id": "install", "name": "Node dependencies", "retries": 2, "steps": [
       {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_INSTALL_COMMAND}", "workDir": "${NPM_WORK_DIR}"}
     ]},
     {"id": "test", "name": "Node tests", "steps": [
