@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 3,
+  "extends": "android-gradle-static",
+  "variables": {
+    "ANDROID_IMAGE": "ghcr.io/cirruslabs/android-sdk:36@sha256:f9b3ea9ed2b5fc9522adae82c7b4622ab7aa54207ef532c8e615a347dca08f31",
+    "POD_RUN_AS_USER": 1000,
+    "POD_RUN_AS_GROUP": 1000,
+    "POD_FS_GROUP": 1000,
+    "ANDROID_USER_HOME": "/home/jenkins",
+    "GRADLE_USER_HOME": "/home/jenkins/.gradle",
+    "ANDROID_CPU_REQUEST": "500m",
+    "ANDROID_MEMORY_REQUEST": "1Gi",
+    "ANDROID_CPU_LIMIT": "3",
+    "ANDROID_MEMORY_LIMIT": "3Gi"
+  },
+  "agent": {"type": "kubernetes", "podTemplate": "android-gradle"},
+  "stages": [
+    {"id": "test", "container": "android"},
+    {"id": "coverage", "container": "android"},
+    {"id": "build", "container": "android"}
+  ]
+}

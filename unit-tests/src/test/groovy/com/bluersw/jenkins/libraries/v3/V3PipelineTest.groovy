@@ -1,6 +1,7 @@
 package com.bluersw.jenkins.libraries.v3
 
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import org.junit.Test
 import org.yaml.snakeyaml.Yaml
 
@@ -313,6 +314,7 @@ class V3PipelineTest {
     @Test
     void isolatesProjectVariablesAndLimitsParallelBatches() {
         FakeSteps steps = new FakeSteps()
+        steps.params.RUN_MULTI = 'api,worker,scheduler,report,gateway'
         List<String> captured = []
         Map result = new V3Pipeline(steps, [
             configFiles: ['v3/multi-project.json'],
@@ -345,6 +347,7 @@ class V3PipelineTest {
     @Test
     void runsCommonControlsRuntimeVariablesAndPostHandlers() {
         FakeSteps steps = new FakeSteps()
+        steps.params.putAll([TEXT_VALUE: 'text', BOOLEAN_VALUE: true, CHOICE_VALUE: 'one', MULTI_VALUE: 'one,two'])
         Map<String, Map> callbackVariables = [:]
         Map result = new V3Pipeline(steps, [
             configFiles: ['v3/common-controls.json'],
@@ -377,6 +380,156 @@ class V3PipelineTest {
         assertEquals(['TEXT_VALUE', 'BOOLEAN_VALUE', 'CHOICE_VALUE', 'MULTI_VALUE'],
             steps.parameterDefinitions.collect { it.name })
     }
+
+    @Test
+    void initializesParametersAndPreservesCurrentSelections() {
+        FakeSteps firstRun = new FakeSteps()
+        Map firstResult = new V3Pipeline(firstRun, [configFiles: ['v3/parameters.json'], checkout: false]).run()
+
+        assertTrue(firstResult.isEmpty())
+        assertEquals('NOT_BUILT', firstRun.currentBuild.result)
+        assertTrue(firstRun.events.every { !it.startsWith('node:') && it != 'checkout' })
+        assertEquals(['BUILD_AGENT', 'PROJECTS', 'INLINE_PROJECTS'], firstRun.parameterDefinitions.collect { it.name })
+
+        FakeSteps nextRun = new FakeSteps()
+        nextRun.params.putAll([BUILD_AGENT: 'mac-m2-16g', PROJECTS: '', INLINE_PROJECTS: 'ios'])
+        Map result = new V3Pipeline(nextRun, [configFiles: ['v3/parameters.json'], checkout: false]).run()
+
+        assertEquals('SUCCESS', result.parameters.status)
+        assertEquals('mac-m2-16g', nextRun.parameterDefinitions[0].defaultValue)
+        assertEquals('', nextRun.parameterDefinitions[1].defaultValue)
+        assertEquals('ios', nextRun.parameterDefinitions[2].defaultValue)
+        assertEquals('FILE_PATH', nextRun.parameterDefinitions[1].protocol)
+        assertEquals('HTTP_HTTPS', nextRun.parameterDefinitions[2].protocol)
+        assertTrue(nextRun.parameterDefinitions[2].pipelineSubmitContent.toString().contains('checked'))
+    }
+
+    @Test
+    void runsMultilanguageStepsCoverageAndAppleSigningCleanup() {
+        FakeSteps steps = new FakeSteps()
+        steps.stdoutByScriptContains["'xccov'"] = '''{"targets":[{"name":"SampleTests","files":[{"name":"App.swift","path":"Sources/App.swift","executableLines":10,"coveredLines":8}]}]}'''
+
+        Map result = new V3Pipeline(steps, [configFiles: ['v3/multilanguage.json'], checkout: false]).run()
+
+        assertEquals('SUCCESS', result.multilanguage.status)
+        assertTrue(steps.commands.any { it.contains("'npm' 'ci'") })
+        assertTrue(steps.commands.any { it.contains("'./gradlew' 'test'") })
+        assertTrue(steps.shellInvocations.any { it.method == 'powershell' && it.arguments.script.startsWith("& 'MSBuild.exe'") })
+        assertTrue(steps.commands.any { it.contains("'xcodebuild' '-workspace' 'Sample.xcworkspace'") && it.contains("'test'") })
+        assertTrue(steps.commands.any { it.contains("'xcodebuild' '-exportArchive'") })
+        assertTrue(steps.commands.any { it.contains('security create-keychain') })
+        assertTrue(steps.commands.any { it.contains('security delete-keychain') })
+        assertTrue(steps.writtenFiles['.jenkins-json-build/xcode-coverage.xml'].contains('line-rate="0.8"'))
+        assertEquals(2, steps.coverageInvocations.size())
+        assertTrue(steps.commands.any { it == 'sonar-scanner -Dsonar.projectKey=sample' })
+    }
+
+    @Test
+    void checksStaticAgentBeforeCheckoutAndRejectsWrongOperatingSystem() {
+        FakeSteps mac = new FakeSteps()
+        Map result = new V3Pipeline(mac, [configFiles: ['v3/static-requirements.json']]).run()
+
+        assertEquals('SUCCESS', result['static-requirements'].status)
+        assertTrue(mac.events.indexOf('requirements') < mac.events.indexOf('checkout'))
+
+        FakeSteps linux = new FakeSteps()
+        try {
+            new V3Pipeline(linux, [configFiles: ['v3/windows-requirements.json']]).run()
+            fail('Expected operating system validation failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message.contains('不是 Windows'))
+        }
+        assertFalse(linux.events.contains('checkout'))
+    }
+
+    @Test
+    void cleansAppleSigningStateWhenNestedStepFails() {
+        FakeSteps steps = new FakeSteps()
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            project: [id: 'signing-failure'],
+            agent: [type: 'none'],
+            stages: [[id: 'archive', name: 'Archive', steps: [[
+                type: 'appleSigning',
+                certificateCredentialsId: 'ios-p12',
+                certificatePasswordCredentialsId: 'ios-p12-password',
+                provisioningProfileCredentialsIds: ['ios-profile'],
+                steps: [[type: 'command', script: 'fail-signing']]
+            ]]]]
+        ])
+        steps.failOnScriptContains = 'fail-signing'
+
+        try {
+            new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false]).run()
+            fail('Expected signing failure')
+        } catch (RuntimeException error) {
+            assertTrue(error.message.contains('simulated command failure'))
+        }
+
+        assertTrue(steps.commands.any { it.contains('security create-keychain') })
+        assertTrue(steps.commands.any { it.contains('security delete-keychain') })
+        assertTrue(steps.commands.any { it.contains('rm -rf "$STATE"') })
+    }
+
+    @Test
+    void loadsEveryBundledLanguageTemplate() {
+        List<String> templates = [
+            'node-npm-static', 'node-npm-kubernetes',
+            'android-gradle-static', 'android-gradle-kubernetes',
+            'react-native-android-static', 'react-native-android-kubernetes',
+            'ios-xcode-static', 'react-native-ios-static', 'dotnet-framework-msbuild-windows'
+        ]
+        for (String template : templates) {
+            FakeSteps steps = new FakeSteps()
+            steps.stdoutByScriptContains["'xccov'"] = '''{"targets":[{"name":"Tests","files":[{"path":"App.swift","executableLines":1,"coveredLines":1}]}]}'''
+            steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+                schemaVersion: 3,
+                extends: template,
+                project: [id: template],
+                agent: [type: 'none']
+            ])
+
+            Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false]).run()
+            assertEquals(template, 'SUCCESS', result[template].status)
+        }
+    }
+
+    @Test
+    void rendersSecurePinnedLanguagePods() {
+        Map<String, List<String>> expectedContainers = [
+            'node-npm-kubernetes': ['node'],
+            'android-gradle-kubernetes': ['android'],
+            'react-native-android-kubernetes': ['node', 'android']
+        ]
+        expectedContainers.each { String template, List<String> names ->
+            FakeSteps steps = new FakeSteps()
+            steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+                schemaVersion: 3,
+                extends: template,
+                project: [id: template]
+            ])
+            Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false,
+                onlyStages: ['not-selected']]).run()
+
+            assertEquals(template, 'SUCCESS', result[template].status)
+            Map pod = new Yaml().load(steps.podYaml) as Map
+            assertEquals(true, pod.spec.securityContext.runAsNonRoot)
+            assertEquals(false, pod.spec.automountServiceAccountToken)
+            Map<String, Map> containers = (pod.spec.containers as List).collectEntries { Map container ->
+                [(container.name.toString()): container]
+            }
+            assertTrue(names.every { containers.containsKey(it) })
+            assertTrue(containers.values().every { Map container ->
+                container.image.toString().contains('@sha256:') &&
+                    container.securityContext.runAsNonRoot == true &&
+                    container.securityContext.allowPrivilegeEscalation == false &&
+                    container.securityContext.capabilities.drop == ['ALL']
+            })
+            assertFalse(steps.podYaml.contains('hostPath:'))
+            assertFalse(steps.podYaml.contains('docker.sock'))
+            assertFalse(steps.podYaml.contains('privileged: true'))
+        }
+    }
 }
 
 class FakeSteps {
@@ -395,10 +548,17 @@ class FakeSteps {
     List<Map> junitInvocations = []
     List<Map> jacocoInvocations = []
     List<Map> archiveInvocations = []
+    List<Map> coverageInvocations = []
     List<String> directories = []
+    List<String> events = []
+    List<String> messages = []
     Map<String, String> writtenFiles = [:]
+    Map<String, String> stdoutByScriptContains = [:]
+    Map<String, String> trustedFiles = [:]
+    Map currentBuild = [result: null]
     String podYaml = ''
     String failOnScriptContains
+    boolean unix = true
 
     String libraryResource(String path) {
         return new File('../shared-library/resources', path).getText('UTF-8')
@@ -409,10 +569,14 @@ class FakeSteps {
     }
 
     String readTrusted(String path) {
+        if (trustedFiles.containsKey(path)) return trustedFiles[path]
         return new File('src/test/resources', path).getText('UTF-8')
     }
 
-    void node(String label, Closure body) { body.call() }
+    void node(String label, Closure body) {
+        events.add("node:${label}".toString())
+        body.call()
+    }
     void stage(String name, Closure body) { body.call() }
     void timeout(Map arguments, Closure body) {
         timeoutInvocations.add(new LinkedHashMap(arguments))
@@ -423,18 +587,19 @@ class FakeSteps {
         body.call()
     }
     void container(String name, Closure body) { body.call() }
-    void dir(String path, Closure body) {
+    Object dir(String path, Closure body) {
         directories.add(path)
-        body.call()
+        return body.call()
     }
-    void withEnv(List<String> values, Closure body) { body.call() }
+    Object withEnv(List<String> values, Closure body) { body.call() }
     void podTemplate(Map arguments, Closure body) {
         podYaml = arguments.yaml.toString()
         env.POD_LABEL = 'v3-test-pod'
         body.call()
     }
     String pwd() { '/workspace' }
-    void checkout(Object scm) { }
+    boolean isUnix() { unix }
+    void checkout(Object scm) { events.add('checkout') }
     void junit(Map arguments) { junitInvocations.add(new LinkedHashMap(arguments)) }
     void jacoco(Map arguments) { jacocoInvocations.add(new LinkedHashMap(arguments)) }
     void archiveArtifacts(Map arguments) { archiveInvocations.add(new LinkedHashMap(arguments)) }
@@ -443,9 +608,25 @@ class FakeSteps {
     Object sshUserPrivateKey(Map arguments) { new LinkedHashMap(arguments) }
     Object booleanParam(Map arguments) { new LinkedHashMap(arguments) }
     Object choice(Map arguments) { new LinkedHashMap(arguments) }
+    Object agentParameter(Map arguments) { new LinkedHashMap(arguments) }
+    Object checkboxParameter(Map arguments) { new FakeCheckboxDefinition(arguments) }
     Object parameters(List arguments) {
-        parameterDefinitions.addAll(arguments.collect { new LinkedHashMap(it as Map) })
+        parameterDefinitions.addAll(arguments.collect { parameterDefinition(it) })
         return arguments
+    }
+
+    private static Map parameterDefinition(Object value) {
+        if (value instanceof Map) return new LinkedHashMap(value as Map)
+        Map result = [:]
+        ['name', 'description', 'defaultValue', 'protocol', 'format', 'uri', 'displayNodePath',
+            'valueNodePath', 'checkedNodePath', 'pipelineSubmitContent'].each { field ->
+            try {
+                Object configured = value."${field}"
+                if (configured != null) result[field] = configured.toString()
+            } catch (Throwable ignored) {
+            }
+        }
+        return result
     }
     void properties(List arguments) { }
     void withCredentials(List bindings, Closure body) {
@@ -460,6 +641,7 @@ class FakeSteps {
         qualityGateInvocations.add(new LinkedHashMap(arguments))
         return [status: 'OK']
     }
+    void recordCoverage(Map arguments) { coverageInvocations.add(new LinkedHashMap(arguments)) }
     Object httpRequest(Map arguments) {
         return [content: 'http-value\n', status: 200]
     }
@@ -477,16 +659,22 @@ class FakeSteps {
         return new File(arguments.file.toString()).getText('UTF-8')
     }
     void writeFile(Map arguments) { writtenFiles[arguments.file.toString()] = arguments.text.toString() }
-    void echo(String message) { }
+    void echo(String message) { messages.add(message) }
 
     Object sh(Map arguments) {
         shellInvocations.add([method: 'sh', arguments: new LinkedHashMap(arguments)])
         commands.add(arguments.script.toString())
+        if (arguments.script.toString().contains('uname -s')) events.add('requirements')
         if (failOnScriptContains && arguments.script.toString().contains(failOnScriptContains)) {
             throw new RuntimeException('simulated command failure')
         }
         if (arguments.returnStatus) return 0
-        if (arguments.returnStdout) return 'output\n'
+        if (arguments.returnStdout) {
+            Map.Entry<String, String> configured = stdoutByScriptContains.find { entry ->
+                arguments.script.toString().contains(entry.key)
+            }
+            return configured ? configured.value : 'output\n'
+        }
         return null
     }
 
@@ -504,4 +692,10 @@ class FakeSteps {
         shellInvocations.add([method: 'bat', arguments: new LinkedHashMap(arguments)])
         return arguments.returnStatus ? 0 : (arguments.returnStdout ? 'output\r\n' : null)
     }
+}
+
+class FakeCheckboxDefinition extends LinkedHashMap {
+    FakeCheckboxDefinition(Map arguments) { super(arguments) }
+
+    void setDefaultValue(String value) { put('defaultValue', value) }
 }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 3,
+  "extends": "node-npm-kubernetes",
+  "project": {
+    "id": "node-npm-example"
+  },
+  "variables": {
+    "ENABLE_SONAR": false,
+    "NPM_BUILD_COMMAND": "jsdoc",
+    "BUILD_ARTIFACTS": "jsdoc/**"
+  }
+}

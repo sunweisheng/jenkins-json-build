@@ -27,6 +27,7 @@ controller:
   installPlugins:
     - kubernetes:4540.v612369217f87
     - workflow-aggregator:608.v67378e9d3db_1
+    - workflow-multibranch:841.vec5b_9e1806ec
     - pipeline-groovy-lib:798.v5cc688825312
     - git:5.10.1
     - configuration-as-code:2111.v475308a_6c93b_
@@ -37,6 +38,10 @@ controller:
     - junit:1416.vd753e036de5e
     - jacoco:3.3.7
     - sonar:2.18.3
+    - ssh-slaves:3.1097.v868116049892
+    - agent-server-parameter:1.21.v71e7962a_b_456
+    - custom-checkbox-parameter:1.69.v27b_2c5306e46
+    - coverage:3.3325.v2f3dd167a_b_e5
   installLatestPlugins: false
   installLatestSpecifiedPlugins: false
   initializeOnce: true
@@ -60,7 +65,7 @@ controller:
           globalLibraries:
             libraries:
               - name: "jenkins-json-build"
-                defaultVersion: "v3.0.0"
+                defaultVersion: "v3.2.0"
                 implicit: false
                 allowVersionOverride: true
                 includeInChangesets: true
@@ -88,7 +93,7 @@ agent:
   jenkinsUrl: http://jenkins.${CI_NAMESPACE}.svc.cluster.local:8080
   websocket: true
   podRetention: Never
-  containerCap: 4
+  containerCap: 1
   showRawYaml: false
   privileged: false
   hostNetworking: false

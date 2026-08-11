@@ -99,4 +99,22 @@ return [
             assertTrue(error.message.contains('禁止'))
         }
     }
+
+    @Test
+    void convertsXcodeCoverageAndRejectsInvalidValues() {
+        String xml = XcodeCoverageConverter.toCobertura([targets: [[name: 'AppTests', files: [[
+            name: 'App.swift', path: 'Sources/App.swift', executableLines: 4, coveredLines: 3
+        ]]]]])
+        assertTrue(xml.contains('line-rate="0.75"'))
+        assertTrue(xml.contains('filename="Sources/App.swift"'))
+
+        try {
+            XcodeCoverageConverter.toCobertura([targets: [[name: 'AppTests', files: [[
+                path: 'Sources/App.swift', executableLines: 1, coveredLines: 2
+            ]]]]])
+            fail('Expected invalid coverage failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message.contains('coveredLines'))
+        }
+    }
 }

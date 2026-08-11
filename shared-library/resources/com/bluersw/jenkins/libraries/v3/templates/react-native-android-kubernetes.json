@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-android-static",
+  "variables": {
+    "NODE_IMAGE": "docker.io/library/node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d",
+    "ANDROID_IMAGE": "ghcr.io/cirruslabs/android-sdk:36@sha256:f9b3ea9ed2b5fc9522adae82c7b4622ab7aa54207ef532c8e615a347dca08f31",
+    "POD_RUN_AS_USER": 1000,
+    "POD_RUN_AS_GROUP": 1000,
+    "POD_FS_GROUP": 1000,
+    "NODE_USER_HOME": "/home/jenkins",
+    "ANDROID_USER_HOME": "/home/jenkins",
+    "GRADLE_USER_HOME": "/home/jenkins/.gradle",
+    "SHARED_NODE_BINARY": "/opt/jenkins-toolchain/node",
+    "NODE_CPU_REQUEST": "250m",
+    "NODE_MEMORY_REQUEST": "512Mi",
+    "NODE_CPU_LIMIT": "2",
+    "NODE_MEMORY_LIMIT": "2Gi",
+    "ANDROID_CPU_REQUEST": "500m",
+    "ANDROID_MEMORY_REQUEST": "1Gi",
+    "ANDROID_CPU_LIMIT": "3",
+    "ANDROID_MEMORY_LIMIT": "3Gi"
+  },
+  "agent": {"type": "kubernetes", "podTemplate": "react-native-android"},
+  "stages": [
+    {"id": "install", "container": "node"},
+    {"id": "test", "container": "node", "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}"}
+    ]},
+    {"id": "coverage", "container": "node"},
+    {"id": "quality", "container": "node"},
+    {"id": "build", "container": "android", "steps": [
+      {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_BUILD_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "${SHARED_NODE_BINARY}"}, "artifacts": ["${ANDROID_ARTIFACTS}"]},
+      {"type": "archive", "artifacts": "${ANDROID_ARTIFACTS}", "fingerprint": true}
+    ]}
+  ]
+}

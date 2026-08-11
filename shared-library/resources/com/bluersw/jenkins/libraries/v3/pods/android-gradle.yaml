@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/part-of: jenkins-json-build
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: ${POD_RUN_AS_USER}
+    runAsGroup: ${POD_RUN_AS_GROUP}
+    fsGroup: ${POD_FS_GROUP}
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: android
+      image: ${ANDROID_IMAGE}
+      command: ["cat"]
+      tty: true
+      env:
+        - name: HOME
+          value: ${ANDROID_USER_HOME}
+        - name: GRADLE_USER_HOME
+          value: ${GRADLE_USER_HOME}
+      resources:
+        requests:
+          cpu: "${ANDROID_CPU_REQUEST}"
+          memory: "${ANDROID_MEMORY_REQUEST}"
+        limits:
+          cpu: "${ANDROID_CPU_LIMIT}"
+          memory: "${ANDROID_MEMORY_LIMIT}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: android-home
+          mountPath: ${ANDROID_USER_HOME}
+  volumes:
+    - name: android-home
+      emptyDir: {}

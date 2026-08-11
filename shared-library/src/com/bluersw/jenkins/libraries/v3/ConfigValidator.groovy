@@ -50,7 +50,7 @@ class ConfigValidator implements Serializable {
             if (!supportedSteps.contains(type)) {
                 throw new V3ConfigException("${location}[${index}] 使用了未注册步骤 ${type}")
             }
-            if (['condition', 'retry', 'timeout', 'credentials'].contains(type)) {
+            if (['condition', 'retry', 'timeout', 'credentials', 'appleSigning'].contains(type)) {
                 validateSteps(step.steps, "${location}[${index}].steps")
             }
             requireMap(step, 'variables', "${location}[${index}]")

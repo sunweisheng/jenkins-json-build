@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "extends": "ios-xcode-static",
+  "project": {
+    "id": "ios-xcode-example"
+  },
+  "variables": {
+    "XCODE_WORKSPACE": "CICD-ObjectC-Test.xcworkspace",
+    "XCODE_SCHEME": "CICD-ObjectC-Test",
+    "XCODE_CONFIGURATION": "Debug",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 16",
+    "XCODE_RESULT_BUNDLE": "build/CICD-ObjectC-Test.xcresult",
+    "XCODE_ARCHIVE_PATH": "build/CICD-ObjectC-Test.xcarchive",
+    "XCODE_EXPORT_PATH": "build/export",
+    "XCODE_EXPORT_OPTIONS_PLIST": "CICDTestApp.plist",
+    "ENABLE_SIGNED_ARCHIVE": false,
+    "IOS_ARTIFACTS": "build/export/**/*.ipa"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 3,
+  "variables": {
+    "MSBUILD_EXECUTABLE": "MSBuild.exe",
+    "MSBUILD_SOLUTION": "ChangeMe.sln",
+    "MSBUILD_CONFIGURATION": "Release",
+    "MSBUILD_PLATFORM": "Any CPU",
+    "MSBUILD_TEST_TARGET": "Test",
+    "MSBUILD_BUILD_TARGET": "Build",
+    "ENABLE_COVERAGE": false,
+    "OPENCOVER_REPORT": "**/coverage.opencover.xml",
+    "MSBUILD_ARTIFACTS": "**/bin/Release/**"
+  },
+  "parameters": [],
+  "agent": {"type": "static", "label": "windows msbuild", "requirements": {"os": "windows", "architectures": ["AMD64"], "tools": ["MSBuild.exe"]}},
+  "stages": [
+    {"id": "test", "name": ".NET Framework tests", "steps": [
+      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_TEST_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}}
+    ]},
+    {"id": "coverage", "name": ".NET Framework coverage", "condition": {"variable": "ENABLE_COVERAGE", "operator": "equals", "value": true}, "steps": [
+      {"type": "coverage", "reports": [{"format": "OPENCOVER", "pattern": "${OPENCOVER_REPORT}"}]}
+    ]},
+    {"id": "build", "name": ".NET Framework build", "steps": [
+      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_BUILD_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}, "artifacts": ["${MSBUILD_ARTIFACTS}"]},
+      {"type": "archive", "artifacts": "${MSBUILD_ARTIFACTS}", "fingerprint": true}
+    ]}
+  ],
+  "post": {"always": []}
+}

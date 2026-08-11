@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "windows-requirements"},
+  "agent": {
+    "type": "static",
+    "label": "windows",
+    "requirements": {"os": "windows", "architectures": ["AMD64"], "tools": ["MSBuild.exe"]}
+  },
+  "stages": [{"id": "build", "name": "Build", "steps": [{"type": "command", "shell": "powershell", "script": "Write-Output ready"}]}]
+}

@@ -9,6 +9,7 @@ This directory contains the test-platform baseline for Jenkins Json Build V3.
 - Application build/runtime default: OpenJDK 21
 - Controller: one StatefulSet replica, persistent Jenkins Home, zero executors
 - Builds: dynamic Kubernetes Pods over WebSocket
+- Static Mac/Windows nodes: SSH Launcher or installation-specific launcher
 
 The image digests were checked against the official image manifests on 2026-08-06. Recheck them before an upgrade; do not replace them with `latest`.
 
@@ -21,6 +22,15 @@ The image digests were checked against the official image manifests on 2026-08-0
 5. Install Chart `5.9.49` with the generated `values.yaml`.
 6. Create a GitHub Organization Folder or Multibranch Pipeline. Git Parameter is only for old jobs.
 
+V3.2.0 固定增加以下插件：
+
+- `ssh-slaves:3.1097.v868116049892`
+- `agent-server-parameter:1.21.v71e7962a_b_456`
+- `custom-checkbox-parameter:1.69.v27b_2c5306e46`
+- `coverage:3.3325.v2f3dd167a_b_e5`
+
+已存在且设置 `initializeOnce: true` 的 Jenkins 不会自动补装新增插件。升级时先备份 Jenkins Home 并完成隔离恢复检查，再渲染 values 和执行 Helm dry-run。临时设置 `initializeOnce: false` 完成插件安装，确认插件版本、任务配置和 Controller 重启正常后恢复 `initializeOnce: true`。不要在没有可恢复备份时直接修改运行中的 Jenkins PVC。
+
 The controller service account can provision build Pods but cannot read Kubernetes Secrets. Ordinary build Pods use `jenkins-build` without an API token. The default Java deployment Pod mounts the registry config only in rootless BuildKit and a short-lived projected Kubernetes token only in Helm; the Kaniko compatibility template keeps the same separation. The deployer role intentionally has no Secret permissions and Helm uses ConfigMaps for release storage.
 
 The bundled rootless BuildKit Pod requires Kubernetes 1.30 or later, an admission policy that permits the container-level `Unconfined` seccomp and AppArmor settings, and nodes with unprivileged user namespaces enabled. It remains non-privileged and does not mount a Docker socket. Image names, executables, credential mount paths, cache references, and resource limits are template variables so installations can use private registries or internally maintained images without editing the shared library.
@@ -31,4 +41,4 @@ With `agent.restrictedPssSecurityContext: true`, the Kubernetes plugin adds rest
 
 Stop new builds, record the installed Chart and plugin versions, and create a storage-level snapshot of the Jenkins Home volume. Restore that snapshot to a different PVC and isolated namespace, then verify login, credentials metadata, shared-library loading, Multibranch discovery, a Java build, and a controller restart. An archive command alone is not considered a completed rehearsal.
 
-Do not upgrade the production release until the restored controller passes those checks. Keep the old release values, plugin files, image digests, and volume snapshot together so rollback does not mix versions.
+Do not upgrade the production release until the restored controller passes those checks. Keep the old release values, plugin files, image digests, and volume snapshot together so rollback does not mix versions. The standard template keeps `containerCap: 1`; Kubernetes and Mac acceptance builds run serially on a 16 GB host.

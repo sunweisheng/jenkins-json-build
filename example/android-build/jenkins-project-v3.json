@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "extends": "android-gradle-kubernetes",
+  "project": {
+    "id": "android-gradle-example"
+  },
+  "variables": {
+    "GRADLE_TEST_TASK": "testDebugUnitTest",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ENABLE_COVERAGE": false,
+    "ANDROID_ARTIFACTS": "app/build/outputs/**/*.apk"
+  }
+}

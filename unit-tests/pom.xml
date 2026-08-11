@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.bluersw.jenkins.libraries</groupId>
     <artifactId>jenkins-json-build</artifactId>
-    <version>3.1.0</version>
+    <version>3.2.0</version>
     <name>Global Shared Library - Tests</name>
     <description>TODO</description>
     <url>https://github.com/sunweisheng/jenkins-json-build</url>
@@ -25,6 +25,7 @@
         <gmavenplus.version>4.2.1</gmavenplus.version>
         <maven-surefire.version>3.5.4</maven-surefire.version>
         <snakeyaml.version>2.5</snakeyaml.version>
+        <custom-checkbox-parameter.version>1.69.v27b_2c5306e46</custom-checkbox-parameter.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -54,6 +55,13 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>${snakeyaml.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>custom-checkbox-parameter</artifactId>
+            <version>${custom-checkbox-parameter.version}</version>
+            <type>jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

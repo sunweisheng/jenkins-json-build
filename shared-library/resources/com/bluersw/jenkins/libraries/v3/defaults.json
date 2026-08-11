@@ -2,8 +2,12 @@
   "stepHandlers": {
     "command": "runCommandStep",
     "maven": "runMavenStep",
+    "npm": "runNpmStep",
+    "gradle": "runGradleStep",
+    "msbuild": "runMsBuildStep",
     "junit": "runJunitStep",
     "jacoco": "runJacocoStep",
+    "coverage": "runCoverageStep",
     "sonarqube": "runSonarQubeStep",
     "archive": "runArchiveStep",
     "credentials": "runCredentialsStep",
@@ -11,6 +15,9 @@
     "retry": "runRetryStep",
     "timeout": "runTimeoutStep",
     "setVariable": "runSetVariableStep",
+    "xcodebuild": "runXcodeBuildStep",
+    "xcodeCoverage": "runXcodeCoverageStep",
+    "appleSigning": "runAppleSigningStep",
     "containerImage": "runContainerImageStep",
     "helm": "runHelmStep"
   },
@@ -18,11 +25,23 @@
   "templates": {
     "java-maven-static": "com/bluersw/jenkins/libraries/v3/templates/java-maven-static.json",
     "java-maven-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes.json",
-    "java-maven-kubernetes-kaniko": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes-kaniko.json"
+    "java-maven-kubernetes-kaniko": "com/bluersw/jenkins/libraries/v3/templates/java-maven-kubernetes-kaniko.json",
+    "node-npm-static": "com/bluersw/jenkins/libraries/v3/templates/node-npm-static.json",
+    "node-npm-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/node-npm-kubernetes.json",
+    "android-gradle-static": "com/bluersw/jenkins/libraries/v3/templates/android-gradle-static.json",
+    "android-gradle-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/android-gradle-kubernetes.json",
+    "react-native-android-static": "com/bluersw/jenkins/libraries/v3/templates/react-native-android-static.json",
+    "react-native-android-kubernetes": "com/bluersw/jenkins/libraries/v3/templates/react-native-android-kubernetes.json",
+    "ios-xcode-static": "com/bluersw/jenkins/libraries/v3/templates/ios-xcode-static.json",
+    "react-native-ios-static": "com/bluersw/jenkins/libraries/v3/templates/react-native-ios-static.json",
+    "dotnet-framework-msbuild-windows": "com/bluersw/jenkins/libraries/v3/templates/dotnet-framework-msbuild-windows.json"
   },
   "podTemplates": {
     "java-buildkit-helm": "com/bluersw/jenkins/libraries/v3/pods/java-buildkit-helm.yaml",
-    "java-kaniko-helm": "com/bluersw/jenkins/libraries/v3/pods/java-kaniko-helm.yaml"
+    "java-kaniko-helm": "com/bluersw/jenkins/libraries/v3/pods/java-kaniko-helm.yaml",
+    "node-npm": "com/bluersw/jenkins/libraries/v3/pods/node-npm.yaml",
+    "android-gradle": "com/bluersw/jenkins/libraries/v3/pods/android-gradle.yaml",
+    "react-native-android": "com/bluersw/jenkins/libraries/v3/pods/react-native-android.yaml"
   },
   "agent": {
     "type": "static",
@@ -39,8 +58,31 @@
     "executable": "./mvnw",
     "settingsVariable": "V3_MAVEN_SETTINGS"
   },
+  "npm": {
+    "executable": "npm",
+    "shell": "sh"
+  },
+  "gradle": {
+    "executable": "./gradlew",
+    "shell": "sh"
+  },
+  "msbuild": {
+    "executable": "MSBuild.exe",
+    "shell": "powershell"
+  },
+  "coverage": {
+    "formats": ["COBERTURA", "JACOCO", "LCOV", "OPENCOVER"]
+  },
   "sonarqube": {
     "qualityGateTimeoutMinutes": 10
+  },
+  "xcodebuild": {
+    "executable": "xcodebuild",
+    "actions": ["clean", "build", "test", "archive", "exportArchive"]
+  },
+  "xcodeCoverage": {
+    "executable": "xcrun",
+    "outputFile": ".jenkins-json-build/xcode-coverage.xml"
   },
   "containerImage": {
     "builder": "buildkit",

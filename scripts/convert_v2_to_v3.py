@@ -43,6 +43,10 @@ class V2Converter:
     def __init__(self, rules: dict[str, Any]) -> None:
         self.rules = rules
         self.maven_pattern = re.compile(rules["mavenCommandPattern"])
+        self.tool_command_patterns = {
+            name: re.compile(pattern, re.IGNORECASE)
+            for name, pattern in rules["toolCommandPatterns"].items()
+        }
         self.image_builder_patterns = [
             (builder, definition["displayName"], re.compile(definition["pattern"], re.IGNORECASE))
             for builder, definition in rules["imageBuilderCommandPatterns"].items()
@@ -214,10 +218,17 @@ class V2Converter:
         if mapping == "sonarqube":
             scanner = str(value.get("ScannerScript") or "")
             if scanner:
-                converted = self._command(scanner, step_name)
-                report.suggestions.append(f"{location} 的 Sonar 命令已保留；建议人工改用 sonarqube 标准步骤")
-                return [converted]
+                shell = "powershell" if re.search(r"MSBuild(?:\.exe)?", scanner, re.IGNORECASE) else "sh"
+                return [{
+                    "id": self._id(step_name),
+                    "type": "sonarqube",
+                    "script": scanner,
+                    "shell": shell,
+                    "qualityGate": True,
+                }]
             return [{"id": self._id(step_name), "type": "sonarqube", "goals": ["sonar:sonar"], "qualityGate": True}]
+        if mapping in self.rules["coverageTypes"]:
+            return self._coverage_step(mapping, step_name, value, location, report)
 
         report.errors.append(f"{location} 使用无法转换的类型 {step_type or '<empty>'}")
         return []
@@ -231,6 +242,13 @@ class V2Converter:
             if not isinstance(command_text, str) or not command_text.strip():
                 report.errors.append(f"{parent_name}/{command_name} 的命令为空")
                 continue
+            error_count = len(report.errors)
+            converted = self._structured_command(command_text, command_name, f"{parent_name}/{command_name}", report)
+            if converted is not None:
+                result.append(converted)
+                continue
+            if len(report.errors) != error_count:
+                continue
             unsupported = [
                 stack_name
                 for stack_name, pattern in self.unsupported_command_patterns
@@ -238,7 +256,7 @@ class V2Converter:
             ]
             if unsupported:
                 report.errors.append(
-                    f"{parent_name}/{command_name} 检测到 V3.0 尚未支持的技术栈: {', '.join(unsupported)}"
+                    f"{parent_name}/{command_name} 无法可靠转换: {', '.join(unsupported)}"
                 )
                 continue
             for builder, display_name, pattern in self.image_builder_patterns:
@@ -248,10 +266,16 @@ class V2Converter:
                     )
             if self.helm_pattern.search(command_text):
                 report.suggestions.append(f"{parent_name}/{command_name} 检测到 Helm 命令，请人工改用 helm 步骤")
-            result.append(self._command(command_text, command_name))
+            result.append({"id": self._id(command_name), "type": "command", "shell": "sh", "script": command_text})
         return result
 
-    def _command(self, command_text: str, command_name: str) -> dict[str, Any]:
+    def _structured_command(
+        self,
+        command_text: str,
+        command_name: str,
+        location: str,
+        report: ConversionReport,
+    ) -> dict[str, Any] | None:
         match = self.maven_pattern.match(command_text.strip())
         if match:
             work_dir, executable, tail = match.groups()
@@ -272,7 +296,271 @@ class V2Converter:
                 if work_dir:
                     converted["workDir"] = work_dir.strip()
                 return converted
-        return {"id": self._id(command_name), "type": "command", "shell": "sh", "script": command_text}
+        for tool_name, pattern in self.tool_command_patterns.items():
+            match = pattern.match(command_text.strip())
+            if not match:
+                continue
+            work_dir, executable, tail = match.groups()
+            if tool_name == "npm":
+                return self._npm_command(command_name, work_dir, executable, tail, location, report)
+            if tool_name == "gradle":
+                return self._gradle_command(command_name, work_dir, executable, tail, location, report)
+            if tool_name == "msbuild":
+                return self._msbuild_command(command_name, work_dir, executable, tail, location, report)
+            if tool_name == "xcodebuild":
+                return self._xcodebuild_command(command_name, work_dir, executable, tail, location, report)
+        return None
+
+    def _npm_command(
+        self,
+        name: str,
+        work_dir: str | None,
+        executable: str,
+        tail: str,
+        location: str,
+        report: ConversionReport,
+    ) -> dict[str, Any] | None:
+        tokens = self._shell_tokens(tail, location, report)
+        if not tokens:
+            return None
+        if self._is_probe(tokens):
+            return None
+        converted: dict[str, Any] = {
+            "id": self._id(name),
+            "type": "npm",
+            "executable": executable,
+            "command": tokens[0],
+        }
+        if len(tokens) > 1:
+            converted["arguments"] = tokens[1:]
+        if work_dir:
+            converted["workDir"] = work_dir.strip()
+        return converted
+
+    def _gradle_command(
+        self,
+        name: str,
+        work_dir: str | None,
+        executable: str,
+        tail: str,
+        location: str,
+        report: ConversionReport,
+    ) -> dict[str, Any] | None:
+        tokens = self._shell_tokens(tail, location, report)
+        if not tokens:
+            return None
+        if self._is_probe(tokens):
+            return None
+        tasks = [token for token in tokens if not token.startswith("-")]
+        arguments = [token for token in tokens if token.startswith("-")]
+        if not tasks:
+            report.errors.append(f"{location} 的 Gradle 命令没有任务")
+            return None
+        converted: dict[str, Any] = {
+            "id": self._id(name),
+            "type": "gradle",
+            "executable": executable,
+            "tasks": tasks,
+            "arguments": arguments,
+        }
+        if work_dir:
+            converted["workDir"] = work_dir.strip()
+        return converted
+
+    def _msbuild_command(
+        self,
+        name: str,
+        work_dir: str | None,
+        executable: str,
+        tail: str,
+        location: str,
+        report: ConversionReport,
+    ) -> dict[str, Any] | None:
+        try:
+            tokens = shlex.split(tail, posix=False)
+        except ValueError as error:
+            report.errors.append(f"{location} 的 MSBuild 参数无法解析: {error}")
+            return None
+        if not tokens or any(re.search(r"[|;&<>]", token) for token in tokens):
+            report.errors.append(f"{location} 的 MSBuild 命令包含组合操作，需要人工拆分")
+            return None
+        if self._is_probe(tokens):
+            return None
+        project = next((token for token in tokens if not token.startswith("/")), "")
+        if not project:
+            report.errors.append(f"{location} 的 MSBuild 命令缺少项目或解决方案")
+            return None
+        targets: list[str] = []
+        properties: dict[str, str] = {}
+        arguments: list[str] = []
+        for token in tokens:
+            if token == project:
+                continue
+            if token.lower().startswith("/t:"):
+                targets.extend(part for part in token[3:].split(";") if part)
+            elif token.lower().startswith("/p:") and "=" in token[3:]:
+                key, value = token[3:].split("=", 1)
+                properties[key] = value
+            else:
+                arguments.append(token)
+        converted: dict[str, Any] = {
+            "id": self._id(name),
+            "type": "msbuild",
+            "executable": executable.strip('"'),
+            "project": project.strip('"'),
+        }
+        if targets:
+            converted["targets"] = targets
+        if properties:
+            converted["properties"] = properties
+        if arguments:
+            converted["arguments"] = arguments
+        if work_dir:
+            converted["workDir"] = work_dir.strip()
+        return converted
+
+    def _xcodebuild_command(
+        self,
+        name: str,
+        work_dir: str | None,
+        executable: str,
+        tail: str,
+        location: str,
+        report: ConversionReport,
+    ) -> dict[str, Any] | None:
+        if re.search(r"[|;&<>]", tail):
+            report.errors.append(f"{location} 的 xcodebuild 命令包含管道或多个命令，需要人工拆分并设置 xcresult")
+            return None
+        tokens = self._shell_tokens(tail, location, report)
+        if not tokens:
+            return None
+        if self._is_probe(tokens):
+            return None
+        configured_actions = set(self.rules["xcodeActions"])
+        options = {
+            "-workspace": "workspace",
+            "-project": "project",
+            "-scheme": "scheme",
+            "-configuration": "configuration",
+            "-destination": "destination",
+            "-derivedDataPath": "derivedDataPath",
+            "-resultBundlePath": "resultBundlePath",
+            "-archivePath": "archivePath",
+            "-exportPath": "exportPath",
+            "-exportOptionsPlist": "exportOptionsPlist",
+        }
+        converted: dict[str, Any] = {"id": self._id(name), "type": "xcodebuild"}
+        actions: list[str] = []
+        arguments: list[str] = []
+        index = 0
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "-exportArchive":
+                actions.append("exportArchive")
+                index += 1
+                continue
+            if token in configured_actions:
+                actions.append(token)
+                index += 1
+                continue
+            if token == "-allowProvisioningUpdates":
+                converted["allowProvisioningUpdates"] = True
+                index += 1
+                continue
+            if token in options:
+                if index + 1 >= len(tokens):
+                    report.errors.append(f"{location} 的 {token} 缺少值")
+                    return None
+                converted[options[token]] = tokens[index + 1]
+                index += 2
+                continue
+            arguments.append(token)
+            index += 1
+        if len(actions) != 1:
+            report.errors.append(f"{location} 的 xcodebuild 命令必须只有一个 action")
+            return None
+        action = actions[0]
+        converted["action"] = action
+        if action == "exportArchive":
+            required = ["archivePath", "exportPath", "exportOptionsPlist"]
+        else:
+            required = ["scheme"]
+            if bool(converted.get("workspace")) == bool(converted.get("project")):
+                report.warnings.append(f"{location} 未明确 workspace 或 project，已保留为普通 command")
+                return None
+        missing = [field for field in required if not converted.get(field)]
+        if missing:
+            report.warnings.append(f"{location} 缺少结构化参数 {', '.join(missing)}，已保留为普通 command")
+            return None
+        if arguments:
+            converted["arguments"] = arguments
+        if work_dir:
+            converted["workDir"] = work_dir.strip()
+        return converted
+
+    def _coverage_step(
+        self,
+        mapping: str,
+        step_name: str,
+        value: dict[str, Any],
+        location: str,
+        report: ConversionReport,
+    ) -> list[dict[str, Any]]:
+        definition = self.rules["coverageTypes"][mapping]
+        if mapping == "coverageLlvm":
+            bundle = next((str(value.get(field)) for field in definition["resultBundleFields"] if value.get(field)), "")
+            if not bundle:
+                report.errors.append(f"{location} 无法从旧 LLVM 配置确定 xcresult 路径，需要人工增加 XcodeResultBundlePath")
+                return []
+            return [{
+                "id": self._id(step_name),
+                "type": "xcodeCoverage",
+                "resultBundlePath": bundle,
+                "outputFile": definition["outputFile"],
+            }]
+
+        pattern = next((str(value.get(field)) for field in definition["pathFields"] if value.get(field)), "")
+        if not pattern:
+            pattern = definition["defaultPattern"]
+            report.warnings.append(f"{location} 未提供标准覆盖率 XML/LCOV 路径，已使用默认值 {pattern}，请人工确认")
+        converted: dict[str, Any] = {
+            "id": self._id(step_name),
+            "type": "coverage",
+            "reports": [{"format": definition["format"], "pattern": pattern}],
+        }
+        quality_gates: list[dict[str, Any]] = []
+        for old_name, metric in definition.get("qualityMetrics", {}).items():
+            if value.get(old_name) in (None, ""):
+                continue
+            try:
+                threshold = float(value[old_name])
+            except (TypeError, ValueError):
+                report.errors.append(f"{location}.{old_name} 不是有效数字")
+                continue
+            quality_gates.append({
+                "metric": metric,
+                "baseline": "PROJECT",
+                "threshold": int(threshold) if threshold.is_integer() else threshold,
+                "unstable": False,
+            })
+        if quality_gates:
+            converted["qualityGates"] = quality_gates
+        return [converted]
+
+    @staticmethod
+    def _shell_tokens(tail: str, location: str, report: ConversionReport) -> list[str]:
+        try:
+            tokens = shlex.split(tail)
+        except ValueError as error:
+            report.errors.append(f"{location} 的命令参数无法解析: {error}")
+            return []
+        if any(re.search(r"[|;&<>]", token) for token in tokens):
+            report.errors.append(f"{location} 包含组合命令，需要人工拆分")
+            return []
+        return tokens
+
+    def _is_probe(self, tokens: list[str]) -> bool:
+        return bool(tokens) and all(token in self.rules["probeArguments"] for token in tokens)
 
     @staticmethod
     def _script_values(configured: Any, location: str, report: ConversionReport) -> list[str]:

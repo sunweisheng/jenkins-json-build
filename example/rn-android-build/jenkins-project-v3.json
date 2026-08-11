@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-android-kubernetes",
+  "project": {
+    "id": "react-native-android-example"
+  },
+  "variables": {
+    "NPM_INSTALL_COMMAND": "install",
+    "ENABLE_SONAR": false,
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ANDROID_ARTIFACTS": "android/app/build/outputs/**/*.apk"
+  }
+}

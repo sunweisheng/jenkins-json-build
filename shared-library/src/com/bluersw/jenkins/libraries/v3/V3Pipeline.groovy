@@ -1,5 +1,6 @@
 package com.bluersw.jenkins.libraries.v3
 
+import com.cloudbees.groovy.cps.NonCPS
 import java.net.URI
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -35,7 +36,9 @@ class V3Pipeline implements Serializable {
         List<Map> roots = [loadMergedConfig(configFiles)]
         List<Map> plans = expandProjects(roots)
         validateUniqueProjectIds(plans)
-        applyParameters(plans.collect { it.config as Map })
+        if (applyParameters(plans.collect { it.config as Map })) {
+            return [:]
+        }
         executePlans(plans, executionPolicy(roots))
         return new LinkedHashMap<String, Map>(buildResults)
     }
@@ -59,13 +62,27 @@ class V3Pipeline implements Serializable {
         List<String> templateNames = stringList(config.extends)
         Map base = [:]
         for (String templateName : templateNames) {
-            String resource = (defaults.templates as Map)[templateName]?.toString()
-            if (!resource) {
-                throw new V3ConfigException("${path} 引用了未知模板 ${templateName}")
-            }
-            base = merger.merge(base, parseJson(steps.libraryResource(resource), resource))
+            base = merger.merge(base, loadTemplate(templateName, []))
         }
         Map override = new LinkedHashMap(config)
+        override.remove('extends')
+        return merger.merge(base, override)
+    }
+
+    private Map loadTemplate(String templateName, List<String> parents) {
+        if (parents.contains(templateName)) {
+            throw new V3ConfigException("模板继承存在循环: ${(parents + templateName).join(' -> ')}")
+        }
+        String resource = (defaults.templates as Map)[templateName]?.toString()
+        if (!resource) throw new V3ConfigException("引用了未知模板 ${templateName}")
+        Map configured = parseJson(steps.libraryResource(resource), resource)
+        Map base = [:]
+        List<String> chain = new ArrayList<String>(parents)
+        chain.add(templateName)
+        for (String parent : stringList(configured.extends)) {
+            base = merger.merge(base, loadTemplate(parent, chain))
+        }
+        Map override = new LinkedHashMap(configured)
         override.remove('extends')
         return merger.merge(base, override)
     }
@@ -149,15 +166,20 @@ class V3Pipeline implements Serializable {
     }
 
     private List<String> selectedProjectIds(Map projects, List<Map> items) {
+        boolean optionProvided = options.containsKey('projectIds') || options.containsKey('projects')
         List<String> selected = stringList(options.projectIds ?: options.projects)
         String parameterName = projects.selectionParameter?.toString() ?: defaults.projects.selectionParameter.toString()
-        if (selected.isEmpty()) {
+        boolean parameterProvided = parameterPresent(parameterName)
+        if (!optionProvided && selected.isEmpty()) {
             Object parameterValue = parameterValue(parameterName)
             selected = stringList(parameterValue)
         }
         List<String> available = items.collect { it.id?.toString() }
         if (available.any { !it }) {
             throw new V3ConfigException('项目清单中的 id 不能为空')
+        }
+        if (selected.isEmpty() && (optionProvided || parameterProvided)) {
+            throw new V3ConfigException('项目选择结果为空，请至少选择一个项目')
         }
         if (selected.isEmpty()) {
             return available
@@ -412,6 +434,148 @@ class V3Pipeline implements Serializable {
         verifyArtifacts(config.artifacts)
     }
 
+    private void runNpmStep(BuildContext context, Map config, Map stageVariables) {
+        String shell = config.shell?.toString() ?: defaults.npm.shell.toString()
+        List<String> command = [config.executable?.toString() ?: defaults.npm.executable.toString(), required(config, 'command')]
+        command.addAll(stringList(config.arguments))
+        runCommandStep(context, [type: 'command', shell: shell, script: commandLine(command, shell),
+            workDir: config.workDir, environment: config.environment], stageVariables)
+        verifyArtifacts(config.artifacts)
+    }
+
+    private void runGradleStep(BuildContext context, Map config, Map stageVariables) {
+        List<String> tasks = stringList(config.tasks)
+        if (tasks.isEmpty()) throw new V3ConfigException('gradle.tasks 不能为空')
+        String shell = config.shell?.toString() ?: defaults.gradle.shell.toString()
+        List<String> command = [config.executable?.toString() ?: defaults.gradle.executable.toString()]
+        command.addAll(tasks)
+        command.addAll(stringList(config.arguments))
+        runCommandStep(context, [type: 'command', shell: shell, script: commandLine(command, shell),
+            workDir: config.workDir, environment: config.environment], stageVariables)
+        verifyArtifacts(config.artifacts)
+    }
+
+    private void runMsBuildStep(BuildContext context, Map config, Map stageVariables) {
+        String shell = config.shell?.toString() ?: defaults.msbuild.shell.toString()
+        List<String> command = [config.executable?.toString() ?: defaults.msbuild.executable.toString(),
+            required(config, 'project')]
+        List<String> targets = stringList(config.targets)
+        if (!targets.isEmpty()) command.add("/t:${targets.join(';')}")
+        (config.properties as Map ?: [:]).each { key, value -> command.add("/p:${key}=${value}") }
+        command.addAll(stringList(config.arguments))
+        runCommandStep(context, [type: 'command', shell: shell, script: commandLine(command, shell),
+            workDir: config.workDir, environment: config.environment], stageVariables)
+        verifyArtifacts(config.artifacts)
+    }
+
+    private void runCoverageStep(BuildContext context, Map config, Map stageVariables) {
+        List<Map> reports = mapList(config.reports, 'coverage.reports')
+        if (reports.isEmpty()) throw new V3ConfigException('coverage.reports 不能为空')
+        List<Map> tools = []
+        for (int index = 0; index < reports.size(); index++) {
+            Map report = reports[index]
+            String format = required(report, 'format').toUpperCase(Locale.ENGLISH)
+            if (!(defaults.coverage.formats as List).contains(format)) {
+                throw new V3ConfigException("coverage.reports[${index}].format 不支持 ${format}")
+            }
+            Map tool = [parser: format, pattern: required(report, 'pattern')]
+            if (report.id) tool.id = report.id.toString()
+            tools.add(tool)
+        }
+        Map arguments = copyWithoutControlKeys(config)
+        arguments.remove('reports')
+        arguments.tools = tools
+        steps.recordCoverage(arguments)
+    }
+
+    private void runXcodeBuildStep(BuildContext context, Map config, Map stageVariables) {
+        String action = required(config, 'action')
+        if (!(defaults.xcodebuild.actions as List).contains(action)) {
+            throw new V3ConfigException("xcodebuild.action 不支持 ${action}")
+        }
+        List<String> command = [config.executable?.toString() ?: defaults.xcodebuild.executable.toString()]
+        if (action == 'exportArchive') {
+            command.addAll(['-exportArchive', '-archivePath', required(config, 'archivePath'),
+                '-exportPath', required(config, 'exportPath'), '-exportOptionsPlist', required(config, 'exportOptionsPlist')])
+        } else {
+            boolean workspace = config.workspace?.toString()?.trim() as boolean
+            boolean project = config.project?.toString()?.trim() as boolean
+            if (workspace == project) throw new V3ConfigException('xcodebuild 必须且只能设置 workspace 或 project')
+            command.addAll([workspace ? '-workspace' : '-project', workspace ? config.workspace.toString() : config.project.toString(),
+                '-scheme', required(config, 'scheme')])
+            if (config.configuration) command.addAll(['-configuration', config.configuration.toString()])
+            if (config.destination) command.addAll(['-destination', config.destination.toString()])
+            if (config.derivedDataPath) command.addAll(['-derivedDataPath', config.derivedDataPath.toString()])
+            if (config.resultBundlePath) command.addAll(['-resultBundlePath', config.resultBundlePath.toString()])
+            if (action == 'test' && booleanValue(config.enableCodeCoverage, true)) command.addAll(['-enableCodeCoverage', 'YES'])
+            if (action == 'archive') command.addAll(['-archivePath', required(config, 'archivePath')])
+            command.add(action)
+        }
+        if (booleanValue(config.allowProvisioningUpdates, false)) command.add('-allowProvisioningUpdates')
+        command.addAll(stringList(config.arguments))
+        runCommandStep(context, [type: 'command', shell: 'sh', script: commandLine(command, 'sh'),
+            workDir: config.workDir, environment: config.environment], stageVariables)
+        verifyArtifacts(config.artifacts)
+    }
+
+    private void runXcodeCoverageStep(BuildContext context, Map config, Map stageVariables) {
+        String resultBundle = required(config, 'resultBundlePath')
+        String outputFile = config.outputFile?.toString() ?: defaults.xcodeCoverage.outputFile.toString()
+        String executable = config.executable?.toString() ?: defaults.xcodeCoverage.executable.toString()
+        List<String> command = [executable, 'xccov', 'view', '--report', '--json', resultBundle]
+        Closure readCoverage = { invokeShell('sh', [script: commandLine(command, 'sh'), returnStdout: true], []) }
+        String json = runWithEnvironmentAndDirectory(config, readCoverage).toString()
+        Object parsed = parseJsonValue(json, resultBundle)
+        if (!(parsed instanceof Map)) throw new V3ConfigException('xcodeCoverage 的 xccov 输出必须是 JSON 对象')
+        String xml = XcodeCoverageConverter.toCobertura(parsed as Map, stringList(config.includeTargets),
+            stringList(config.excludePatterns))
+        steps.writeFile(file: outputFile, text: xml, encoding: 'UTF-8')
+        Map coverage = copyWithoutControlKeys(config)
+        ['resultBundlePath', 'outputFile', 'executable', 'includeTargets', 'excludePatterns', 'environment', 'workDir'].each {
+            coverage.remove(it)
+        }
+        coverage.type = 'coverage'
+        coverage.reports = [[format: 'COBERTURA', pattern: outputFile]]
+        runCoverageStep(context, coverage, stageVariables)
+    }
+
+    private void runAppleSigningStep(BuildContext context, Map config, Map stageVariables) {
+        String certificateId = required(config, 'certificateCredentialsId')
+        String passwordId = required(config, 'certificatePasswordCredentialsId')
+        List<String> profileIds = stringList(config.provisioningProfileCredentialsIds ?: config.provisioningProfileCredentialsId)
+        if (profileIds.isEmpty()) throw new V3ConfigException('appleSigning.provisioningProfileCredentialsIds 不能为空')
+
+        List bindings = [
+            steps.file(credentialsId: certificateId, variable: 'V3_APPLE_CERTIFICATE'),
+            steps.string(credentialsId: passwordId, variable: 'V3_APPLE_CERTIFICATE_PASSWORD')
+        ]
+        for (int index = 0; index < profileIds.size(); index++) {
+            bindings.add(steps.file(credentialsId: profileIds[index], variable: "V3_APPLE_PROFILE_${index}"))
+        }
+        steps.withCredentials(bindings) {
+            String workspace = steps.pwd().toString()
+            String stateDirectory = "${workspace}/.jenkins-json-build/apple-signing"
+            String keychain = "${stateDirectory}/build.keychain-db"
+            String setup = appleSigningSetupScript(stateDirectory, keychain, profileIds.size())
+            String cleanup = appleSigningCleanupScript(stateDirectory, keychain)
+            try {
+                steps.sh(script: setup)
+                steps.withEnv(["V3_APPLE_KEYCHAIN=${keychain}", "OTHER_CODE_SIGN_FLAGS=--keychain ${keychain}"]) {
+                    executeSteps(config.steps as List, context, stageVariables)
+                }
+            } finally {
+                steps.sh(script: cleanup)
+            }
+        }
+    }
+
+    private static String commandLine(List<String> command, String shell) {
+        Closure escape = shell in ['powershell', 'pwsh'] ? ShellEscaper.&powershell :
+            (shell == 'bat' ? ShellEscaper.&batch : ShellEscaper.&posix)
+        String line = command.collect { escape.call(it) }.join(' ')
+        return shell in ['powershell', 'pwsh'] ? "& ${line}" : line
+    }
+
     private void runJunitStep(BuildContext context, Map config, Map stageVariables) {
         steps.junit(testResults: required(config, 'testResults'), allowEmptyResults: booleanValue(config.allowEmptyResults, false),
             skipPublishingChecks: booleanValue(config.skipPublishingChecks, false))
@@ -424,9 +588,14 @@ class V3Pipeline implements Serializable {
 
     private void runSonarQubeStep(BuildContext context, Map config, Map stageVariables) {
         Closure scan = {
-            Map mavenConfig = [type: 'maven', goals: config.goals ?: ['sonar:sonar'], arguments: config.arguments ?: [],
-                executable: config.executable, workDir: config.workDir, settings: config.settings]
-            runMavenStep(context, mavenConfig, stageVariables)
+            if (config.script) {
+                runCommandStep(context, [type: 'command', shell: config.shell ?: 'sh', script: config.script,
+                    workDir: config.workDir, environment: config.environment], stageVariables)
+            } else {
+                Map mavenConfig = [type: 'maven', goals: config.goals ?: ['sonar:sonar'], arguments: config.arguments ?: [],
+                    executable: config.executable, workDir: config.workDir, settings: config.settings]
+                runMavenStep(context, mavenConfig, stageVariables)
+            }
         }
         if (config.installation) {
             steps.withSonarQubeEnv(config.installation.toString()) { scan.call() }
@@ -698,6 +867,41 @@ class V3Pipeline implements Serializable {
         return "case \"\$${variable}\" in /*) ;; *) echo ${ShellEscaper.posix(description + ' 必须使用绝对路径')} >&2; exit 1 ;; esac"
     }
 
+    private static String appleSigningSetupScript(String stateDirectory, String keychain, int profileCount) {
+        List<String> lines = ['#!/bin/bash', 'set -eu', 'set +x', 'umask 077',
+            "STATE=${ShellEscaper.posix(stateDirectory)}", "KEYCHAIN=${ShellEscaper.posix(keychain)}",
+            'rm -rf "$STATE"', 'mkdir -p "$STATE"',
+            'security list-keychains -d user > "$STATE/original-keychains"',
+            'KEYCHAIN_PASSWORD="$(uuidgen)-$(uuidgen)"',
+            'security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"',
+            'security set-keychain-settings -lut 21600 "$KEYCHAIN"',
+            'security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"',
+            'security import "$V3_APPLE_CERTIFICATE" -k "$KEYCHAIN" -P "$V3_APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security',
+            'security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"',
+            'ORIGINAL_KEYCHAINS="$(tr \'\\n\' \' \' < "$STATE/original-keychains")"',
+            'eval "security list-keychains -d user -s \\"$KEYCHAIN\\" $ORIGINAL_KEYCHAINS"',
+            'PROFILE_DIRECTORY="$HOME/Library/MobileDevice/Provisioning Profiles"',
+            'mkdir -p "$PROFILE_DIRECTORY"', ': > "$STATE/created-profiles"']
+        for (int index = 0; index < profileCount; index++) {
+            String variable = "V3_APPLE_PROFILE_${index}"
+            lines.add("security cms -D -i \"\$${variable}\" > \"\$STATE/profile-${index}.plist\"")
+            lines.add("PROFILE_UUID=\"\$(/usr/libexec/PlistBuddy -c 'Print UUID' \"\$STATE/profile-${index}.plist\")\"")
+            lines.add("case \"\$PROFILE_UUID\" in *[!A-Fa-f0-9-]*|'') echo '描述文件 UUID 无效' >&2; exit 1 ;; esac")
+            lines.add("PROFILE_TARGET=\"\$PROFILE_DIRECTORY/\$PROFILE_UUID.mobileprovision\"")
+            lines.add("if [ ! -e \"\$PROFILE_TARGET\" ]; then cp \"\$${variable}\" \"\$PROFILE_TARGET\"; printf '%s\\n' \"\$PROFILE_TARGET\" >> \"\$STATE/created-profiles\"; fi")
+        }
+        return lines.join('\n')
+    }
+
+    private static String appleSigningCleanupScript(String stateDirectory, String keychain) {
+        return ['#!/bin/bash', 'set +e', 'set +x', "STATE=${ShellEscaper.posix(stateDirectory)}",
+            "KEYCHAIN=${ShellEscaper.posix(keychain)}",
+            'if [ -s "$STATE/original-keychains" ]; then ORIGINAL_KEYCHAINS="$(tr \'\\n\' \' \' < "$STATE/original-keychains")"; eval "security list-keychains -d user -s $ORIGINAL_KEYCHAINS"; fi',
+            'security delete-keychain "$KEYCHAIN" >/dev/null 2>&1 || true',
+            'if [ -f "$STATE/created-profiles" ]; then while IFS= read -r PROFILE; do [ -n "$PROFILE" ] && rm -f "$PROFILE"; done < "$STATE/created-profiles"; fi',
+            'rm -rf "$STATE"'].join('\n')
+    }
+
     private void runHelmStep(BuildContext context, Map config, Map stageVariables) {
         String action = required(config, 'action')
         if (!(defaults.helm.actions as List).contains(action)) {
@@ -788,6 +992,7 @@ class V3Pipeline implements Serializable {
         }
         if (type == 'static') {
             steps.node(agent.label?.toString() ?: '') {
+                validateStaticAgentRequirements(agent, context)
                 checkoutSource(config)
                 body.call()
             }
@@ -807,6 +1012,60 @@ class V3Pipeline implements Serializable {
                 checkoutSource(config)
                 body.call()
             }
+        }
+    }
+
+    private void validateStaticAgentRequirements(Map agent, BuildContext context) {
+        if (agent.requirements == null) return
+        if (!(agent.requirements instanceof Map)) {
+            throw new V3ConfigException('agent.requirements 必须是对象')
+        }
+        Map requirements = agent.requirements as Map
+        String expectedOs = requirements.os?.toString()?.toLowerCase(Locale.ENGLISH)
+        if (expectedOs && !['linux', 'macos', 'windows'].contains(expectedOs)) {
+            throw new V3ConfigException('agent.requirements.os 只能是 linux、macos 或 windows')
+        }
+        boolean unix = steps.isUnix()
+        if (expectedOs == 'windows' && unix) {
+            throw new V3ConfigException('所选 Agent 不是 Windows，已在源码检出前停止')
+        }
+        if (expectedOs && expectedOs != 'windows' && !unix) {
+            throw new V3ConfigException("所选 Agent 不是 ${expectedOs}，已在源码检出前停止")
+        }
+
+        List<String> architectures = stringList(requirements.architectures ?: requirements.architecture)
+        List<String> tools = stringList(requirements.tools)
+        if (unix) {
+            List<String> lines = ['set -eu']
+            if (expectedOs) {
+                String kernel = expectedOs == 'macos' ? 'Darwin' : 'Linux'
+                lines.add("[ \"\$(uname -s)\" = ${ShellEscaper.posix(kernel)} ] || { echo ${ShellEscaper.posix('所选 Agent 操作系统不符合要求')} >&2; exit 1; }")
+            }
+            if (!architectures.isEmpty()) {
+                if (architectures.any { !BUILDKIT_IDENTIFIER.matcher(it).matches() }) {
+                    throw new V3ConfigException('agent.requirements.architectures 含有无效值')
+                }
+                lines.add("case \"\$(uname -m)\" in ${architectures.join('|')}) ;; *) echo ${ShellEscaper.posix('所选 Agent CPU 架构不符合要求')} >&2; exit 1 ;; esac")
+            }
+            for (String tool : tools) {
+                lines.add("command -v ${ShellEscaper.posix(tool)} >/dev/null 2>&1 || { echo ${ShellEscaper.posix('所选 Agent 缺少工具 ' + tool)} >&2; exit 1; }")
+            }
+            if (lines.size() > 1) {
+                runCommandStep(context, [type: 'command', shell: 'sh', script: lines.join('\n')], [:])
+            }
+            return
+        }
+
+        List<String> lines = ["\$ErrorActionPreference = 'Stop'"]
+        if (!architectures.isEmpty()) {
+            String values = architectures.collect { ShellEscaper.powershell(it.toUpperCase(Locale.ENGLISH)) }.join(', ')
+            lines.add("if (@(${values}) -notcontains \$env:PROCESSOR_ARCHITECTURE.ToUpperInvariant()) { throw '所选 Agent CPU 架构不符合要求' }")
+        }
+        for (String tool : tools) {
+            lines.add("if (-not (Get-Command ${ShellEscaper.powershell(tool)} -ErrorAction SilentlyContinue)) { throw ${ShellEscaper.powershell('所选 Agent 缺少工具 ' + tool)} }")
+        }
+        if (lines.size() > 1) {
+            runCommandStep(context, [type: 'command', shell: 'powershell', script: lines.join('\n')], [:])
         }
     }
 
@@ -923,37 +1182,54 @@ class V3Pipeline implements Serializable {
         return current
     }
 
-    private void applyParameters(List<Map> configs) {
+    private boolean applyParameters(List<Map> configs) {
         Map<String, Map> definitions = new LinkedHashMap<String, Map>()
         for (Map config : configs) {
             for (Map parameter : config.parameters ?: []) {
                 definitions[required(parameter, 'name')] = parameter
             }
         }
-        if (definitions.isEmpty()) return
+        if (definitions.isEmpty()) return false
         List jenkinsParameters = []
         for (Map parameter : definitions.values()) {
+            String name = parameter.name.toString()
+            boolean hasCurrentValue = parameterPresent(name)
+            Object currentValue = hasCurrentValue ? parameterValue(name) : null
             String type = parameter.type?.toString() ?: 'string'
             switch (type) {
                 case 'string':
-                    jenkinsParameters.add(steps.string(name: parameter.name.toString(), defaultValue: parameter.defaultValue?.toString() ?: '',
+                    jenkinsParameters.add(steps.string(name: name,
+                        defaultValue: hasCurrentValue ? currentValue?.toString() ?: '' : parameter.defaultValue?.toString() ?: '',
                         description: parameter.description?.toString() ?: '', trim: booleanValue(parameter.trim, true)))
                     break
                 case 'boolean':
-                    jenkinsParameters.add(steps.booleanParam(name: parameter.name.toString(), defaultValue: booleanValue(parameter.defaultValue, false),
+                    jenkinsParameters.add(steps.booleanParam(name: name,
+                        defaultValue: hasCurrentValue ? booleanValue(currentValue, false) : booleanValue(parameter.defaultValue, false),
                         description: parameter.description?.toString() ?: ''))
                     break
                 case 'choice':
-                    jenkinsParameters.add(steps.choice(name: parameter.name.toString(), choices: stringList(parameter.choices),
+                    List<String> choices = stringList(parameter.choices)
+                    if (choices.isEmpty()) throw new V3ConfigException("参数 ${name} 的 choices 不能为空")
+                    String preferred = hasCurrentValue ? currentValue?.toString() : parameter.defaultValue?.toString()
+                    if (preferred && choices.contains(preferred)) {
+                        choices = [preferred] + choices.findAll { it != preferred }
+                    }
+                    jenkinsParameters.add(steps.choice(name: name, choices: choices,
                         description: parameter.description?.toString() ?: ''))
+                    break
+                case 'agentServer':
+                    jenkinsParameters.add(steps.agentParameter(name: name,
+                        defaultValue: hasCurrentValue ? currentValue?.toString() ?: '' : parameter.defaultValue?.toString() ?: ''))
+                    break
+                case 'customCheckbox':
+                    jenkinsParameters.add(customCheckboxParameter(parameter, hasCurrentValue, currentValue))
                     break
                 case 'multiChoice':
                     if (parameter.provider?.toString() == 'customCheckbox') {
-                        jenkinsParameters.add(steps.checkboxParameter(name: parameter.name.toString(),
-                            format: parameter.format?.toString() ?: 'JSON', uri: required(parameter, 'uri')))
+                        jenkinsParameters.add(customCheckboxParameter(parameter, hasCurrentValue, currentValue))
                     } else {
-                        jenkinsParameters.add(steps.string(name: parameter.name.toString(),
-                            defaultValue: stringList(parameter.defaultValue).join(','),
+                        jenkinsParameters.add(steps.string(name: name,
+                            defaultValue: hasCurrentValue ? currentValue?.toString() ?: '' : stringList(parameter.defaultValue).join(','),
                             description: parameter.description?.toString() ?: '', trim: true))
                     }
                     break
@@ -962,6 +1238,67 @@ class V3Pipeline implements Serializable {
             }
         }
         steps.properties([steps.parameters(jenkinsParameters)])
+        List<String> missing = definitions.keySet().findAll { !parameterPresent(it) }.collect { it.toString() }
+        if (!missing.isEmpty()) {
+            steps.currentBuild.result = 'NOT_BUILT'
+            steps.echo("构建参数已初始化，请重新进入 Build with Parameters。新增参数: ${missing.join(', ')}")
+            return true
+        }
+        return false
+    }
+
+    private Object customCheckboxParameter(Map parameter, boolean hasCurrentValue, Object currentValue) {
+        String name = parameter.name.toString()
+        String format = parameter.format?.toString() ?: 'JSON'
+        if (!['JSON', 'YAML'].contains(format)) {
+            throw new V3ConfigException("参数 ${name} 的 format 只能是 JSON 或 YAML")
+        }
+        String content = parameter.pipelineSubmitContent?.toString()
+        String uri = parameter.uri?.toString()
+        if ((content?.trim() ? true : false) == (uri?.trim() ? true : false)) {
+            throw new V3ConfigException("参数 ${name} 必须且只能设置 pipelineSubmitContent 或 uri")
+        }
+        String protocol = parameter.protocol?.toString() ?: 'HTTP_HTTPS'
+        if (!['HTTP_HTTPS', 'FILE_PATH'].contains(protocol)) {
+            throw new V3ConfigException("参数 ${name} 的 protocol 只能是 HTTP_HTTPS 或 FILE_PATH")
+        }
+        Map arguments = [name: name, description: parameter.description?.toString() ?: '', protocol: protocol, format: format]
+        if (content?.trim()) {
+            arguments.pipelineSubmitContent = content
+        } else {
+            arguments.uri = uri
+        }
+        ['displayNodePath', 'valueNodePath', 'checkedNodePath'].each { field ->
+            if (parameter[field]?.toString()?.trim()) arguments[field] = parameter[field].toString()
+        }
+        boolean setDefault = hasCurrentValue || parameter.containsKey('defaultValue')
+        String defaultValue = hasCurrentValue ? currentValue?.toString() ?: '' :
+            (parameter.defaultValue instanceof Collection ? stringList(parameter.defaultValue).join(',') :
+                parameter.defaultValue?.toString() ?: '')
+        if (!setDefault) return steps.checkboxParameter(arguments)
+        return checkboxParameterWithDefault(arguments, defaultValue)
+    }
+
+    @NonCPS
+    private Object checkboxParameterWithDefault(Map arguments, String defaultValue) {
+        try {
+            ClassLoader loader = this.class.classLoader
+            Class definitionType = loader.loadClass('com.bluersw.CheckboxParameterDefinition')
+            Class protocolType = loader.loadClass('com.bluersw.source.Protocol')
+            Class formatType = loader.loadClass('com.bluersw.analyze.Format')
+            Object protocol = Enum.valueOf(protocolType as Class<Enum>, arguments.protocol.toString())
+            Object format = Enum.valueOf(formatType as Class<Enum>, arguments.format.toString())
+            def constructor = definitionType.constructors.find { it.parameterTypes.size() == 9 }
+            if (constructor == null) throw new IllegalStateException('未找到兼容的构造函数')
+            Object definition = constructor.newInstance(arguments.name.toString(), arguments.description.toString(),
+                protocol, format, arguments.uri?.toString() ?: '', arguments.displayNodePath?.toString(),
+                arguments.valueNodePath?.toString(), null, arguments.pipelineSubmitContent?.toString())
+            if (arguments.checkedNodePath) definition.setCheckedNodePath(arguments.checkedNodePath.toString())
+            definition.setDefaultValue(defaultValue)
+            return definition
+        } catch (Throwable error) {
+            throw new V3ConfigException('Custom Checkbox Parameter 插件不可用或版本不兼容，需要 1.69.v27b_2c5306e46', error)
+        }
     }
 
     private Map collectEnvironment(Map config) {
@@ -991,7 +1328,7 @@ class V3Pipeline implements Serializable {
         }
     }
 
-    private void runWithEnvironmentAndDirectory(Map config, Closure command) {
+    private Object runWithEnvironmentAndDirectory(Map config, Closure command) {
         Closure action = command
         if (config.environment instanceof Map && !(config.environment as Map).isEmpty()) {
             List<String> values = (config.environment as Map).collect { key, value -> "${key}=${value}" }
@@ -1002,14 +1339,14 @@ class V3Pipeline implements Serializable {
             Closure inDirectory = action
             action = { steps.dir(config.workDir.toString()) { inDirectory.call() } }
         }
-        action.call()
+        return action.call()
     }
 
     private void verifyArtifacts(Object configured) {
         for (String pattern : stringList(configured)) {
             def matches = steps.findFiles(glob: pattern)
             if (matches == null || matches.size() == 0) {
-                throw new V3ConfigException("Maven 构建后未找到产物 ${pattern}")
+                throw new V3ConfigException("构建后未找到产物 ${pattern}")
             }
         }
     }
@@ -1085,6 +1422,14 @@ class V3Pipeline implements Serializable {
 
     private Object parameterValue(String name) {
         try { return steps.params[name] } catch (Throwable ignored) { return null }
+    }
+
+    private boolean parameterPresent(String name) {
+        try {
+            return steps.params instanceof Map && (steps.params as Map).containsKey(name)
+        } catch (Throwable ignored) {
+            return parameterValue(name) != null
+        }
     }
 
     private List<String> trustedHostsFromOptions() {

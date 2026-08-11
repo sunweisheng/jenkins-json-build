@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/part-of: jenkins-json-build
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: ${POD_RUN_AS_USER}
+    runAsGroup: ${POD_RUN_AS_GROUP}
+    fsGroup: ${POD_FS_GROUP}
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  initContainers:
+    - name: node-toolchain
+      image: ${NODE_IMAGE}
+      command: ["sh", "-c", "cp /usr/local/bin/node ${SHARED_NODE_BINARY} && chmod 0555 ${SHARED_NODE_BINARY}"]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: node-toolchain
+          mountPath: /opt/jenkins-toolchain
+  containers:
+    - name: node
+      image: ${NODE_IMAGE}
+      command: ["cat"]
+      tty: true
+      env:
+        - name: HOME
+          value: ${NODE_USER_HOME}
+        - name: npm_config_cache
+          value: ${NODE_USER_HOME}/.npm
+      resources:
+        requests:
+          cpu: "${NODE_CPU_REQUEST}"
+          memory: "${NODE_MEMORY_REQUEST}"
+        limits:
+          cpu: "${NODE_CPU_LIMIT}"
+          memory: "${NODE_MEMORY_LIMIT}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: node-home
+          mountPath: ${NODE_USER_HOME}
+    - name: android
+      image: ${ANDROID_IMAGE}
+      command: ["cat"]
+      tty: true
+      env:
+        - name: HOME
+          value: ${ANDROID_USER_HOME}
+        - name: GRADLE_USER_HOME
+          value: ${GRADLE_USER_HOME}
+        - name: NODE_BINARY
+          value: ${SHARED_NODE_BINARY}
+      resources:
+        requests:
+          cpu: "${ANDROID_CPU_REQUEST}"
+          memory: "${ANDROID_MEMORY_REQUEST}"
+        limits:
+          cpu: "${ANDROID_CPU_LIMIT}"
+          memory: "${ANDROID_MEMORY_LIMIT}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: android-home
+          mountPath: ${ANDROID_USER_HOME}
+        - name: node-toolchain
+          mountPath: /opt/jenkins-toolchain
+          readOnly: true
+  volumes:
+    - name: node-home
+      emptyDir: {}
+    - name: android-home
+      emptyDir: {}
+    - name: node-toolchain
+      emptyDir: {}

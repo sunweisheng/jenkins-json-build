@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 3,
+  "extends": ["node-npm-static", "android-gradle-static"],
+  "variables": {
+    "GRADLE_WORK_DIR": "android",
+    "GRADLE_TEST_TASK": "test",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ANDROID_ARTIFACTS": "android/**/build/outputs/**/*.apk"
+  },
+  "agent": {"type": "static", "label": "", "requirements": {"tools": ["java", "node", "npm"]}},
+  "stages": [
+    {"id": "test", "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}"},
+      {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_TEST_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}"}
+    ]},
+    {"id": "build", "steps": [
+      {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_BUILD_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}", "environment": {"NODE_BINARY": "node"}, "artifacts": ["${ANDROID_ARTIFACTS}"]},
+      {"type": "archive", "artifacts": "${ANDROID_ARTIFACTS}", "fingerprint": true}
+    ]}
+  ]
+}

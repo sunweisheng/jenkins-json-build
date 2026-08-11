@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 3,
+  "extends": ["node-npm-static", "ios-xcode-static"],
+  "variables": {
+    "IOS_WORK_DIR": "ios",
+    "COCOAPODS_INSTALL_SCRIPT": "bundle exec pod install",
+    "XCODE_WORKSPACE": "ChangeMe.xcworkspace",
+    "XCODE_RESULT_BUNDLE": "build/RN-Test.xcresult",
+    "XCODE_ARCHIVE_PATH": "build/ChangeMe-RN.xcarchive",
+    "XCODE_EXPORT_PATH": "build/export",
+    "IOS_ARTIFACTS": "ios/build/export/**/*.ipa"
+  },
+  "agent": {"type": "static", "label": "macos ios", "requirements": {"os": "macos", "architectures": ["arm64"], "tools": ["node", "npm", "bundle", "pod", "xcodebuild", "xcrun"]}},
+  "stages": [
+    {"id": "pods", "name": "CocoaPods dependencies", "steps": [
+      {"type": "command", "shell": "sh", "script": "${COCOAPODS_INSTALL_SCRIPT}", "workDir": "${IOS_WORK_DIR}"}
+    ]},
+    {"id": "clean", "steps": [
+      {"type": "xcodebuild", "action": "clean", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "destination": "${XCODE_DESTINATION}", "workDir": "${IOS_WORK_DIR}"}
+    ]},
+    {"id": "test", "name": "React Native and iOS tests", "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}"},
+      {"type": "xcodebuild", "action": "test", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "destination": "${XCODE_DESTINATION}", "resultBundlePath": "${XCODE_RESULT_BUNDLE}", "enableCodeCoverage": true, "workDir": "${IOS_WORK_DIR}"},
+      {"type": "xcodeCoverage", "resultBundlePath": "${XCODE_RESULT_BUNDLE}", "outputFile": "${XCODE_COVERAGE_XML}", "workDir": "${IOS_WORK_DIR}"}
+    ]},
+    {"id": "archive", "steps": [
+      {"type": "appleSigning", "certificateCredentialsId": "${IOS_CERTIFICATE_CREDENTIALS_ID}", "certificatePasswordCredentialsId": "${IOS_CERTIFICATE_PASSWORD_CREDENTIALS_ID}", "provisioningProfileCredentialsIds": ["${IOS_PROVISIONING_PROFILE_CREDENTIALS_ID}"], "steps": [
+        {"type": "xcodebuild", "action": "archive", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "configuration": "${XCODE_CONFIGURATION}", "archivePath": "${XCODE_ARCHIVE_PATH}", "workDir": "${IOS_WORK_DIR}"},
+        {"type": "xcodebuild", "action": "exportArchive", "archivePath": "${XCODE_ARCHIVE_PATH}", "exportPath": "${XCODE_EXPORT_PATH}", "exportOptionsPlist": "${XCODE_EXPORT_OPTIONS_PLIST}", "workDir": "${IOS_WORK_DIR}", "artifacts": ["${IOS_ARTIFACTS}"]}
+      ]},
+      {"type": "archive", "artifacts": "${IOS_ARTIFACTS}", "fingerprint": true}
+    ]}
+  ]
+}
