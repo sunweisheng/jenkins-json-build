@@ -230,7 +230,6 @@ class V3Pipeline implements Serializable {
 
         Map agent = config.agent instanceof Map ? config.agent as Map : defaults.agent as Map
         withAgent(agent, config, context) {
-            initializeWorkspaceVariables(context)
             resolveRuntimeVariables(config.runtimeVariables, context, config)
             Throwable failure = null
             String outcome = 'success'
@@ -994,6 +993,7 @@ class V3Pipeline implements Serializable {
             steps.node(agent.label?.toString() ?: '') {
                 validateStaticAgentRequirements(agent, context)
                 checkoutSource(config)
+                initializeWorkspaceVariables(context)
                 body.call()
             }
             return
@@ -1010,6 +1010,7 @@ class V3Pipeline implements Serializable {
         steps.podTemplate(arguments) {
             steps.node(environmentValue('POD_LABEL')?.toString() ?: '') {
                 checkoutSource(config)
+                initializeWorkspaceVariables(context)
                 body.call()
             }
         }

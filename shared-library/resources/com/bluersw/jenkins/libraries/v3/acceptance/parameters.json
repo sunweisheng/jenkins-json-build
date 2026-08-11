@@ -69,8 +69,9 @@
       "name": "Run",
       "steps": [
         {
-          "type": "command",
-          "script": "true"
+          "type": "setVariable",
+          "name": "PARAMETER_ACCEPTANCE",
+          "value": "ready"
         }
       ]
     }

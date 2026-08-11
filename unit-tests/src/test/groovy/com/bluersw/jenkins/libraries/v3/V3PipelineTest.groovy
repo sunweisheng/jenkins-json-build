@@ -400,6 +400,7 @@ class V3PipelineTest {
         assertEquals('SUCCESS', result.parameters.status)
         assertEquals('mac-m2-16g', nextRun.parameterDefinitions[0].defaultValue)
         assertEquals('', nextRun.parameterDefinitions[1].defaultValue)
+        assertFalse(nextRun.events.contains('pwd'))
         assertEquals('/var/jenkins_home/project-list.yaml', nextRun.parameterDefinitions[1].uri)
         assertEquals('ios', nextRun.parameterDefinitions[2].defaultValue)
         assertEquals('FILE_PATH', nextRun.parameterDefinitions[1].protocol)
@@ -602,7 +603,10 @@ class FakeSteps {
         env.POD_LABEL = 'v3-test-pod'
         body.call()
     }
-    String pwd() { '/workspace' }
+    String pwd() {
+        events.add('pwd')
+        return '/workspace'
+    }
     boolean isUnix() { unix }
     void checkout(Object scm) { events.add('checkout') }
     void junit(Map arguments) { junitInvocations.add(new LinkedHashMap(arguments)) }
