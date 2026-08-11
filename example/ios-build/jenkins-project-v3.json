@@ -5,6 +5,7 @@
     "id": "ios-xcode-example"
   },
   "variables": {
+    "IOS_WORK_DIR": "example/ios-build",
     "XCODE_WORKSPACE": "CICD-ObjectC-Test.xcworkspace",
     "XCODE_SCHEME": "CICD-ObjectC-Test",
     "XCODE_CONFIGURATION": "Debug",
@@ -14,6 +15,6 @@
     "XCODE_EXPORT_PATH": "build/export",
     "XCODE_EXPORT_OPTIONS_PLIST": "CICDTestApp.plist",
     "ENABLE_SIGNED_ARCHIVE": false,
-    "IOS_ARTIFACTS": "build/export/**/*.ipa"
+    "IOS_ARTIFACTS": "example/ios-build/build/export/**/*.ipa"
   }
 }

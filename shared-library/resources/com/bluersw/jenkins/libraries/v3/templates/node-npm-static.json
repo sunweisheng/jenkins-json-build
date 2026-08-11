@@ -7,6 +7,7 @@
     "NPM_INSTALL_COMMAND": "ci",
     "NPM_TEST_COMMAND": "test",
     "NPM_BUILD_COMMAND": "build",
+    "ENABLE_NPM_BUILD": true,
     "ENABLE_COVERAGE": true,
     "ENABLE_SONAR": false,
     "SONARQUBE_INSTALLATION": "SonarQube",
@@ -30,7 +31,7 @@
     {"id": "quality", "name": "Node quality", "condition": {"variable": "ENABLE_SONAR", "operator": "equals", "value": true}, "steps": [
       {"type": "sonarqube", "installation": "${SONARQUBE_INSTALLATION}", "script": "${SONAR_SCANNER_SCRIPT}", "qualityGate": true, "workDir": "${NPM_WORK_DIR}"}
     ]},
-    {"id": "build", "name": "Node build", "steps": [
+    {"id": "build", "name": "Node build", "condition": {"variable": "ENABLE_NPM_BUILD", "operator": "equals", "value": true}, "steps": [
       {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "run", "arguments": ["${NPM_BUILD_COMMAND}"], "workDir": "${NPM_WORK_DIR}", "artifacts": ["${BUILD_ARTIFACTS}"]},
       {"type": "archive", "artifacts": "${BUILD_ARTIFACTS}", "fingerprint": true}
     ]}
