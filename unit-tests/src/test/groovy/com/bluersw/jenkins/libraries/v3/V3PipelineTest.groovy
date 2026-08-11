@@ -385,6 +385,7 @@ class V3PipelineTest {
     @Test
     void initializesParametersAndPreservesCurrentSelections() {
         FakeSteps firstRun = new FakeSteps()
+        firstRun.populateParamsOnProperties = true
         Map firstResult = new V3Pipeline(firstRun, [configFiles: ['v3/parameters.json'], checkout: false]).run()
 
         assertTrue(firstResult.isEmpty())
@@ -562,6 +563,7 @@ class FakeSteps {
     String podYaml = ''
     String failOnScriptContains
     boolean unix = true
+    boolean populateParamsOnProperties = false
 
     String libraryResource(String path) {
         return new File('../shared-library/resources', path).getText('UTF-8')
@@ -631,7 +633,15 @@ class FakeSteps {
         }
         return result
     }
-    void properties(List arguments) { }
+    void properties(List arguments) {
+        if (populateParamsOnProperties) {
+            parameterDefinitions.each { definition ->
+                if (!params.containsKey(definition.name)) {
+                    params[definition.name] = definition.defaultValue ?: ''
+                }
+            }
+        }
+    }
     void withCredentials(List bindings, Closure body) {
         credentialInvocations.add(bindings.collect { new LinkedHashMap(it as Map) })
         body.call()

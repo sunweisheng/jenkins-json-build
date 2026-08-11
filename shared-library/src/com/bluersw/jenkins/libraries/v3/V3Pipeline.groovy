@@ -1240,8 +1240,8 @@ class V3Pipeline implements Serializable {
                     throw new V3ConfigException("不支持的参数类型 ${type}")
             }
         }
-        steps.properties([steps.parameters(jenkinsParameters)])
         List<String> missing = definitions.keySet().findAll { !parameterPresent(it) }.collect { it.toString() }
+        steps.properties([steps.parameters(jenkinsParameters)])
         if (!missing.isEmpty()) {
             steps.currentBuild.result = 'NOT_BUILT'
             steps.echo("构建参数已初始化，请重新进入 Build with Parameters。新增参数: ${missing.join(', ')}")
