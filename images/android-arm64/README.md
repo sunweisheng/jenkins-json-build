@@ -1,6 +1,6 @@
 # Android ARM64 build image
 
-This image keeps the pinned Cirrus Labs Android SDK 36 base and replaces its x86_64 `aapt2` executable with the AArch64 build from `lzhiyong/android-sdk-tools`.
+This image keeps the pinned Cirrus Labs Android SDK 36 base, adds the verified Google Android Build Tools 35.0.0 package, and replaces its host executables with AArch64 builds from `lzhiyong/android-sdk-tools`. The SDK 36 `aapt2` executable is replaced with the same AArch64 build.
 
 Versions, source URL, checksum, repository name, and image tag are configured in `image.env`. The downloaded archive is verified before the image is built. The upstream Android SDK tools are licensed under Apache-2.0.
 
