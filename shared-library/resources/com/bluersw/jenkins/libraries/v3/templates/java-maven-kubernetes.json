@@ -2,7 +2,6 @@
   "schemaVersion": 3,
   "variables": {
     "JAVA_VERSION": "21",
-    "JNLP_IMAGE": "docker.io/jenkins/inbound-agent:jdk25@sha256:a95513bf791abd2279535ed78bcf5695cd3d910fab0edeeda3d049cccbe2a4ac",
     "MAVEN_IMAGE": "docker.io/library/maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237",
     "POD_HTTP_PROXY": "",
     "POD_HTTPS_PROXY": "",
@@ -54,7 +53,15 @@
   "parameters": [],
   "agent": {
     "type": "kubernetes",
-    "podTemplate": "java-buildkit-helm"
+    "podTemplate": "java-buildkit-helm",
+    "environment": {
+      "HTTP_PROXY": "${POD_HTTP_PROXY}",
+      "HTTPS_PROXY": "${POD_HTTPS_PROXY}",
+      "NO_PROXY": "${POD_NO_PROXY}",
+      "http_proxy": "${POD_HTTP_PROXY}",
+      "https_proxy": "${POD_HTTPS_PROXY}",
+      "no_proxy": "${POD_NO_PROXY}"
+    }
   },
   "stages": [
     {

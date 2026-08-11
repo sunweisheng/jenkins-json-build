@@ -14,22 +14,6 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
-    - name: jnlp
-      image: ${JNLP_IMAGE}
-      env:
-        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
-        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
-        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
-        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
-        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
-        - {name: no_proxy, value: "${POD_NO_PROXY}"}
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: ${POD_RUN_AS_USER}
-        runAsGroup: ${POD_RUN_AS_GROUP}
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop: ["ALL"]
     - name: node
       image: ${NODE_IMAGE}
       command: ["cat"]
@@ -39,12 +23,6 @@ spec:
           value: ${NODE_USER_HOME}
         - name: npm_config_cache
           value: ${NODE_USER_HOME}/.npm
-        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
-        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
-        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
-        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
-        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
-        - {name: no_proxy, value: "${POD_NO_PROXY}"}
       resources:
         requests:
           cpu: "${NODE_CPU_REQUEST}"

@@ -1007,6 +1007,23 @@ class V3Pipeline implements Serializable {
         if (agent.cloud) arguments.cloud = agent.cloud.toString()
         if (agent.inheritFrom) arguments.inheritFrom = agent.inheritFrom.toString()
         if (agent.serviceAccount) arguments.serviceAccount = agent.serviceAccount.toString()
+        if (agent.containsKey('environment')) {
+            if (!(agent.environment instanceof Map)) {
+                throw new V3ConfigException('Kubernetes Agent environment 必须是对象')
+            }
+            List environmentVariables = []
+            (agent.environment as Map).each { key, value ->
+                String name = key.toString()
+                if (!ENVIRONMENT_NAME.matcher(name).matches()) {
+                    throw new V3ConfigException("Kubernetes Agent environment 含有无效变量名 ${name}")
+                }
+                if (value == null) {
+                    throw new V3ConfigException("Kubernetes Agent environment.${name} 不能为空")
+                }
+                environmentVariables.add(steps.envVar(key: name, value: value.toString()))
+            }
+            if (!environmentVariables.isEmpty()) arguments.envVars = environmentVariables
+        }
         steps.podTemplate(arguments) {
             steps.node(environmentValue('POD_LABEL')?.toString() ?: '') {
                 checkoutSource(config)
