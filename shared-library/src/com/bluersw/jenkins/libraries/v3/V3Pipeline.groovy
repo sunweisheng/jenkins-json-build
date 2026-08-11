@@ -569,9 +569,17 @@ class V3Pipeline implements Serializable {
     }
 
     private static String commandLine(List<String> command, String shell) {
-        Closure escape = shell in ['powershell', 'pwsh'] ? ShellEscaper.&powershell :
-            (shell == 'bat' ? ShellEscaper.&batch : ShellEscaper.&posix)
-        String line = command.collect { escape.call(it) }.join(' ')
+        List<String> escaped = []
+        for (Object value : command) {
+            if (shell in ['powershell', 'pwsh']) {
+                escaped.add(ShellEscaper.powershell(value))
+            } else if (shell == 'bat') {
+                escaped.add(ShellEscaper.batch(value))
+            } else {
+                escaped.add(ShellEscaper.posix(value))
+            }
+        }
+        String line = escaped.join(' ')
         return shell in ['powershell', 'pwsh'] ? "& ${line}" : line
     }
 

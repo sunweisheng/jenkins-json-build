@@ -10,7 +10,7 @@
   "agent": {"type": "static", "label": "", "requirements": {"tools": ["java", "node", "npm"]}},
   "stages": [
     {"id": "test", "steps": [
-      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}"},
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"},
       {"type": "gradle", "executable": "${GRADLE_EXECUTABLE}", "tasks": ["${GRADLE_TEST_TASK}"], "arguments": ["--no-daemon"], "workDir": "${GRADLE_WORK_DIR}"}
     ]},
     {"id": "build", "steps": [

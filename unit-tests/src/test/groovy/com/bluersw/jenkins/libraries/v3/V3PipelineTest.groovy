@@ -345,6 +345,16 @@ class V3PipelineTest {
     }
 
     @Test
+    void escapesCommandArgumentsWithoutMethodClosures() {
+        assertEquals("'one'\"'\"'two'", ShellEscaper.posix("one'two"))
+        assertEquals("'one''two'", ShellEscaper.powershell("one'two"))
+        assertEquals('"one""two"', ShellEscaper.batch('one"two'))
+
+        String source = new File('../shared-library/src/com/bluersw/jenkins/libraries/v3/V3Pipeline.groovy').text
+        assertFalse(source.contains('ShellEscaper.&'))
+    }
+
+    @Test
     void runsCommonControlsRuntimeVariablesAndPostHandlers() {
         FakeSteps steps = new FakeSteps()
         steps.params.putAll([TEXT_VALUE: 'text', BOOLEAN_VALUE: true, CHOICE_VALUE: 'one', MULTI_VALUE: 'one,two'])

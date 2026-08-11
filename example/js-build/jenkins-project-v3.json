@@ -7,8 +7,8 @@
   "variables": {
     "ENABLE_SONAR": false,
     "NPM_WORK_DIR": "example/js-build",
-    "NPM_BUILD_COMMAND": "jsdoc",
+    "NPM_BUILD_COMMAND": "build",
     "LCOV_REPORT": "example/js-build/coverage/lcov.info",
-    "BUILD_ARTIFACTS": "example/js-build/jsdoc/**"
+    "BUILD_ARTIFACTS": "example/js-build/css/**"
   }
 }

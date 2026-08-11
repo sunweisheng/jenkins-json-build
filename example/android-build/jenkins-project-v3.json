@@ -5,9 +5,10 @@
     "id": "android-gradle-example"
   },
   "variables": {
+    "GRADLE_WORK_DIR": "example/android-build",
     "GRADLE_TEST_TASK": "testDebugUnitTest",
     "GRADLE_BUILD_TASK": "assembleDebug",
     "ENABLE_COVERAGE": false,
-    "ANDROID_ARTIFACTS": "app/build/outputs/**/*.apk"
+    "ANDROID_ARTIFACTS": "example/android-build/app/build/outputs/**/*.apk"
   }
 }

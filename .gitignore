@@ -47,6 +47,11 @@ work/
 /unit-tests/*.iml
 .scannerwork/
 
+# Node acceptance output
+node_modules/
+coverage/
+example/js-build/css/
+
 # Python test cache
 __pycache__/
 *.py[cod]
