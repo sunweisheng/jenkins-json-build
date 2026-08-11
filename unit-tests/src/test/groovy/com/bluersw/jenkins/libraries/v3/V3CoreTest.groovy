@@ -117,4 +117,20 @@ return [
             assertTrue(error.message.contains('coveredLines'))
         }
     }
+
+    @Test
+    void keepsV3ExampleConfigPathsResolvableFromRepositoryRoot() {
+        File repositoryRoot = new File('..').canonicalFile
+        List<File> jenkinsfiles = []
+        repositoryRoot.eachFileRecurse { file ->
+            if (file.name == 'Jenkinsfile.v3') jenkinsfiles.add(file)
+        }
+
+        assertFalse(jenkinsfiles.isEmpty())
+        jenkinsfiles.each { file ->
+            def matcher = file.getText('UTF-8') =~ /configFiles:\s*\[\s*'([^']+)'\s*\]/
+            assertTrue("${file} must declare one config file", matcher.find())
+            assertTrue("${file} references a missing config file", new File(repositoryRoot, matcher.group(1)).isFile())
+        }
+    }
 }
