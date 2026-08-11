@@ -492,6 +492,16 @@ class V3Pipeline implements Serializable {
         if (!(defaults.xcodebuild.actions as List).contains(action)) {
             throw new V3ConfigException("xcodebuild.action 不支持 ${action}")
         }
+        if (config.resultBundlePath && booleanValue(config.cleanResultBundle, false)) {
+            String resultBundlePath = requireWorkspaceRelativePath(config.resultBundlePath.toString(),
+                'xcodebuild.resultBundlePath')
+            if (!resultBundlePath.endsWith('.xcresult')) {
+                throw new V3ConfigException('启用 cleanResultBundle 时，xcodebuild.resultBundlePath 必须以 .xcresult 结尾')
+            }
+            runCommandStep(context, [type: 'command', shell: 'sh',
+                script: commandLine([defaults.xcodebuild.resultBundleCleanupExecutable.toString(), '-rf', '--', resultBundlePath], 'sh'),
+                workDir: config.workDir, environment: config.environment], stageVariables)
+        }
         List<String> command = [config.executable?.toString() ?: defaults.xcodebuild.executable.toString()]
         if (action == 'exportArchive') {
             command.addAll(['-exportArchive', '-archivePath', required(config, 'archivePath'),

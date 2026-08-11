@@ -18,7 +18,8 @@
           "workspace": "Sample.xcworkspace",
           "scheme": "Sample",
           "destination": "platform=iOS Simulator,name=iPhone 16",
-          "resultBundlePath": "build/Test.xcresult"
+          "resultBundlePath": "build/Test.xcresult",
+          "cleanResultBundle": true
         },
         {"type": "xcodeCoverage", "resultBundlePath": "build/Test.xcresult"},
         {

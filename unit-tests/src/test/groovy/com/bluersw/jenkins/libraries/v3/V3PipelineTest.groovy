@@ -454,6 +454,10 @@ class V3PipelineTest {
         assertTrue(steps.commands.any { it.contains("'npm' 'ci'") })
         assertTrue(steps.commands.any { it.contains("'./gradlew' 'test'") })
         assertTrue(steps.shellInvocations.any { it.method == 'powershell' && it.arguments.script.startsWith("& 'MSBuild.exe'") })
+        int resultBundleCleanup = steps.commands.findIndexOf { it.contains("'rm' '-rf' '--' 'build/Test.xcresult'") }
+        int xcodeTest = steps.commands.findIndexOf { it.contains("'xcodebuild' '-workspace' 'Sample.xcworkspace'") && it.contains("'test'") }
+        assertTrue(resultBundleCleanup >= 0)
+        assertTrue(resultBundleCleanup < xcodeTest)
         assertTrue(steps.commands.any { it.contains("'xcodebuild' '-workspace' 'Sample.xcworkspace'") && it.contains("'test'") })
         assertTrue(steps.commands.any { it.contains("'xcodebuild' '-exportArchive'") })
         assertTrue(steps.commands.any { it.contains('security create-keychain') })
@@ -462,6 +466,19 @@ class V3PipelineTest {
         assertEquals(2, steps.coverageInvocations.size())
         assertEquals([[path: 'plugin/src']], steps.coverageInvocations[0].sourceDirectories)
         assertTrue(steps.commands.any { it == 'sonar-scanner -Dsonar.projectKey=sample' })
+    }
+
+    @Test
+    void rejectsUnsafeXcodeResultBundleCleanupPath() {
+        FakeSteps steps = new FakeSteps()
+
+        try {
+            new V3Pipeline(steps, [configFiles: ['v3/xcode-unsafe-result.json'], checkout: false]).run()
+            fail('Expected unsafe xcresult path failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message, error.message.contains('工作区内的相对路径'))
+        }
+        assertFalse(steps.commands.any { it.contains("'rm' '-rf'") })
     }
 
     @Test

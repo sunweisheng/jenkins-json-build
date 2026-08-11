@@ -81,6 +81,7 @@
   },
   "xcodebuild": {
     "executable": "xcodebuild",
+    "resultBundleCleanupExecutable": "rm",
     "actions": ["clean", "build", "test", "archive", "exportArchive"]
   },
   "xcodeCoverage": {
