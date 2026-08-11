@@ -4,7 +4,7 @@
     "XCODE_WORKSPACE": "ChangeMe.xcworkspace",
     "XCODE_SCHEME": "ChangeMe",
     "XCODE_CONFIGURATION": "Release",
-    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 16",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest",
     "XCODE_RESULT_BUNDLE": "build/Test.xcresult",
     "XCODE_ARCHIVE_PATH": "build/ChangeMe.xcarchive",
     "XCODE_EXPORT_PATH": "build/export",

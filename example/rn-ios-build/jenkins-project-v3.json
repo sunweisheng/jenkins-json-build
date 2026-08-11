@@ -10,7 +10,7 @@
     "XCODE_WORKSPACE": "TestRnBuild.xcworkspace",
     "XCODE_SCHEME": "TestRnBuild",
     "XCODE_CONFIGURATION": "Debug",
-    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 16",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest",
     "XCODE_RESULT_BUNDLE": "build/TestRnBuild.xcresult",
     "XCODE_ARCHIVE_PATH": "build/TestRnBuild.xcarchive",
     "XCODE_EXPORT_PATH": "build/export",
