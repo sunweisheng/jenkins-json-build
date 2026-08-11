@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "extends": "android-gradle-static",
   "variables": {
-    "ANDROID_IMAGE": "ghcr.io/sunweisheng/jenkins-json-build-android-arm64@sha256:4cb1328ef9bbc83d5545f90cedc2c11410548506591a61717fc6335e2ca44e5e",
+    "ANDROID_IMAGE": "ghcr.io/sunweisheng/jenkins-json-build-android-arm64@sha256:5be4a35cf77a1b6c389f1eb53b89c332222b6f320e9b1b43d32e20aae5d1b0c9",
     "POD_HTTP_PROXY": "",
     "POD_HTTPS_PROXY": "",
     "POD_NO_PROXY": "",
