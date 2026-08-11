@@ -64,11 +64,11 @@
       "type": "customCheckbox",
       "description": "内部 HTTP 项目",
       "protocol": "HTTP_HTTPS",
-      "format": "JSON",
-      "uri": "http://jenkins.ci.svc.cluster.local:8080/userContent/v3.2-checkbox-projects.json",
-      "displayNodePath": "//projects/title",
-      "valueNodePath": "//projects/code",
-      "checkedNodePath": "//projects/selected"
+      "format": "YAML",
+      "uri": "http://192.168.0.5:18080/project-list.yaml",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked"
     },
     {
       "name": "EXTERNAL_HTTPS_PROJECTS",
