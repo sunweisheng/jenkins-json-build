@@ -58,6 +58,28 @@
       "displayNodePath": "//projects/title",
       "valueNodePath": "//projects/code",
       "checkedNodePath": "//projects/selected"
+    },
+    {
+      "name": "INTERNAL_HTTP_PROJECTS",
+      "type": "customCheckbox",
+      "description": "内部 HTTP 项目",
+      "protocol": "HTTP_HTTPS",
+      "format": "JSON",
+      "uri": "http://jenkins.ci.svc.cluster.local:8080/userContent/v3.2-checkbox-projects.json",
+      "displayNodePath": "//projects/title",
+      "valueNodePath": "//projects/code",
+      "checkedNodePath": "//projects/selected"
+    },
+    {
+      "name": "EXTERNAL_HTTPS_PROJECTS",
+      "type": "customCheckbox",
+      "description": "外部 HTTPS 项目",
+      "protocol": "HTTP_HTTPS",
+      "format": "JSON",
+      "uri": "https://raw.githubusercontent.com/sunweisheng/jenkins-json-build/codex/v3.2.0-multilanguage/shared-library/resources/com/bluersw/jenkins/libraries/v3/acceptance/checkbox-projects.json",
+      "displayNodePath": "//projects/title",
+      "valueNodePath": "//projects/code",
+      "checkedNodePath": "//projects/selected"
     }
   ],
   "agent": {
