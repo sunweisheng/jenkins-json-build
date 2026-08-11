@@ -568,6 +568,13 @@ class V3PipelineTest {
                     container.securityContext.allowPrivilegeEscalation == false &&
                     container.securityContext.capabilities.drop == ['ALL']
             })
+            assertTrue(containers.values().every { Map container ->
+                Map containerEnvironment = (container.env as List).collectEntries { Map entry ->
+                    [(entry.name.toString()): entry.value.toString()]
+                }
+                containerEnvironment.HTTP_PROXY == '' && containerEnvironment.HTTPS_PROXY == '' &&
+                    containerEnvironment.NO_PROXY == ''
+            })
             Map<String, String> environment = steps.podTemplateArguments.envVars.collectEntries { Map entry ->
                 [(entry.key.toString()): entry.value.toString()]
             }
