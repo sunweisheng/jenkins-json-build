@@ -460,6 +460,7 @@ class V3PipelineTest {
         assertTrue(steps.commands.any { it.contains('security delete-keychain') })
         assertTrue(steps.writtenFiles['.jenkins-json-build/xcode-coverage.xml'].contains('line-rate="0.8"'))
         assertEquals(2, steps.coverageInvocations.size())
+        assertEquals([[path: 'plugin/src']], steps.coverageInvocations[0].sourceDirectories)
         assertTrue(steps.commands.any { it == 'sonar-scanner -Dsonar.projectKey=sample' })
     }
 

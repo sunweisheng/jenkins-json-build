@@ -12,6 +12,7 @@
     "SONARQUBE_INSTALLATION": "SonarQube",
     "SONAR_SCANNER_SCRIPT": "npx sonar-scanner",
     "LCOV_REPORT": "coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": ".",
     "BUILD_ARTIFACTS": "dist/**"
   },
   "parameters": [],
@@ -24,7 +25,7 @@
       {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"}
     ]},
     {"id": "coverage", "name": "Node coverage", "condition": {"variable": "ENABLE_COVERAGE", "operator": "equals", "value": true}, "steps": [
-      {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "${LCOV_REPORT}"}]}
+      {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "${LCOV_REPORT}"}], "sourceDirectories": [{"path": "${COVERAGE_SOURCE_DIRECTORY}"}]}
     ]},
     {"id": "quality", "name": "Node quality", "condition": {"variable": "ENABLE_SONAR", "operator": "equals", "value": true}, "steps": [
       {"type": "sonarqube", "installation": "${SONARQUBE_INSTALLATION}", "script": "${SONAR_SCANNER_SCRIPT}", "qualityGate": true, "workDir": "${NPM_WORK_DIR}"}

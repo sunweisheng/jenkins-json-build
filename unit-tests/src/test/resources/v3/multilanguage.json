@@ -10,7 +10,7 @@
         {"type": "npm", "command": "ci"},
         {"type": "gradle", "tasks": ["test"], "arguments": ["--no-daemon"]},
         {"type": "msbuild", "project": "Sample.sln", "targets": ["Build"], "properties": {"Configuration": "Release"}},
-        {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "coverage/lcov.info"}], "sourceCodeRetention": "LAST_BUILD"},
+        {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "coverage/lcov.info"}], "sourceCodeRetention": "LAST_BUILD", "sourceDirectories": [{"path": "plugin/src"}]},
         {"type": "sonarqube", "installation": "SonarQube", "script": "sonar-scanner -Dsonar.projectKey=sample"},
         {
           "type": "xcodebuild",

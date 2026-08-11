@@ -9,6 +9,7 @@
     "NPM_WORK_DIR": "example/js-build",
     "NPM_BUILD_COMMAND": "build",
     "LCOV_REPORT": "example/js-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/js-build",
     "BUILD_ARTIFACTS": "example/js-build/css/**"
   }
 }
