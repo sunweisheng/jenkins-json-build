@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "extends": "node-npm-kubernetes",
+  "project": {"id": "node-npm-acceptance"},
+  "variables": {
+    "POD_HTTP_PROXY": "${HTTP_PROXY}",
+    "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
+    "POD_NO_PROXY": "${NO_PROXY}",
+    "ENABLE_SONAR": false,
+    "NPM_BUILD_COMMAND": "jsdoc",
+    "BUILD_ARTIFACTS": "jsdoc/**"
+  }
+}

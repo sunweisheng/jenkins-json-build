@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-android-kubernetes",
+  "project": {"id": "react-native-android-acceptance"},
+  "variables": {
+    "POD_HTTP_PROXY": "${HTTP_PROXY}",
+    "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
+    "POD_NO_PROXY": "${NO_PROXY}",
+    "NPM_INSTALL_COMMAND": "install",
+    "ENABLE_SONAR": false,
+    "GRADLE_TEST_TASK": "testDebugUnitTest",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ANDROID_ARTIFACTS": "android/app/build/outputs/**/*.apk"
+  }
+}

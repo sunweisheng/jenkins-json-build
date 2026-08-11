@@ -14,6 +14,22 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
+    - name: jnlp
+      image: ${JNLP_IMAGE}
+      env:
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
     - name: android
       image: ${ANDROID_IMAGE}
       command: ["cat"]
@@ -23,6 +39,12 @@ spec:
           value: ${ANDROID_USER_HOME}
         - name: GRADLE_USER_HOME
           value: ${GRADLE_USER_HOME}
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
       resources:
         requests:
           cpu: "${ANDROID_CPU_REQUEST}"

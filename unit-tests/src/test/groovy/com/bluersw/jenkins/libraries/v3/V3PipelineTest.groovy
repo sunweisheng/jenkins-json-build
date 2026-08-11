@@ -147,7 +147,7 @@ class V3PipelineTest {
     @Test
     void keepsDefaultKubernetesImagesPinnedAndPodImagesVariableDriven() {
         FakeSteps steps = new FakeSteps()
-        List<String> imageVariables = ['MAVEN_IMAGE', 'BUILDKIT_IMAGE', 'KANIKO_IMAGE', 'HELM_IMAGE']
+        List<String> imageVariables = ['JNLP_IMAGE', 'MAVEN_IMAGE', 'BUILDKIT_IMAGE', 'KANIKO_IMAGE', 'HELM_IMAGE']
         for (String template : ['java-maven-kubernetes.json', 'java-maven-kubernetes-kaniko.json']) {
             Map parsed = new JsonSlurper().parseText(steps.libraryResource(
                 "com/bluersw/jenkins/libraries/v3/templates/${template}")) as Map
@@ -540,9 +540,9 @@ class V3PipelineTest {
     @Test
     void rendersSecurePinnedLanguagePods() {
         Map<String, List<String>> expectedContainers = [
-            'node-npm-kubernetes': ['node'],
-            'android-gradle-kubernetes': ['android'],
-            'react-native-android-kubernetes': ['node', 'android']
+            'node-npm-kubernetes': ['jnlp', 'node'],
+            'android-gradle-kubernetes': ['jnlp', 'android'],
+            'react-native-android-kubernetes': ['jnlp', 'node', 'android']
         ]
         expectedContainers.each { String template, List<String> names ->
             FakeSteps steps = new FakeSteps()
@@ -567,6 +567,12 @@ class V3PipelineTest {
                     container.securityContext.runAsNonRoot == true &&
                     container.securityContext.allowPrivilegeEscalation == false &&
                     container.securityContext.capabilities.drop == ['ALL']
+            })
+            assertTrue(containers.values().every { Map container ->
+                Map environment = (container.env as List).collectEntries { Map entry ->
+                    [(entry.name.toString()): entry.value]
+                }
+                environment.HTTP_PROXY == '' && environment.HTTPS_PROXY == '' && environment.NO_PROXY == ''
             })
             assertFalse(steps.podYaml.contains('hostPath:'))
             assertFalse(steps.podYaml.contains('docker.sock'))

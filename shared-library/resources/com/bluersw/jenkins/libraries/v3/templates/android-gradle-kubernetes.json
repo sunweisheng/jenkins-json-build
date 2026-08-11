@@ -2,7 +2,11 @@
   "schemaVersion": 3,
   "extends": "android-gradle-static",
   "variables": {
+    "JNLP_IMAGE": "docker.io/jenkins/inbound-agent:jdk25@sha256:a95513bf791abd2279535ed78bcf5695cd3d910fab0edeeda3d049cccbe2a4ac",
     "ANDROID_IMAGE": "ghcr.io/cirruslabs/android-sdk:36@sha256:f9b3ea9ed2b5fc9522adae82c7b4622ab7aa54207ef532c8e615a347dca08f31",
+    "POD_HTTP_PROXY": "",
+    "POD_HTTPS_PROXY": "",
+    "POD_NO_PROXY": "",
     "POD_RUN_AS_USER": 1000,
     "POD_RUN_AS_GROUP": 1000,
     "POD_FS_GROUP": 1000,
