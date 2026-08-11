@@ -409,6 +409,31 @@ class V3PipelineTest {
     }
 
     @Test
+    void rejectsEmptyAndUnknownProjectSelectionsBeforeAllocatingAnAgent() {
+        String config = 'resource:com/bluersw/jenkins/libraries/v3/acceptance/projects.json'
+
+        FakeSteps empty = new FakeSteps()
+        empty.params.PROJECT_SELECTION = ''
+        try {
+            new V3Pipeline(empty, [configFiles: [config], checkout: false]).run()
+            fail('Expected empty project selection failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message.contains('请至少选择一个项目'))
+        }
+        assertTrue(empty.events.every { !it.startsWith('node:') && it != 'checkout' && it != 'pwd' })
+
+        FakeSteps unknown = new FakeSteps()
+        unknown.params.PROJECT_SELECTION = 'unknown'
+        try {
+            new V3Pipeline(unknown, [configFiles: [config], checkout: false]).run()
+            fail('Expected unknown project selection failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message.contains('未知编号: unknown'))
+        }
+        assertTrue(unknown.events.every { !it.startsWith('node:') && it != 'checkout' && it != 'pwd' })
+    }
+
+    @Test
     void runsMultilanguageStepsCoverageAndAppleSigningCleanup() {
         FakeSteps steps = new FakeSteps()
         steps.stdoutByScriptContains["'xccov'"] = '''{"targets":[{"name":"SampleTests","files":[{"name":"App.swift","path":"Sources/App.swift","executableLines":10,"coveredLines":8}]}]}'''
