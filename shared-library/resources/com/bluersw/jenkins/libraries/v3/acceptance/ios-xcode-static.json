@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 3,
+  "extends": "ios-xcode-static",
+  "project": {"id": "ios-xcode-acceptance"},
+  "variables": {
+    "IOS_WORK_DIR": "example/ios-build",
+    "XCODE_WORKSPACE": "CICD-ObjectC-Test.xcworkspace",
+    "XCODE_SCHEME": "CICD-ObjectC-Test",
+    "XCODE_CONFIGURATION": "Debug",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest",
+    "XCODE_RESULT_BUNDLE": "build/CICD-ObjectC-Test.xcresult",
+    "XCODE_ARCHIVE_PATH": "build/CICD-ObjectC-Test.xcarchive"
+  },
+  "stages": [
+    {
+      "id": "archive",
+      "name": "iOS unsigned archive",
+      "condition": true,
+      "steps": [
+        {
+          "type": "xcodebuild",
+          "action": "archive",
+          "workspace": "${XCODE_WORKSPACE}",
+          "scheme": "${XCODE_SCHEME}",
+          "configuration": "${XCODE_CONFIGURATION}",
+          "destination": "generic/platform=iOS",
+          "archivePath": "${XCODE_ARCHIVE_PATH}",
+          "arguments": ["CODE_SIGNING_ALLOWED=NO", "CODE_SIGNING_REQUIRED=NO"],
+          "workDir": "${IOS_WORK_DIR}",
+          "artifacts": ["example/ios-build/build/CICD-ObjectC-Test.xcarchive/Info.plist"]
+        }
+      ]
+    }
+  ]
+}
