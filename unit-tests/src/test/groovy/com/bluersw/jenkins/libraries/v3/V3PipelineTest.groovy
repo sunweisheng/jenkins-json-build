@@ -398,6 +398,7 @@ class V3PipelineTest {
         assertEquals('SUCCESS', result.parameters.status)
         assertEquals('mac-m2-16g', nextRun.parameterDefinitions[0].defaultValue)
         assertEquals('', nextRun.parameterDefinitions[1].defaultValue)
+        assertEquals('/var/jenkins_home/project-list.yaml', nextRun.parameterDefinitions[1].uri)
         assertEquals('ios', nextRun.parameterDefinitions[2].defaultValue)
         assertEquals('FILE_PATH', nextRun.parameterDefinitions[1].protocol)
         assertEquals('HTTP_HTTPS', nextRun.parameterDefinitions[2].protocol)

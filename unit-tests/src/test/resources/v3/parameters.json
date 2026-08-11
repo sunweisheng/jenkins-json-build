@@ -9,7 +9,7 @@
       "description": "选择项目",
       "protocol": "FILE_PATH",
       "format": "YAML",
-      "uri": "$JENKINS_HOME/project-list.yaml",
+      "uri": "/var/jenkins_home/project-list.yaml",
       "displayNodePath": "//projects/name",
       "valueNodePath": "//projects/id",
       "checkedNodePath": "//projects/checked"
