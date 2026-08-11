@@ -3,7 +3,7 @@
   "extends": "react-native-android-static",
   "variables": {
     "NODE_IMAGE": "docker.io/library/node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d",
-    "ANDROID_IMAGE": "ghcr.io/cirruslabs/android-sdk:36@sha256:f9b3ea9ed2b5fc9522adae82c7b4622ab7aa54207ef532c8e615a347dca08f31",
+    "ANDROID_IMAGE": "ghcr.io/sunweisheng/jenkins-json-build-android-arm64@sha256:4cb1328ef9bbc83d5545f90cedc2c11410548506591a61717fc6335e2ca44e5e",
     "POD_HTTP_PROXY": "",
     "POD_HTTPS_PROXY": "",
     "POD_NO_PROXY": "",
