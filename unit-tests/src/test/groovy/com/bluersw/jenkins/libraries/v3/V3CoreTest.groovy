@@ -88,6 +88,21 @@ return [
     }
 
     @Test
+    void ordersMergedTemplateStagesExplicitly() {
+        ConfigMerger merger = new ConfigMerger()
+        Map merged = merger.merge(
+            [stages: [[id: 'install'], [id: 'test'], [id: 'coverage']]],
+            [stages: [[id: 'pods'], [id: 'test', name: 'Combined tests']],
+                stageOrder: ['install', 'pods', 'test', 'coverage']]
+        )
+
+        Map ordered = merger.orderStages(merged)
+
+        assertEquals(['install', 'pods', 'test', 'coverage'], ordered.stages.collect { it.id })
+        assertEquals('Combined tests', ordered.stages[2].name)
+    }
+
+    @Test
     void validatesImageDigestAndPodSecurity() {
         String digest = 'sha256:' + ('a' * 64)
         assertEquals("ghcr.io/acme/app@${digest}".toString(), ImageReference.withDigest('ghcr.io/acme/app:42', digest))

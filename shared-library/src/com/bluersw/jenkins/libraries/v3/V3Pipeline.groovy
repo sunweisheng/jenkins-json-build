@@ -53,6 +53,7 @@ class V3Pipeline implements Serializable {
         Set<String> supported = new LinkedHashSet<String>((defaults.stepHandlers as Map).keySet().collect { it.toString() })
         supported.addAll(customHandlers.keySet().collect { it.toString() })
         new ConfigValidator(supported).validate(merged, primarySource)
+        merged = merger.orderStages(merged)
         merged._configPath = primarySource
         return merged
     }

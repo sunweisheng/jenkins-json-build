@@ -15,6 +15,22 @@ class ConfigMerger implements Serializable {
         return result
     }
 
+    Map orderStages(Map config) {
+        if (!(config.stageOrder instanceof List) || !(config.stages instanceof List)) return config
+        Map result = deepCopy(config) as Map
+        Map<String, Map> stagesById = new LinkedHashMap<String, Map>()
+        for (Object stage : result.stages as List) {
+            if (stage instanceof Map && stage.id) stagesById[stage.id.toString()] = stage as Map
+        }
+        List ordered = []
+        for (Object stageId : result.stageOrder as List) {
+            ordered.add(stagesById.remove(stageId.toString()))
+        }
+        ordered.addAll(stagesById.values())
+        result.stages = ordered
+        return result
+    }
+
     private List mergeNamedLists(List base, List override, String identityKey) {
         List result = deepCopy(base) as List
         for (Object item : override) {

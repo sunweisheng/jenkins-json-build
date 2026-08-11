@@ -482,6 +482,25 @@ class V3PipelineTest {
     }
 
     @Test
+    void runsReactNativeIosTemplateStagesInDeclaredOrder() {
+        FakeSteps steps = new FakeSteps()
+        steps.stdoutByScriptContains["'xccov'"] = '''{"targets":[{"name":"SampleTests","files":[{"name":"App.swift","path":"Sources/App.swift","executableLines":2,"coveredLines":1}]}]}'''
+
+        Map result = new V3Pipeline(steps, [configFiles: ['v3/react-native-ios-template.json'], checkout: false]).run()
+
+        assertEquals('SUCCESS', result['react-native-ios-template'].status)
+        assertEquals(['install', 'pods', 'clean', 'test', 'coverage', 'quality', 'build', 'archive'],
+            result['react-native-ios-template'].stages.keySet().toList())
+        int pods = steps.commands.findIndexOf { it == 'bundle exec pod install' }
+        int clean = steps.commands.findIndexOf { it.contains("'xcodebuild'") && it.endsWith("'clean'") }
+        int xcodeTest = steps.commands.findIndexOf { it.contains("'xcodebuild'") && it.endsWith("'test'") }
+        assertTrue(pods >= 0)
+        assertTrue(pods < clean)
+        assertTrue(clean < xcodeTest)
+        assertTrue(steps.commands.any { it.contains("'rm' '-rf' '--' 'build/Test.xcresult'") })
+    }
+
+    @Test
     void checksStaticAgentBeforeCheckoutAndRejectsWrongOperatingSystem() {
         FakeSteps mac = new FakeSteps()
         Map result = new V3Pipeline(mac, [configFiles: ['v3/static-requirements.json']]).run()

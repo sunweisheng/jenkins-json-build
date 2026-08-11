@@ -1,6 +1,7 @@
 {
   "schemaVersion": 3,
   "extends": ["node-npm-static", "ios-xcode-static"],
+  "stageOrder": ["install", "pods", "clean", "test", "coverage", "quality", "build", "archive"],
   "variables": {
     "ENABLE_NPM_BUILD": false,
     "IOS_WORK_DIR": "ios",
@@ -21,7 +22,7 @@
     ]},
     {"id": "test", "name": "React Native and iOS tests", "steps": [
       {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"},
-      {"type": "xcodebuild", "action": "test", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "destination": "${XCODE_DESTINATION}", "resultBundlePath": "${XCODE_RESULT_BUNDLE}", "enableCodeCoverage": true, "workDir": "${IOS_WORK_DIR}"},
+      {"type": "xcodebuild", "action": "test", "workspace": "${XCODE_WORKSPACE}", "scheme": "${XCODE_SCHEME}", "destination": "${XCODE_DESTINATION}", "resultBundlePath": "${XCODE_RESULT_BUNDLE}", "cleanResultBundle": true, "enableCodeCoverage": true, "workDir": "${IOS_WORK_DIR}"},
       {"type": "xcodeCoverage", "resultBundlePath": "${XCODE_RESULT_BUNDLE}", "outputFile": "${XCODE_COVERAGE_XML}", "workDir": "${IOS_WORK_DIR}"}
     ]},
     {"id": "archive", "condition": {"variable": "ENABLE_SIGNED_ARCHIVE", "operator": "equals", "value": true}, "steps": [
