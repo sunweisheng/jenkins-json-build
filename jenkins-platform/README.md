@@ -11,6 +11,12 @@ This directory contains the test-platform baseline for Jenkins Json Build V3.
 - Builds: dynamic Kubernetes Pods over WebSocket
 - Static Mac/Windows nodes: SSH Launcher or installation-specific launcher
 
+The startup probe allows fifteen minutes for plugin and job loading. This prevents Kubernetes from restarting a healthy controller when an NFS-backed Jenkins Home needs more than the Chart default of two minutes to initialize, including one-time plugin upgrades with `initializeOnce: false`.
+
+Controller settings already exposed by the Chart, including `disableRememberMe` and API token policy, stay in their native values. Do not repeat them in `JCasC.configScripts`: current Configuration as Code releases reject duplicate keys and stop Jenkins during startup.
+
+Keep `controller.admin.createSecret: true` when `controller.admin.existingSecret` points to a pre-created admin Secret. With an existing Secret the Chart does not create or overwrite one; this switch enables the projected `chart-admin-username` and `chart-admin-password` files required by its default JCasC security realm.
+
 The image digests were checked against the official image manifests on 2026-08-06. Recheck them before an upgrade; do not replace them with `latest`.
 
 ## Install order

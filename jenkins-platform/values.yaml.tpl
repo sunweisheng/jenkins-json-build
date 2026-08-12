@@ -7,6 +7,7 @@ controller:
 
   replicas: 1
   numExecutors: 0
+  disableRememberMe: true
   javaOpts: "-Xms512m -Xmx1536m -Duser.timezone=Asia/Shanghai"
   resources:
     requests:
@@ -16,12 +17,16 @@ controller:
       cpu: "2"
       memory: 2Gi
 
+  probes:
+    startupProbe:
+      failureThreshold: 90
+
   serviceType: ClusterIP
   servicePort: 8080
   jenkinsUrl: https://${JENKINS_HOST}
 
   admin:
-    createSecret: false
+    createSecret: true
     existingSecret: jenkins-admin
 
   installPlugins:
@@ -58,16 +63,15 @@ controller:
   JCasC:
     defaultConfig: true
     overwriteConfiguration: false
+    security:
+      apiToken:
+        creationOfLegacyTokenEnabled: false
+        tokenGenerationOnCreationEnabled: false
     configScripts:
       v3-security: |
         jenkins:
-          disableRememberMe: true
           remotingSecurity:
             enabled: true
-        security:
-          apiToken:
-            creationOfLegacyTokenEnabled: false
-            tokenGenerationOnCreationEnabled: false
       v3-shared-library: |
         unclassified:
           globalLibraries:
