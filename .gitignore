@@ -25,6 +25,7 @@ buildNumber.properties
 
 # Package Files #
 *.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
@@ -46,6 +47,13 @@ work/
 *.iml
 /unit-tests/*.iml
 .scannerwork/
+
+# Node acceptance output
+node_modules/
+coverage/
+example/js-build/css/
+local.properties
+*.keystore
 
 # Python test cache
 __pycache__/

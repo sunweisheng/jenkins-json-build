@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 3,
+  "parameters": [
+    {
+      "name": "PROJECT_SELECTION",
+      "type": "string",
+      "defaultValue": "node,ios",
+      "description": "选择验收项目"
+    }
+  ],
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "acceptance",
+      "name": "Acceptance",
+      "steps": [
+        {
+          "type": "setVariable",
+          "name": "PROJECT_ACCEPTANCE",
+          "value": "ready"
+        }
+      ]
+    }
+  ],
+  "projects": {
+    "selectionParameter": "PROJECT_SELECTION",
+    "execution": "sequential",
+    "items": [
+      {
+        "id": "node",
+        "configFiles": [
+          "resource:com/bluersw/jenkins/libraries/v3/acceptance/project.json"
+        ]
+      },
+      {
+        "id": "ios",
+        "configFiles": [
+          "resource:com/bluersw/jenkins/libraries/v3/acceptance/project.json"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+name: android-arm64-image
+
+on:
+  push:
+    paths:
+      - .github/workflows/android-arm64-image.yml
+      - images/android-arm64/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load image configuration
+        run: cat images/android-arm64/image.env >> "$GITHUB_ENV"
+
+      - name: Verify Android Build Tools
+        working-directory: images/android-arm64
+        run: |
+          curl --fail --location --retry 3 --output android-build-tools.zip "$ANDROID_BUILD_TOOLS_ARCHIVE_URL"
+          echo "$ANDROID_BUILD_TOOLS_ARCHIVE_SHA256  android-build-tools.zip" | sha256sum --check --strict
+          unzip -q android-build-tools.zip -d android-build-tools-extract
+          mv "android-build-tools-extract/$ANDROID_BUILD_TOOLS_ARCHIVE_DIR" build-tools
+          grep -Fx "Pkg.Revision=$ANDROID_BUILD_TOOLS_VERSION" build-tools/source.properties
+
+      - name: Verify ARM64 Android SDK tools
+        working-directory: images/android-arm64
+        run: |
+          curl --fail --location --retry 3 --output android-sdk-tools-static-aarch64.zip "$ANDROID_SDK_TOOLS_ARCHIVE_URL"
+          echo "$ANDROID_SDK_TOOLS_ARCHIVE_SHA256  android-sdk-tools-static-aarch64.zip" | sha256sum --check --strict
+          unzip -q android-sdk-tools-static-aarch64.zip -d android-sdk-tools-extract
+          mkdir arm64-build-tools
+          IFS=',' read -ra tool_names <<< "$ANDROID_ARM64_BUILD_TOOLS"
+          for tool_name in "${tool_names[@]}"; do
+            cp "android-sdk-tools-extract/build-tools/$tool_name" "arm64-build-tools/$tool_name"
+            chmod 0555 "arm64-build-tools/$tool_name"
+            test "$(od -An -tx1 -j18 -N2 "arm64-build-tools/$tool_name" | tr -d ' ')" = "b700"
+          done
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: images/android-arm64
+          file: images/android-arm64/Dockerfile
+          platforms: linux/arm64
+          build-args: |
+            ANDROID_BASE_IMAGE=${{ env.ANDROID_BASE_IMAGE }}
+            JDK17_IMAGE=${{ env.JDK17_IMAGE }}
+            ANDROID_BUILD_TOOLS_VERSION=${{ env.ANDROID_BUILD_TOOLS_VERSION }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.ANDROID_IMAGE_REPOSITORY }}:${{ env.ANDROID_IMAGE_TAG }}
+          provenance: mode=max
+          sbom: true
+
+      - name: Record immutable image reference
+        run: echo "ghcr.io/${{ github.repository_owner }}/${ANDROID_IMAGE_REPOSITORY}@${{ steps.build.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"

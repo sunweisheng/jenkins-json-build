@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "acceptance",
+      "name": "Acceptance",
+      "steps": [
+        {
+          "type": "setVariable",
+          "name": "PROJECT_ACCEPTANCE",
+          "value": "ready"
+        }
+      ]
+    }
+  ]
+}

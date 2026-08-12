@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 3,
+  "project": {
+    "id": "parameters"
+  },
+  "parameters": [
+    {
+      "name": "RELEASE_NOTE",
+      "type": "string",
+      "defaultValue": "v3.2 acceptance",
+      "description": "验收说明"
+    },
+    {
+      "name": "RUN_OPTIONAL",
+      "type": "boolean",
+      "defaultValue": false,
+      "description": "运行可选步骤"
+    },
+    {
+      "name": "BUILD_MODE",
+      "type": "choice",
+      "choices": ["verify", "package"],
+      "defaultValue": "verify",
+      "description": "构建模式"
+    },
+    {
+      "name": "BUILD_AGENT",
+      "type": "agentServer",
+      "defaultValue": "linux"
+    },
+    {
+      "name": "PROJECTS",
+      "type": "customCheckbox",
+      "description": "选择项目",
+      "protocol": "FILE_PATH",
+      "format": "YAML",
+      "uri": "/var/jenkins_home/project-list.yaml",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked"
+    },
+    {
+      "name": "INLINE_PROJECTS",
+      "type": "multiChoice",
+      "provider": "customCheckbox",
+      "format": "JSON",
+      "pipelineSubmitContent": "{\"projects\":[{\"name\":\"iOS\",\"id\":\"ios\",\"checked\":true}]}",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked",
+      "defaultValue": "ios"
+    },
+    {
+      "name": "INLINE_YAML_PROJECTS",
+      "type": "customCheckbox",
+      "format": "YAML",
+      "pipelineSubmitContent": "projects:\n  - title: Node\n    code: node\n    selected: true\n  - title: Android\n    code: android\n    selected: false\n",
+      "displayNodePath": "//projects/title",
+      "valueNodePath": "//projects/code",
+      "checkedNodePath": "//projects/selected"
+    },
+    {
+      "name": "INTERNAL_HTTP_PROJECTS",
+      "type": "customCheckbox",
+      "description": "内部 HTTP 项目",
+      "protocol": "HTTP_HTTPS",
+      "format": "YAML",
+      "uri": "http://192.168.0.5:18080/project-list.yaml",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked"
+    },
+    {
+      "name": "EXTERNAL_HTTPS_PROJECTS",
+      "type": "customCheckbox",
+      "description": "外部 HTTPS 项目",
+      "protocol": "HTTP_HTTPS",
+      "format": "JSON",
+      "uri": "https://raw.githubusercontent.com/sunweisheng/jenkins-json-build/codex/v3.2.0-multilanguage/shared-library/resources/com/bluersw/jenkins/libraries/v3/acceptance/checkbox-projects.json",
+      "displayNodePath": "//projects/title",
+      "valueNodePath": "//projects/code",
+      "checkedNodePath": "//projects/selected"
+    }
+  ],
+  "agent": {
+    "type": "none"
+  },
+  "stages": [
+    {
+      "id": "run",
+      "name": "Run",
+      "steps": [
+        {
+          "type": "setVariable",
+          "name": "PARAMETER_ACCEPTANCE",
+          "value": "ready"
+        }
+      ]
+    }
+  ]
+}

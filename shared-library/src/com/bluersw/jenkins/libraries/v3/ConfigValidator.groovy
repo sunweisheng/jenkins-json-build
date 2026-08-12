@@ -29,6 +29,7 @@ class ConfigValidator implements Serializable {
             requireMap(stage, 'variables', "${source}.stages[${stageIndex}]")
             validateSteps(stage.steps, "${source}.stages[${stageIndex}].steps")
         }
+        validateStageOrder(config.stageOrder, stageIds, source)
 
         if (config.post instanceof Map) {
             ['success', 'failure', 'cancelled', 'always'].each { event ->
@@ -38,6 +39,24 @@ class ConfigValidator implements Serializable {
             }
         }
         validateProjects(config.projects, source)
+    }
+
+    private static void validateStageOrder(Object value, Set<String> stageIds, String source) {
+        if (value == null) return
+        if (!(value instanceof List)) {
+            throw new V3ConfigException("${source}.stageOrder 必须是数组")
+        }
+        Set<String> orderedIds = new LinkedHashSet<String>()
+        for (Object configuredId : value as List) {
+            String stageId = configuredId?.toString()?.trim()
+            if (!stageId) throw new V3ConfigException("${source}.stageOrder 不能包含空阶段编号")
+            if (!orderedIds.add(stageId)) {
+                throw new V3ConfigException("${source}.stageOrder 含有重复阶段编号 ${stageId}")
+            }
+            if (!stageIds.contains(stageId)) {
+                throw new V3ConfigException("${source}.stageOrder 引用了未知阶段编号 ${stageId}")
+            }
+        }
     }
 
     private void validateSteps(Object value, String location) {
@@ -50,7 +69,7 @@ class ConfigValidator implements Serializable {
             if (!supportedSteps.contains(type)) {
                 throw new V3ConfigException("${location}[${index}] 使用了未注册步骤 ${type}")
             }
-            if (['condition', 'retry', 'timeout', 'credentials'].contains(type)) {
+            if (['condition', 'retry', 'timeout', 'credentials', 'appleSigning'].contains(type)) {
                 validateSteps(step.steps, "${location}[${index}].steps")
             }
             requireMap(step, 'variables', "${location}[${index}]")

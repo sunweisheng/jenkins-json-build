@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 3,
+  "variables": {
+    "NODE_VERSION": "24.15.0",
+    "NPM_EXECUTABLE": "npm",
+    "NPM_WORK_DIR": ".",
+    "NPM_INSTALL_COMMAND": "ci",
+    "NPM_TEST_COMMAND": "test",
+    "NPM_BUILD_COMMAND": "build",
+    "ENABLE_NPM_BUILD": true,
+    "ENABLE_COVERAGE": true,
+    "ENABLE_SONAR": false,
+    "SONARQUBE_INSTALLATION": "SonarQube",
+    "SONAR_SCANNER_SCRIPT": "npx sonar-scanner",
+    "LCOV_REPORT": "coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": ".",
+    "BUILD_ARTIFACTS": "dist/**"
+  },
+  "parameters": [],
+  "agent": {"type": "static", "label": "", "requirements": {"tools": ["node", "npm"]}},
+  "stages": [
+    {"id": "install", "name": "Node dependencies", "retries": 2, "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_INSTALL_COMMAND}", "workDir": "${NPM_WORK_DIR}"}
+    ]},
+    {"id": "test", "name": "Node tests", "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "${NPM_TEST_COMMAND}", "workDir": "${NPM_WORK_DIR}"}
+    ]},
+    {"id": "coverage", "name": "Node coverage", "condition": {"variable": "ENABLE_COVERAGE", "operator": "equals", "value": true}, "steps": [
+      {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "${LCOV_REPORT}"}], "sourceDirectories": [{"path": "${COVERAGE_SOURCE_DIRECTORY}"}]}
+    ]},
+    {"id": "quality", "name": "Node quality", "condition": {"variable": "ENABLE_SONAR", "operator": "equals", "value": true}, "steps": [
+      {"type": "sonarqube", "installation": "${SONARQUBE_INSTALLATION}", "script": "${SONAR_SCANNER_SCRIPT}", "qualityGate": true, "workDir": "${NPM_WORK_DIR}"}
+    ]},
+    {"id": "build", "name": "Node build", "condition": {"variable": "ENABLE_NPM_BUILD", "operator": "equals", "value": true}, "steps": [
+      {"type": "npm", "executable": "${NPM_EXECUTABLE}", "command": "run", "arguments": ["${NPM_BUILD_COMMAND}"], "workDir": "${NPM_WORK_DIR}", "artifacts": ["${BUILD_ARTIFACTS}"]},
+      {"type": "archive", "artifacts": "${BUILD_ARTIFACTS}", "fingerprint": true}
+    ]}
+  ],
+  "post": {"always": []}
+}

@@ -28,6 +28,12 @@ spec:
           value: >-
             -Duser.home=${MAVEN_USER_HOME}
             -Dmaven.repo.local=${MAVEN_REPOSITORY}
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
       resources:
         requests:
           cpu: "${MAVEN_CPU_REQUEST}"
@@ -57,6 +63,12 @@ spec:
             ${BUILDKITD_FLAGS} --root ${BUILDKIT_STATE_DIR}
         - name: DOCKER_CONFIG
           value: ${BUILDKIT_DOCKER_CONFIG}
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
       resources:
         requests:
           cpu: "${IMAGE_BUILDER_CPU_REQUEST}"
@@ -91,6 +103,12 @@ spec:
           value: ${HELM_DRIVER}
         - name: HOME
           value: ${HELM_USER_HOME}
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
       resources:
         requests:
           cpu: "${HELM_CPU_REQUEST}"

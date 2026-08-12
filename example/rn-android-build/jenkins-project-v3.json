@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-android-kubernetes",
+  "project": {
+    "id": "react-native-android-example"
+  },
+  "variables": {
+    "NPM_INSTALL_COMMAND": "ci",
+    "NPM_WORK_DIR": "example/rn-android-build",
+    "ENABLE_SONAR": false,
+    "LCOV_REPORT": "example/rn-android-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/rn-android-build",
+    "GRADLE_WORK_DIR": "example/rn-android-build/android",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ANDROID_ARTIFACTS": "example/rn-android-build/android/app/build/outputs/**/*.apk"
+  }
+}

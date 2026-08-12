@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "multilanguage"},
+  "agent": {"type": "none"},
+  "stages": [
+    {
+      "id": "build",
+      "name": "Build",
+      "steps": [
+        {"type": "npm", "command": "ci"},
+        {"type": "gradle", "tasks": ["test"], "arguments": ["--no-daemon"]},
+        {"type": "msbuild", "project": "Sample.sln", "targets": ["Build"], "properties": {"Configuration": "Release"}},
+        {"type": "coverage", "reports": [{"format": "LCOV", "pattern": "coverage/lcov.info"}], "sourceCodeRetention": "LAST_BUILD", "sourceDirectories": [{"path": "plugin/src"}]},
+        {"type": "sonarqube", "installation": "SonarQube", "script": "sonar-scanner -Dsonar.projectKey=sample"},
+        {
+          "type": "xcodebuild",
+          "action": "test",
+          "workspace": "Sample.xcworkspace",
+          "scheme": "Sample",
+          "destination": "platform=iOS Simulator,name=iPhone 16",
+          "resultBundlePath": "build/Test.xcresult",
+          "cleanResultBundle": true
+        },
+        {"type": "xcodeCoverage", "resultBundlePath": "build/Test.xcresult"},
+        {
+          "type": "appleSigning",
+          "certificateCredentialsId": "ios-p12",
+          "certificatePasswordCredentialsId": "ios-p12-password",
+          "provisioningProfileCredentialsIds": ["ios-profile"],
+          "steps": [
+            {
+              "type": "xcodebuild",
+              "action": "archive",
+              "workspace": "Sample.xcworkspace",
+              "scheme": "Sample",
+              "archivePath": "build/Sample.xcarchive"
+            },
+            {
+              "type": "xcodebuild",
+              "action": "exportArchive",
+              "archivePath": "build/Sample.xcarchive",
+              "exportPath": "build/export",
+              "exportOptionsPlist": "ci/ExportOptions.plist"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

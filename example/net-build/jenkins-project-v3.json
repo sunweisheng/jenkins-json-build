@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 3,
+  "extends": "dotnet-framework-msbuild-windows",
+  "project": {
+    "id": "dotnet-framework-msbuild-example"
+  },
+  "variables": {
+    "MSBUILD_SOLUTION": "WinBuild.sln",
+    "MSBUILD_TEST_TARGET": "Build",
+    "MSBUILD_BUILD_TARGET": "Build",
+    "ENABLE_COVERAGE": false,
+    "MSBUILD_ARTIFACTS": "WinBuild/bin/**"
+  }
+}

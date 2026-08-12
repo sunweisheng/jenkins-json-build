@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 3,
+  "extends": "node-npm-static",
+  "variables": {
+    "NODE_IMAGE": "docker.io/library/node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d",
+    "POD_HTTP_PROXY": "",
+    "POD_HTTPS_PROXY": "",
+    "POD_NO_PROXY": "",
+    "POD_RUN_AS_USER": 1000,
+    "POD_RUN_AS_GROUP": 1000,
+    "POD_FS_GROUP": 1000,
+    "NODE_USER_HOME": "/home/jenkins",
+    "NODE_CPU_REQUEST": "250m",
+    "NODE_MEMORY_REQUEST": "512Mi",
+    "NODE_CPU_LIMIT": "2",
+    "NODE_MEMORY_LIMIT": "2Gi"
+  },
+  "agent": {
+    "type": "kubernetes",
+    "podTemplate": "node-npm",
+    "environment": {
+      "HTTP_PROXY": "${POD_HTTP_PROXY}",
+      "HTTPS_PROXY": "${POD_HTTPS_PROXY}",
+      "NO_PROXY": "${POD_NO_PROXY}",
+      "http_proxy": "${POD_HTTP_PROXY}",
+      "https_proxy": "${POD_HTTPS_PROXY}",
+      "no_proxy": "${POD_NO_PROXY}"
+    }
+  },
+  "stages": [
+    {"id": "install", "container": "node"},
+    {"id": "test", "container": "node"},
+    {"id": "coverage", "container": "node"},
+    {"id": "quality", "container": "node"},
+    {"id": "build", "container": "node"}
+  ]
+}

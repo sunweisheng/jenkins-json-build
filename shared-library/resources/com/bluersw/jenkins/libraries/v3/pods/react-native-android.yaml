@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/part-of: jenkins-json-build
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: ${POD_RUN_AS_USER}
+    runAsGroup: ${POD_RUN_AS_GROUP}
+    fsGroup: ${POD_FS_GROUP}
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  initContainers:
+    - name: node-toolchain
+      image: ${NODE_IMAGE}
+      command:
+        - sh
+        - -c
+        - |
+          set -eu
+          mkdir -p ${SHARED_NODE_BIN_DIR} ${SHARED_NODE_MODULES_DIR}
+          cp /usr/local/bin/node ${SHARED_NODE_BINARY}
+          cp -R /usr/local/lib/node_modules/npm ${SHARED_NODE_MODULES_DIR}/npm
+          ln -s ../lib/node_modules/npm/bin/npm-cli.js ${SHARED_NODE_BIN_DIR}/npm
+          ln -s ../lib/node_modules/npm/bin/npx-cli.js ${SHARED_NODE_BIN_DIR}/npx
+          chmod 0555 ${SHARED_NODE_BINARY}
+      env:
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: node-toolchain
+          mountPath: ${SHARED_NODE_ROOT}
+  containers:
+    - name: node
+      image: ${NODE_IMAGE}
+      command: ["cat"]
+      tty: true
+      env:
+        - name: HOME
+          value: ${NODE_USER_HOME}
+        - name: npm_config_cache
+          value: ${NODE_USER_HOME}/.npm
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
+      resources:
+        requests:
+          cpu: "${NODE_CPU_REQUEST}"
+          memory: "${NODE_MEMORY_REQUEST}"
+        limits:
+          cpu: "${NODE_CPU_LIMIT}"
+          memory: "${NODE_MEMORY_LIMIT}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: node-home
+          mountPath: ${NODE_USER_HOME}
+    - name: android
+      image: ${ANDROID_IMAGE}
+      command: ["cat"]
+      tty: true
+      env:
+        - name: HOME
+          value: ${ANDROID_USER_HOME}
+        - name: GRADLE_USER_HOME
+          value: ${GRADLE_USER_HOME}
+        - name: GRADLE_OPTS
+          value: ${ANDROID_GRADLE_OPTS}
+        - name: NODE_BINARY
+          value: ${SHARED_NODE_BINARY}
+        - {name: HTTP_PROXY, value: "${POD_HTTP_PROXY}"}
+        - {name: HTTPS_PROXY, value: "${POD_HTTPS_PROXY}"}
+        - {name: NO_PROXY, value: "${POD_NO_PROXY}"}
+        - {name: http_proxy, value: "${POD_HTTP_PROXY}"}
+        - {name: https_proxy, value: "${POD_HTTPS_PROXY}"}
+        - {name: no_proxy, value: "${POD_NO_PROXY}"}
+      resources:
+        requests:
+          cpu: "${ANDROID_CPU_REQUEST}"
+          memory: "${ANDROID_MEMORY_REQUEST}"
+        limits:
+          cpu: "${ANDROID_CPU_LIMIT}"
+          memory: "${ANDROID_MEMORY_LIMIT}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${POD_RUN_AS_USER}
+        runAsGroup: ${POD_RUN_AS_GROUP}
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: android-home
+          mountPath: ${ANDROID_USER_HOME}
+        - name: node-toolchain
+          mountPath: ${SHARED_NODE_ROOT}
+          readOnly: true
+  volumes:
+    - name: node-home
+      emptyDir: {}
+    - name: android-home
+      emptyDir: {}
+    - name: node-toolchain
+      emptyDir: {}

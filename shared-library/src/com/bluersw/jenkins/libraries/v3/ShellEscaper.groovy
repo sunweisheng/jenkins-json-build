@@ -10,4 +10,9 @@ class ShellEscaper implements Serializable {
         String text = value == null ? '' : value.toString()
         return "'${text.replace("'", "''")}'"
     }
+
+    static String batch(Object value) {
+        String text = value == null ? '' : value.toString()
+        return '"' + text.replace('"', '""') + '"'
+    }
 }

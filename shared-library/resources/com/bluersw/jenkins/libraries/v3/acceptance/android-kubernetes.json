@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 3,
+  "extends": "android-gradle-kubernetes",
+  "project": {"id": "android-gradle-acceptance"},
+  "variables": {
+    "POD_HTTP_PROXY": "${HTTP_PROXY}",
+    "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
+    "POD_NO_PROXY": "${NO_PROXY}",
+    "GRADLE_WORK_DIR": "example/android-build",
+    "GRADLE_TEST_TASK": "testDebugUnitTest",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ENABLE_COVERAGE": false,
+    "ANDROID_ARTIFACTS": "example/android-build/app/build/outputs/**/*.apk"
+  }
+}

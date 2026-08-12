@@ -1,36 +1,17 @@
 {
   "name": "html-jest",
-  "version": "1.0.0",
-  "description": "",
-  "main": "sum.test.js",
-  "dependencies": {
-    "axios": "^0.19.0",
-    "gulp": "^4.0.2",
-    "gulp-clean-css": "^3.9.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-connect": "^5.0.0",
-    "gulp-header": "^1.8.9",
-    "gulp-htmlmin": "^3.0.0",
-    "gulp-jshint": "^2.0.4",
-    "gulp-rename": "^1.2.2",
-    "gulp-rev-append": "^0.1.8",
-    "gulp-sourcemaps": "^2.6.1",
-    "gulp-uglify": "^3.0.0"
-  },
+  "version": "3.2.0",
+  "description": "Minimal Node, Jest and Gulp acceptance project",
+  "private": true,
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-jest": "^24.8.0",
-    "babel-preset-env": "^1.7.0",
-    "gulp-cli": "^2.3.0",
-    "jest": "^24.8.0",
-    "jest-html-reporter": "^2.5.0",
-    "jsdoc": "^3.6.5",
-    "regenerator-runtime": "^0.13.3",
-    "gulp-minify-css": "^1.2.4"
+    "gulp": "5.0.1",
+    "gulp-clean-css": "4.3.0",
+    "gulp-rename": "2.1.0",
+    "jest": "30.4.2"
   },
   "scripts": {
-    "test": "jest",
-    "jsdoc": "node_modules/.bin/jsdoc -r -c doc/conf.json -R doc/HOMEPAGE.md"
+    "test": "jest --coverage",
+    "build": "gulp"
   },
   "jest": {
     "collectCoverage": true,
@@ -43,7 +24,5 @@
       }
     }
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC"
 }

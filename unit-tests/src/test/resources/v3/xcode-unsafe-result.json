@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "xcode-unsafe-result"},
+  "agent": {"type": "none"},
+  "stages": [
+    {
+      "id": "test",
+      "name": "Test",
+      "steps": [
+        {
+          "type": "xcodebuild",
+          "action": "test",
+          "workspace": "Sample.xcworkspace",
+          "scheme": "Sample",
+          "resultBundlePath": "../Test.xcresult",
+          "cleanResultBundle": true
+        }
+      ]
+    }
+  ]
+}

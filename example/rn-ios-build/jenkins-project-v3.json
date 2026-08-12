@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-ios-static",
+  "project": {
+    "id": "react-native-ios-example"
+  },
+  "variables": {
+    "NPM_INSTALL_COMMAND": "ci",
+    "NPM_WORK_DIR": "example/rn-ios-build",
+    "ENABLE_NPM_BUILD": false,
+    "ENABLE_SONAR": false,
+    "LCOV_REPORT": "example/rn-ios-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/rn-ios-build",
+    "IOS_WORK_DIR": "example/rn-ios-build/ios",
+    "XCODE_WORKSPACE": "TestRnBuild.xcworkspace",
+    "XCODE_SCHEME": "TestRnBuild",
+    "XCODE_CONFIGURATION": "Debug",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest",
+    "XCODE_RESULT_BUNDLE": "build/TestRnBuild.xcresult",
+    "XCODE_ARCHIVE_PATH": "build/TestRnBuild.xcarchive",
+    "XCODE_EXPORT_PATH": "build/export",
+    "XCODE_EXPORT_OPTIONS_PLIST": "test-rn-build.plist",
+    "ENABLE_SIGNED_ARCHIVE": false,
+    "IOS_ARTIFACTS": "example/rn-ios-build/ios/build/export/**/*.ipa"
+  }
+}

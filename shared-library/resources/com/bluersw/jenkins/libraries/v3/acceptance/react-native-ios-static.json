@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-ios-static",
+  "project": {"id": "react-native-ios-acceptance"},
+  "variables": {
+    "NPM_INSTALL_COMMAND": "ci",
+    "NPM_WORK_DIR": "example/rn-ios-build",
+    "ENABLE_NPM_BUILD": false,
+    "ENABLE_SONAR": false,
+    "LCOV_REPORT": "example/rn-ios-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/rn-ios-build",
+    "COCOAPODS_INSTALL_SCRIPT": "bundle install && bundle exec pod install",
+    "IOS_WORK_DIR": "example/rn-ios-build/ios",
+    "XCODE_WORKSPACE": "TestRnBuild.xcworkspace",
+    "XCODE_SCHEME": "TestRnBuild",
+    "XCODE_CONFIGURATION": "Debug",
+    "XCODE_DESTINATION": "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest",
+    "XCODE_RESULT_BUNDLE": "build/TestRnBuild.xcresult",
+    "XCODE_ARCHIVE_PATH": "build/TestRnBuild.xcarchive"
+  },
+  "stages": [
+    {
+      "id": "archive",
+      "name": "React Native iOS unsigned archive",
+      "condition": true,
+      "steps": [
+        {
+          "type": "xcodebuild",
+          "action": "archive",
+          "workspace": "${XCODE_WORKSPACE}",
+          "scheme": "${XCODE_SCHEME}",
+          "configuration": "${XCODE_CONFIGURATION}",
+          "destination": "generic/platform=iOS",
+          "archivePath": "${XCODE_ARCHIVE_PATH}",
+          "arguments": ["CODE_SIGNING_ALLOWED=NO", "CODE_SIGNING_REQUIRED=NO"],
+          "workDir": "${IOS_WORK_DIR}",
+          "artifacts": ["example/rn-ios-build/ios/build/TestRnBuild.xcarchive/Info.plist"]
+        }
+      ]
+    }
+  ]
+}

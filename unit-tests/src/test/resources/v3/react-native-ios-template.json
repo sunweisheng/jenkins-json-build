@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-ios-static",
+  "project": {"id": "react-native-ios-template"},
+  "agent": {"type": "none"},
+  "variables": {
+    "NPM_WORK_DIR": ".",
+    "IOS_WORK_DIR": "ios",
+    "XCODE_WORKSPACE": "Sample.xcworkspace",
+    "XCODE_SCHEME": "Sample",
+    "XCODE_RESULT_BUNDLE": "build/Test.xcresult"
+  }
+}

@@ -1,6 +1,5 @@
-import functions from '../src/functions';
-import axios from 'axios';
-import Status from '../src/status';
+const functions = require('../src/functions');
+const Status = require('../src/status');
 
 test('1+2=3', () => {
   expect(functions.sum(1, 2)).toBe(3);
@@ -120,10 +119,9 @@ test("测试mock模拟返回值", () => {
   console.log(myMock(), myMock(), myMock(), myMock())
 })
 
-jest.mock('axios');
 test('mock返回status', () => {
   const status = [{ status: 'incorrect-login' }];
   const res = { data: status };
-  axios.get.mockResolvedValue(res);//返回我们希望测试断言的数据
-  return Status.all().then(data => expect(data).toEqual(status));
+  const client = { get: jest.fn().mockResolvedValue(res) };
+  return Status.all(client).then(data => expect(data).toEqual(status));
 });

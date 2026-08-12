@@ -1,15 +1,9 @@
-class UnitTestPresenter{
+export default class UnitTestPresenter {
+  add(number1, number2) {
+    return number1 + number2;
+  }
 
-    constructor(){
-
-    }
-
-    add(number1,number2){
-        return number1+number2
-    }
-
-    mul(number1,number2){
-        return number1+number2
-    } 
+  multiply(number1, number2) {
+    return number1 * number2;
+  }
 }
-export default UnitTestPresenter

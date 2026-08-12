@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 3,
+  "project": {"id": "parameters"},
+  "parameters": [
+    {"name": "BUILD_AGENT", "type": "agentServer", "defaultValue": "linux"},
+    {
+      "name": "PROJECTS",
+      "type": "customCheckbox",
+      "description": "选择项目",
+      "protocol": "FILE_PATH",
+      "format": "YAML",
+      "uri": "/var/jenkins_home/project-list.yaml",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked"
+    },
+    {
+      "name": "INLINE_PROJECTS",
+      "type": "multiChoice",
+      "provider": "customCheckbox",
+      "format": "JSON",
+      "pipelineSubmitContent": "{\"projects\":[{\"name\":\"iOS\",\"id\":\"ios\",\"checked\":true}]}",
+      "displayNodePath": "//projects/name",
+      "valueNodePath": "//projects/id",
+      "checkedNodePath": "//projects/checked",
+      "defaultValue": "ios"
+    }
+  ],
+  "agent": {"type": "none"},
+  "stages": [{"id": "run", "name": "Run", "steps": [{"type": "command", "script": "true"}]}]
+}

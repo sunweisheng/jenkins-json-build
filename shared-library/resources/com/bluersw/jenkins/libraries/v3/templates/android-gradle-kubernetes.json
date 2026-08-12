@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 3,
+  "extends": "android-gradle-static",
+  "variables": {
+    "ANDROID_IMAGE": "ghcr.io/sunweisheng/jenkins-json-build-android-arm64@sha256:c2c080be4986e5a286303ad894d769762e2bdbffb6a42ebdcc3f0a59bae7083b",
+    "POD_HTTP_PROXY": "",
+    "POD_HTTPS_PROXY": "",
+    "POD_NO_PROXY": "",
+    "POD_RUN_AS_USER": 1000,
+    "POD_RUN_AS_GROUP": 1000,
+    "POD_FS_GROUP": 1000,
+    "ANDROID_USER_HOME": "/home/jenkins",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk-linux",
+    "ANDROID_AAPT2_PATH": "${ANDROID_SDK_ROOT}/build-tools/${ANDROID_BUILD_TOOLS_VERSION}/aapt2",
+    "ANDROID_GRADLE_OPTS": "-Dorg.gradle.project.android.aapt2FromMavenOverride=${ANDROID_AAPT2_PATH} -Dorg.gradle.java.installations.paths=/usr/lib/jvm/java-17-openjdk-arm64,/usr/lib/jvm/java-21-openjdk-arm64 -Dorg.gradle.java.installations.auto-download=false",
+    "GRADLE_USER_HOME": "/home/jenkins/.gradle",
+    "ANDROID_CPU_REQUEST": "500m",
+    "ANDROID_MEMORY_REQUEST": "1Gi",
+    "ANDROID_CPU_LIMIT": "3",
+    "ANDROID_MEMORY_LIMIT": "3Gi"
+  },
+  "agent": {
+    "type": "kubernetes",
+    "podTemplate": "android-gradle",
+    "environment": {
+      "HTTP_PROXY": "${POD_HTTP_PROXY}",
+      "HTTPS_PROXY": "${POD_HTTPS_PROXY}",
+      "NO_PROXY": "${POD_NO_PROXY}",
+      "http_proxy": "${POD_HTTP_PROXY}",
+      "https_proxy": "${POD_HTTPS_PROXY}",
+      "no_proxy": "${POD_NO_PROXY}"
+    }
+  },
+  "stages": [
+    {"id": "test", "container": "android"},
+    {"id": "coverage", "container": "android"},
+    {"id": "build", "container": "android"}
+  ]
+}

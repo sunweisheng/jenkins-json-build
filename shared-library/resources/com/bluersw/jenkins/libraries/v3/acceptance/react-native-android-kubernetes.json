@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 3,
+  "extends": "react-native-android-kubernetes",
+  "project": {"id": "react-native-android-acceptance"},
+  "variables": {
+    "POD_HTTP_PROXY": "${HTTP_PROXY}",
+    "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
+    "POD_NO_PROXY": "${NO_PROXY}",
+    "NODE_CPU_REQUEST": "50m",
+    "NODE_MEMORY_REQUEST": "128Mi",
+    "NODE_CPU_LIMIT": "1",
+    "NODE_MEMORY_LIMIT": "512Mi",
+    "ANDROID_CPU_REQUEST": "200m",
+    "ANDROID_MEMORY_REQUEST": "512Mi",
+    "ANDROID_CPU_LIMIT": "1",
+    "ANDROID_MEMORY_LIMIT": "1536Mi",
+    "NPM_INSTALL_COMMAND": "ci",
+    "NPM_WORK_DIR": "example/rn-android-build",
+    "ENABLE_SONAR": false,
+    "LCOV_REPORT": "example/rn-android-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/rn-android-build",
+    "GRADLE_WORK_DIR": "example/rn-android-build/android",
+    "GRADLE_TEST_TASK": "testDebugUnitTest",
+    "GRADLE_BUILD_TASK": "assembleDebug",
+    "ANDROID_ARTIFACTS": "example/rn-android-build/android/app/build/outputs/**/*.apk"
+  }
+}

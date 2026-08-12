@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 3,
+  "extends": "node-npm-kubernetes",
+  "project": {"id": "node-npm-acceptance"},
+  "variables": {
+    "POD_HTTP_PROXY": "${HTTP_PROXY}",
+    "POD_HTTPS_PROXY": "${HTTPS_PROXY}",
+    "POD_NO_PROXY": "${NO_PROXY}",
+    "ENABLE_SONAR": false,
+    "NPM_WORK_DIR": "example/js-build",
+    "NPM_BUILD_COMMAND": "build",
+    "LCOV_REPORT": "example/js-build/coverage/lcov.info",
+    "COVERAGE_SOURCE_DIRECTORY": "example/js-build",
+    "BUILD_ARTIFACTS": "example/js-build/css/**"
+  }
+}

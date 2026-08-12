@@ -1,11 +1,7 @@
 {
   "metadataNodes": ["RuntimeVariable", "GlobalVariable", "GlobalLogLevel"],
   "commandTypes": ["COMMAND_STATUS", "COMMAND_STDOUT"],
-  "unsupportedTypes": [
-    "JEST_COVERAGE_ANALYSIS",
-    "LLVM_COV_COVERAGE_ANALYSIS",
-    "MSBUILD_COVERAGE_ANALYSIS"
-  ],
+  "unsupportedTypes": [],
   "mappings": {
     "COMMAND_STATUS_FOR": "commandLoop",
     "COMMAND_STATUS_IF": "conditionalCommand",
@@ -13,9 +9,20 @@
     "BUILD_PARAMETER_DROP_DOWN_MENU": "choiceParameter",
     "JUNIT_PLUG_IN": "junit",
     "JACOCO_PLUG_IN": "jacoco",
-    "SONAR_QUBE": "sonarqube"
+    "SONAR_QUBE": "sonarqube",
+    "JEST_COVERAGE_ANALYSIS": "coverageJest",
+    "LLVM_COV_COVERAGE_ANALYSIS": "coverageLlvm",
+    "MSBUILD_COVERAGE_ANALYSIS": "coverageMsbuild"
   },
   "mavenCommandPattern": "^(?:cd\\s+([^;]+);\\s*)?(mvn|\\./mvnw)\\s+(.+)$",
+  "toolCommandPatterns": {
+    "npm": "^(?:cd\\s+(.+?)\\s*(?:;|&&)\\s*)?(npm)\\s+(.+)$",
+    "gradle": "^(?:cd\\s+(.+?)\\s*(?:;|&&)\\s*)?(\\./gradlew|gradlew(?:\\.bat)?|gradle)\\s+(.+)$",
+    "msbuild": "^(?:cd\\s+(.+?)\\s*(?:;|&&)\\s*)?(\"?(?:[^\"\\s]*[\\\\/])?MSBuild(?:\\.exe)?\"?)\\s+(.+)$",
+    "xcodebuild": "^(?:(?:export\\s+[^;]+);\\s*)*(?:cd\\s+([^;]+);\\s*)?(xcodebuild)\\s+(.+)$"
+  },
+  "probeArguments": ["-v", "--version", "-version", "/?"],
+  "xcodeActions": ["clean", "build", "test", "archive", "exportArchive"],
   "imageBuilderCommandPatterns": {
     "kaniko": {
       "displayName": "Kaniko",
@@ -28,12 +35,26 @@
   },
   "helmCommandPattern": "(?:^|\\s)helm\\s+(lint|template|upgrade|status|rollback)(?:\\s|$)",
   "unsupportedCommandPatterns": {
-    "Node": "(?:^|[;&|\\s])(node|npm|npx|yarn|pnpm|gulp|jest)(?:\\s|$)",
-    ".NET": "(?:^|[;&|\\s])(dotnet|MSBuild(?:\\.exe)?|SonarScanner\\.MSBuild(?:\\.exe)?)(?:\\s|$)",
-    "Android": "(?:^|[/\\\\;&|\\s])(gradlew(?:\\.bat)?|gradle|adb)(?:\\s|$)",
-    "iOS": "(?:^|[;&|\\s])(xcodebuild|xcrun|pod|oclint(?:-json-compilation-database)?)(?:\\s|$)",
-    "React Native": "(?:^|[;&|\\s])react-native(?:\\s|$)",
-    "LLVM": "(?:^|[;&|\\s])llvm-cov(?:\\s|$)"
+    "modern .NET": "(?:^|[;&|\\s])dotnet(?:\\s|$)",
+    "LLVM command": "(?:^|[;&|\\s])llvm-cov(?:\\s|$)"
+  },
+  "coverageTypes": {
+    "coverageJest": {
+      "format": "LCOV",
+      "pathFields": ["LcovReportPath", "LcovReportFile"],
+      "defaultPattern": "coverage/lcov.info",
+      "qualityMetrics": {"Lines": "LINE", "Branches": "BRANCH", "Functions": "METHOD"}
+    },
+    "coverageMsbuild": {
+      "format": "OPENCOVER",
+      "pathFields": ["OpenCoverReportPath", "ReportFile"],
+      "defaultPattern": "**/coverage.opencover.xml",
+      "qualityMetrics": {"Lines": "LINE"}
+    },
+    "coverageLlvm": {
+      "resultBundleFields": ["XcodeResultBundlePath", "ResultBundlePath"],
+      "outputFile": ".jenkins-json-build/xcode-coverage.xml"
+    }
   },
   "jacocoFields": {
     "classPattern": "classPattern",

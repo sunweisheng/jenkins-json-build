@@ -1,5 +1,5 @@
-# Uncomment the next line to define a global platform for your project
-platform :ios, '9.0'
+minimum_ios_version = '13.6'
+platform :ios, minimum_ios_version
 
 target 'CICD-ObjectC-Test' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -11,5 +11,13 @@ target 'CICD-ObjectC-Test' do
   pod 'OCMock', '~> 3.3'
   pod 'OCHamcrest', '~> 5.4.0'
   pod 'XcodeCoverage','~>1.4.0'
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = minimum_ios_version
+    end
   end
 end

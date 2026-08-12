@@ -7,6 +7,7 @@ controller:
 
   replicas: 1
   numExecutors: 0
+  disableRememberMe: true
   javaOpts: "-Xms512m -Xmx1536m -Duser.timezone=Asia/Shanghai"
   resources:
     requests:
@@ -16,17 +17,29 @@ controller:
       cpu: "2"
       memory: 2Gi
 
+  probes:
+    startupProbe:
+      failureThreshold: 90
+
   serviceType: ClusterIP
   servicePort: 8080
   jenkinsUrl: https://${JENKINS_HOST}
 
   admin:
-    createSecret: false
+    createSecret: true
     existingSecret: jenkins-admin
 
   installPlugins:
     - kubernetes:4540.v612369217f87
     - workflow-aggregator:608.v67378e9d3db_1
+    - workflow-multibranch:841.vec5b_9e1806ec
+    - pipeline-model-api:2.2277.v00573e73ddf1
+    - pipeline-model-definition:2.2277.v00573e73ddf1
+    - pipeline-model-extensions:2.2277.v00573e73ddf1
+    - pipeline-stage-step:322.vecffa_99f371c
+    - pipeline-stage-tags-metadata:2.2277.v00573e73ddf1
+    - pipeline-input-step:534.v352f0a_e98918
+    - joda-time-api:2.14.0-149.v1c3ce991d1b_9
     - pipeline-groovy-lib:798.v5cc688825312
     - git:5.10.1
     - configuration-as-code:2111.v475308a_6c93b_
@@ -34,9 +47,14 @@ controller:
     - github-branch-source:1983.vfa_27ed961853
     - credentials-binding:728.v902a_273b_8947
     - config-file-provider:1013.v73c323e52b_1f
+    - http_request:1.25
     - junit:1416.vd753e036de5e
     - jacoco:3.3.7
     - sonar:2.18.3
+    - ssh-slaves:3.1097.v868116049892
+    - agent-server-parameter:1.23.v3f9770f9cc1a_
+    - custom-checkbox-parameter:1.72.v6074130b_6587
+    - coverage:3.3325.v2f3dd167a_b_e5
   installLatestPlugins: false
   installLatestSpecifiedPlugins: false
   initializeOnce: true
@@ -45,22 +63,21 @@ controller:
   JCasC:
     defaultConfig: true
     overwriteConfiguration: false
+    security:
+      apiToken:
+        creationOfLegacyTokenEnabled: false
+        tokenGenerationOnCreationEnabled: false
     configScripts:
       v3-security: |
         jenkins:
-          disableRememberMe: true
           remotingSecurity:
             enabled: true
-        security:
-          apiToken:
-            creationOfLegacyTokenEnabled: false
-            tokenGenerationOnCreationEnabled: false
       v3-shared-library: |
         unclassified:
           globalLibraries:
             libraries:
               - name: "jenkins-json-build"
-                defaultVersion: "v3.0.0"
+                defaultVersion: "v3.2.0"
                 implicit: false
                 allowVersionOverride: true
                 includeInChangesets: true
@@ -88,7 +105,7 @@ agent:
   jenkinsUrl: http://jenkins.${CI_NAMESPACE}.svc.cluster.local:8080
   websocket: true
   podRetention: Never
-  containerCap: 4
+  containerCap: 2
   showRawYaml: false
   privileged: false
   hostNetworking: false

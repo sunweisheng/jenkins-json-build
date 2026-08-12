@@ -88,6 +88,21 @@ return [
     }
 
     @Test
+    void ordersMergedTemplateStagesExplicitly() {
+        ConfigMerger merger = new ConfigMerger()
+        Map merged = merger.merge(
+            [stages: [[id: 'install'], [id: 'test'], [id: 'coverage']]],
+            [stages: [[id: 'pods'], [id: 'test', name: 'Combined tests']],
+                stageOrder: ['install', 'pods', 'test', 'coverage']]
+        )
+
+        Map ordered = merger.orderStages(merged)
+
+        assertEquals(['install', 'pods', 'test', 'coverage'], ordered.stages.collect { it.id })
+        assertEquals('Combined tests', ordered.stages[2].name)
+    }
+
+    @Test
     void validatesImageDigestAndPodSecurity() {
         String digest = 'sha256:' + ('a' * 64)
         assertEquals("ghcr.io/acme/app@${digest}".toString(), ImageReference.withDigest('ghcr.io/acme/app:42', digest))
@@ -97,6 +112,40 @@ return [
             fail('Expected unsafe Pod failure')
         } catch (V3ConfigException error) {
             assertTrue(error.message.contains('禁止'))
+        }
+    }
+
+    @Test
+    void convertsXcodeCoverageAndRejectsInvalidValues() {
+        String xml = XcodeCoverageConverter.toCobertura([targets: [[name: 'AppTests', files: [[
+            name: 'App.swift', path: 'Sources/App.swift', executableLines: 4, coveredLines: 3
+        ]]]]])
+        assertTrue(xml.contains('line-rate="0.75"'))
+        assertTrue(xml.contains('filename="Sources/App.swift"'))
+
+        try {
+            XcodeCoverageConverter.toCobertura([targets: [[name: 'AppTests', files: [[
+                path: 'Sources/App.swift', executableLines: 1, coveredLines: 2
+            ]]]]])
+            fail('Expected invalid coverage failure')
+        } catch (V3ConfigException error) {
+            assertTrue(error.message.contains('coveredLines'))
+        }
+    }
+
+    @Test
+    void keepsV3ExampleConfigPathsResolvableFromRepositoryRoot() {
+        File repositoryRoot = new File('..').canonicalFile
+        List<File> jenkinsfiles = []
+        repositoryRoot.eachFileRecurse { file ->
+            if (file.name == 'Jenkinsfile.v3') jenkinsfiles.add(file)
+        }
+
+        assertFalse(jenkinsfiles.isEmpty())
+        jenkinsfiles.each { file ->
+            def matcher = file.getText('UTF-8') =~ /configFiles:\s*\[\s*'([^']+)'\s*\]/
+            assertTrue("${file} must declare one config file", matcher.find())
+            assertTrue("${file} references a missing config file", new File(repositoryRoot, matcher.group(1)).isFile())
         }
     }
 }
