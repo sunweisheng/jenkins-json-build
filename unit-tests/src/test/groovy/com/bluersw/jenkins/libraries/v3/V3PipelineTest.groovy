@@ -544,6 +544,24 @@ class V3PipelineTest {
     }
 
     @Test
+    void runsMsbuildInConfiguredWorkingDirectory() {
+        FakeSteps steps = new FakeSteps()
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            project: [id: 'msbuild-workdir'],
+            agent: [type: 'none'],
+            stages: [[id: 'build', name: 'Build', steps: [[
+                type: 'msbuild', project: 'WinBuild.sln', targets: ['Build'], workDir: 'example/net-build'
+            ]]]]
+        ])
+
+        Map result = new V3Pipeline(steps, [configFiles: ['generated.json'], checkout: false]).run()
+
+        assertEquals('SUCCESS', result['msbuild-workdir'].status)
+        assertTrue(steps.directories.contains('example/net-build'))
+    }
+
+    @Test
     void usesExplicitScmForCheckout() {
         FakeSteps steps = new FakeSteps()
         Map configuredScm = [url: 'https://example.test/project.git', branch: 'acceptance']

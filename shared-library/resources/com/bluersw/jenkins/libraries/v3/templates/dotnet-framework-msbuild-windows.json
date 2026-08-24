@@ -3,6 +3,7 @@
   "variables": {
     "MSBUILD_EXECUTABLE": "MSBuild.exe",
     "MSBUILD_SOLUTION": "ChangeMe.sln",
+    "MSBUILD_WORK_DIR": ".",
     "MSBUILD_CONFIGURATION": "Release",
     "MSBUILD_PLATFORM": "Any CPU",
     "MSBUILD_TEST_TARGET": "Test",
@@ -15,13 +16,13 @@
   "agent": {"type": "static", "label": "windows && msbuild", "requirements": {"os": "windows", "architectures": ["AMD64"], "tools": ["${MSBUILD_EXECUTABLE}"]}},
   "stages": [
     {"id": "test", "name": ".NET Framework tests", "steps": [
-      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_TEST_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}}
+      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_TEST_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}, "workDir": "${MSBUILD_WORK_DIR}"}
     ]},
     {"id": "coverage", "name": ".NET Framework coverage", "condition": {"variable": "ENABLE_COVERAGE", "operator": "equals", "value": true}, "steps": [
       {"type": "coverage", "reports": [{"format": "OPENCOVER", "pattern": "${OPENCOVER_REPORT}"}]}
     ]},
     {"id": "build", "name": ".NET Framework build", "steps": [
-      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_BUILD_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}, "artifacts": ["${MSBUILD_ARTIFACTS}"]},
+      {"type": "msbuild", "executable": "${MSBUILD_EXECUTABLE}", "project": "${MSBUILD_SOLUTION}", "targets": ["${MSBUILD_BUILD_TARGET}"], "properties": {"Configuration": "${MSBUILD_CONFIGURATION}", "Platform": "${MSBUILD_PLATFORM}"}, "workDir": "${MSBUILD_WORK_DIR}", "artifacts": ["${MSBUILD_ARTIFACTS}"]},
       {"type": "archive", "artifacts": "${MSBUILD_ARTIFACTS}", "fingerprint": true}
     ]}
   ],

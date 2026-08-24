@@ -8,9 +8,10 @@
     "MSBUILD_EXECUTABLE": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
     "VSTEST_CONSOLE": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe",
     "MSBUILD_SOLUTION": "WinBuild.sln",
+    "MSBUILD_WORK_DIR": "example/net-build",
     "MSBUILD_BUILD_TARGET": "Build",
     "ENABLE_COVERAGE": false,
-    "MSBUILD_ARTIFACTS": "WinBuild/bin/**"
+    "MSBUILD_ARTIFACTS": "example/net-build/WinBuild/bin/**"
   },
   "agent": {
     "label": "windows",
@@ -27,6 +28,7 @@
           "executable": "${MSBUILD_EXECUTABLE}",
           "project": "My.msbuild",
           "targets": ["RunUnitTestsInMs"],
+          "workDir": "${MSBUILD_WORK_DIR}",
           "properties": {"VSTestConsole": "${VSTEST_CONSOLE}"}
         }
       ]
