@@ -1,6 +1,7 @@
 {
   "GlobalVariable": {
-    "MSBuildBinDir": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin"
+    "MSBuildBinDir": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin",
+    "VSTestConsole": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe"
   },
   "初始化": {
     "检查MSBuild环境": {
@@ -25,13 +26,8 @@
     "执行单元测试脚本": {
       "Type": "COMMAND_STATUS",
       "Script": {
-        "运行单元测试": "cd ${PROJECT_PATH}\\ && MSBuild  My.msbuild /t:GenerateCoverageHtmlReport"
+        "运行单元测试": "cd ${PROJECT_PATH}\\ && \"${MSBuildBinDir}\\MSBuild.exe\" My.msbuild /t:RunUnitTestsInMs /p:VSTestConsole=\"${VSTestConsole}\""
       }
-    },
-    "分析单元测试覆盖率": {
-      "Type": "MSBUILD_COVERAGE_ANALYSIS",
-      "ReportDir": "${PROJECT_PATH}\\Cover\\",
-      "Lines": "0"
     }
   },
   "代码检查": {
