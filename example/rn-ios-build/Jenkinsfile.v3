@@ -1,3 +1,3 @@
-@Library('jenkins-json-build@v3.2.0') _
+@Library('jenkins-json-build@v3.2.1') _
 
 jenkinsJsonBuild(configFiles: ['example/rn-ios-build/jenkins-project-v3.json'])

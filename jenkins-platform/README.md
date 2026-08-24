@@ -28,7 +28,7 @@ The image digests were checked against the official image manifests on 2026-08-0
 5. Install Chart `5.9.49` with the generated `values.yaml`.
 6. Create a GitHub Organization Folder or Multibranch Pipeline. Git Parameter is only for old jobs.
 
-V3.2.0 固定增加以下插件：
+V3.2.1 使用以下固定插件：
 
 - `http_request:1.25`
 - `ssh-slaves:3.1097.v868116049892`

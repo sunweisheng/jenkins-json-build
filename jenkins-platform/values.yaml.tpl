@@ -77,7 +77,7 @@ controller:
           globalLibraries:
             libraries:
               - name: "jenkins-json-build"
-                defaultVersion: "v3.2.0"
+                defaultVersion: "v3.2.1"
                 implicit: false
                 allowVersionOverride: true
                 includeInChangesets: true

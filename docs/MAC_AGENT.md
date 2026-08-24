@@ -1,6 +1,6 @@
 # Mac Agent 安装说明
 
-V3.2.0 的 iOS 和 React Native iOS 模板只在静态 Mac Agent 上运行。推荐节点配置：
+V3.2.1 的 iOS 和 React Native iOS 模板只在静态 Mac Agent 上运行。推荐节点配置：
 
 - 节点名：`mac-m2-16g`
 - 标签：`macos arm64 ios xcode mac-m2-16g`
