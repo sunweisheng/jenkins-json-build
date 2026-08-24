@@ -519,6 +519,31 @@ class V3PipelineTest {
     }
 
     @Test
+    void validatesConfiguredWindowsToolPaths() {
+        FakeSteps steps = new FakeSteps()
+        steps.unix = false
+        steps.trustedFiles['generated.json'] = JsonOutput.toJson([
+            schemaVersion: 3,
+            project: [id: 'windows-tool-path'],
+            agent: [type: 'static', label: 'windows', requirements: [
+                os: 'windows', architectures: ['AMD64'], tools: ['C:\\Tools\\MSBuild.exe']
+            ]],
+            stages: [[id: 'build', name: 'Build', steps: [[
+                type: 'command', shell: 'powershell', script: 'Write-Output ready'
+            ]]]]
+        ])
+
+        Map result = new V3Pipeline(steps, [configFiles: ['generated.json']]).run()
+
+        assertEquals('SUCCESS', result['windows-tool-path'].status)
+        String requirementsScript = steps.shellInvocations.find {
+            it.method == 'powershell' && it.arguments.script.contains('Test-Path -LiteralPath')
+        }.arguments.script
+        assertTrue(requirementsScript.contains("Test-Path -LiteralPath 'C:\\Tools\\MSBuild.exe' -PathType Leaf"))
+        assertFalse(requirementsScript.contains("Get-Command 'C:\\Tools\\MSBuild.exe'"))
+    }
+
+    @Test
     void usesExplicitScmForCheckout() {
         FakeSteps steps = new FakeSteps()
         Map configuredScm = [url: 'https://example.test/project.git', branch: 'acceptance']

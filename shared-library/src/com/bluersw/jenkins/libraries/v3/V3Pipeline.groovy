@@ -1099,7 +1099,11 @@ class V3Pipeline implements Serializable {
             lines.add("if (@(${values}) -notcontains \$env:PROCESSOR_ARCHITECTURE.ToUpperInvariant()) { throw '所选 Agent CPU 架构不符合要求' }")
         }
         for (String tool : tools) {
-            lines.add("if (-not (Get-Command ${ShellEscaper.powershell(tool)} -ErrorAction SilentlyContinue)) { throw ${ShellEscaper.powershell('所选 Agent 缺少工具 ' + tool)} }")
+            if (tool.contains('\\') || tool.contains('/')) {
+                lines.add("if (-not (Test-Path -LiteralPath ${ShellEscaper.powershell(tool)} -PathType Leaf)) { throw ${ShellEscaper.powershell('所选 Agent 缺少工具 ' + tool)} }")
+            } else {
+                lines.add("if (-not (Get-Command ${ShellEscaper.powershell(tool)} -ErrorAction SilentlyContinue)) { throw ${ShellEscaper.powershell('所选 Agent 缺少工具 ' + tool)} }")
+            }
         }
         if (lines.size() > 1) {
             runCommandStep(context, [type: 'command', shell: 'powershell', script: lines.join('\n')], [:])
