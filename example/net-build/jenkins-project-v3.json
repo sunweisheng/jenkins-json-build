@@ -13,6 +13,7 @@
     "MSBUILD_ARTIFACTS": "WinBuild/bin/**"
   },
   "agent": {
+    "label": "windows",
     "requirements": {
       "tools": ["${MSBUILD_EXECUTABLE}", "${VSTEST_CONSOLE}"]
     }
